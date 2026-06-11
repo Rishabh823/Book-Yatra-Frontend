@@ -1,0 +1,303 @@
+import { useEffect, useState } from 'react';
+import {
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, RefreshControl, Alert, Image, TextInput, Modal, ScrollView,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { AdminShell } from '../../lib/AdminScreen';
+import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { gallery as galleryApi, api } from '../../lib/api';
+
+export default function AdminGallery() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [newItem, setNewItem] = useState({ title: '', type: 'photo', uri: null, videoUrl: '' });
+  const [filter, setFilter] = useState('all'); // all | photo | video
+
+  const load = async () => {
+    try {
+      const res = await galleryApi.list();
+      setItems(Array.isArray(res) ? res : res?.data || []);
+    } catch {}
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+  const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setNewItem((n) => ({ ...n, uri: result.assets[0].uri }));
+    }
+  };
+
+  const uploadItem = async () => {
+    if (!newItem.title.trim()) {
+      Alert.alert('Required', 'Please enter a title');
+      return;
+    }
+    if (newItem.type === 'photo' && !newItem.uri) {
+      Alert.alert('Required', 'Please select a photo to upload');
+      return;
+    }
+    if (newItem.type === 'video' && !newItem.videoUrl.trim()) {
+      Alert.alert('Required', 'Please enter a video URL (YouTube embed URL)');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      if (newItem.type === 'photo') {
+        await galleryApi.upload(newItem.uri, newItem.title, 'photo');
+      } else {
+        await api.post('/gallery', { type: 'video', src: newItem.videoUrl.trim(), title: newItem.title.trim() });
+      }
+      Alert.alert('Uploaded', 'Gallery item added successfully');
+      setShowModal(false);
+      setNewItem({ title: '', type: 'photo', uri: null, videoUrl: '' });
+      load();
+    } catch (e) {
+      Alert.alert('Upload failed', e.message || 'Please try again');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteItem = (item) => {
+    Alert.alert('Delete?', `Remove "${item.title}" from gallery?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive',
+        onPress: async () => {
+          try {
+            await galleryApi.delete(item._id);
+            setItems((prev) => prev.filter((i) => i._id !== item._id));
+          } catch (e) {
+            Alert.alert('Error', e.message || 'Failed to delete');
+          }
+        },
+      },
+    ]);
+  };
+
+  const filtered = filter === 'all' ? items : items.filter((i) => i.type === filter);
+
+  return (
+    <AdminShell title="Gallery" subtitle={`${items.length} items`}>
+      {/* Filter tabs + upload button */}
+      <View style={s.toolbar}>
+        <View style={s.filterRow}>
+          {['all', 'photo', 'video'].map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[s.filterChip, filter === f && s.filterChipActive]}
+              onPress={() => setFilter(f)}
+            >
+              <Text style={[s.filterText, filter === f && s.filterTextActive]}>
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity style={s.uploadBtn} onPress={() => setShowModal(true)}>
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={s.uploadBtnText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(it) => String(it._id)}
+          numColumns={2}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+          columnWrapperStyle={{ gap: 12, marginBottom: 12 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', paddingTop: 60 }}>
+              <Ionicons name="images-outline" size={48} color={colors.textDisabled} />
+              <Text style={{ fontFamily: fonts.body, color: colors.textSecondary, marginTop: 8 }}>No gallery items</Text>
+              <TouchableOpacity style={s.emptyBtn} onPress={() => setShowModal(true)}>
+                <Text style={s.emptyBtnText}>Add First Item</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View style={s.gridItem}>
+              {item.type === 'photo' ? (
+                <Image source={{ uri: item.src }} style={s.gridImg} resizeMode="cover" />
+              ) : (
+                <View style={[s.gridImg, s.videoPlaceholder]}>
+                  <Ionicons name="play-circle" size={40} color="#fff" />
+                </View>
+              )}
+              <View style={s.gridOverlay}>
+                <Text style={s.gridTitle} numberOfLines={1}>{item.title}</Text>
+                <TouchableOpacity style={s.deleteIcon} onPress={() => deleteItem(item)}>
+                  <Ionicons name="trash" size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              {item.type === 'video' && (
+                <View style={s.videoBadge}>
+                  <Ionicons name="videocam" size={10} color="#fff" />
+                </View>
+              )}
+            </View>
+          )}
+        />
+      )}
+
+      {/* Upload Modal */}
+      <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Add to Gallery</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)} style={s.cancelBtn}>
+                <Text style={s.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Type selector */}
+              <Text style={s.modalLabel}>Type</Text>
+              <View style={s.typeRow}>
+                {['photo', 'video'].map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[s.typeChip, newItem.type === t && s.typeChipActive]}
+                    onPress={() => setNewItem((n) => ({ ...n, type: t, uri: null, videoUrl: '' }))}
+                  >
+                    <Ionicons name={t === 'photo' ? 'image-outline' : 'videocam-outline'} size={16} color={newItem.type === t ? '#fff' : colors.textSecondary} />
+                    <Text style={[s.typeChipText, newItem.type === t && { color: '#fff' }]}>
+                      {t === 'photo' ? 'Photo' : 'Video'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Title */}
+              <Text style={s.modalLabel}>Title</Text>
+              <View style={s.inputWrap}>
+                <TextInput
+                  style={s.modalInput}
+                  value={newItem.title}
+                  onChangeText={(v) => setNewItem((n) => ({ ...n, title: v }))}
+                  placeholder="Enter a title for this item"
+                  placeholderTextColor={colors.textDisabled}
+                />
+              </View>
+
+              {newItem.type === 'photo' ? (
+                <>
+                  <Text style={s.modalLabel}>Photo</Text>
+                  <TouchableOpacity style={s.pickImageBtn} onPress={pickImage}>
+                    {newItem.uri ? (
+                      <Image source={{ uri: newItem.uri }} style={s.previewImg} />
+                    ) : (
+                      <>
+                        <Ionicons name="cloud-upload-outline" size={32} color={colors.primary} />
+                        <Text style={s.pickImageText}>Tap to select photo</Text>
+                        <Text style={s.pickImageHint}>Uploads to Cloudinary</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  {newItem.uri && (
+                    <TouchableOpacity style={s.changePhotoLink} onPress={pickImage}>
+                      <Text style={s.changePhotoText}>Change photo</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={s.modalLabel}>YouTube Embed URL</Text>
+                  <View style={s.inputWrap}>
+                    <TextInput
+                      style={s.modalInput}
+                      value={newItem.videoUrl}
+                      onChangeText={(v) => setNewItem((n) => ({ ...n, videoUrl: v }))}
+                      placeholder="https://youtube.com/embed/..."
+                      placeholderTextColor={colors.textDisabled}
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                  </View>
+                </>
+              )}
+
+              <TouchableOpacity style={s.uploadCta} onPress={uploadItem} disabled={uploading}>
+                {uploading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="cloud-upload" size={18} color="#fff" />
+                    <Text style={s.uploadCtaText}>Upload & Add to Gallery</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </AdminShell>
+  );
+}
+
+const GRID_W = 160;
+const s = StyleSheet.create({
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 14 },
+  filterRow: { flexDirection: 'row', gap: 8 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
+  filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
+  filterTextActive: { color: '#fff' },
+  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.primary, borderRadius: radius.pill, ...shadow.card },
+  uploadBtnText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
+  emptyBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: radius.pill },
+  emptyBtnText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
+
+  gridItem: { flex: 1, borderRadius: radius.lg, overflow: 'hidden', ...shadow.soft, backgroundColor: colors.borderSubtle },
+  gridImg: { width: '100%', aspectRatio: 1 },
+  videoPlaceholder: { backgroundColor: '#1E1B4B', alignItems: 'center', justifyContent: 'center' },
+  gridOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 8, paddingVertical: 6 },
+  gridTitle: { fontFamily: fonts.bodyBold, fontSize: 11, color: '#fff', flex: 1 },
+  deleteIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: 'rgba(220,38,38,0.85)', alignItems: 'center', justifyContent: 'center' },
+  videoBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 4, padding: 3 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '90%' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
+  modalLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8, marginTop: 14 },
+  inputWrap: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, height: 50, justifyContent: 'center' },
+  modalInput: { fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
+  typeRow: { flexDirection: 'row', gap: 12 },
+  typeChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  typeChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  typeChipText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
+  pickImageBtn: { height: 160, borderRadius: radius.xl, borderWidth: 2, borderColor: colors.primaryLight, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, overflow: 'hidden' },
+  previewImg: { width: '100%', height: '100%' },
+  pickImageText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary, marginTop: 8 },
+  pickImageHint: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 4 },
+  changePhotoLink: { alignItems: 'center', marginTop: 8 },
+  changePhotoText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary },
+  uploadCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, marginTop: 24, marginBottom: 8, ...shadow.card },
+  uploadCtaText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
+  cancelBtn:  { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.bg },
+  cancelText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
+});
