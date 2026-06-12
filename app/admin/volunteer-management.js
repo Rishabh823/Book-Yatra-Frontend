@@ -1,22 +1,37 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Alert, Modal, ScrollView,
-} from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { api } from '../../lib/api';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+  Modal,
+  ScrollView,
+  TextInput,
+} from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { api, volunteerApi } from "../../lib/api";
+import { colors, fonts, radius, shadow } from "../../lib/theme";
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d
+    ? new Date(d).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
 
 const STATUS_COLOR = {
-  active:    { bg: '#DCFCE7', color: '#16A34A' },
-  suspended: { bg: '#FEE2E2', color: '#DC2626' },
-  pending:   { bg: '#FEF3C7', color: '#D97706' },
+  active: { bg: "#DCFCE7", color: "#16A34A" },
+  suspended: { bg: "#FEE2E2", color: "#DC2626" },
+  pending: { bg: "#FEF3C7", color: "#D97706" },
 };
 
 export default function VolunteerManagementScreen() {
@@ -26,36 +41,60 @@ export default function VolunteerManagementScreen() {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState('all');
-  const [assignModal, setAssignModal] = useState(null); // volunteer object
+  const [tab, setTab] = useState("all");
+  const [assignModal, setAssignModal] = useState(null);
   const [assigningTourId, setAssigningTourId] = useState(null);
   const [assigning, setAssigning] = useState(false);
+  const [createModal, setCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const cf = (k, v) => setCreateForm((p) => ({ ...p, [k]: v }));
+
+  // Change password state
+  const [pwdModal, setPwdModal] = useState(null); // holds the volunteer object
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [savingPwd, setSavingPwd] = useState(false);
 
   const load = useCallback(async () => {
     try {
       const [vRes, tRes] = await Promise.all([
-        api.get('/volunteer/list'),
-        api.get('/tours'),
+        api.get("/volunteer/list"),
+        api.get("/tours"),
       ]);
-      const vList = Array.isArray(vRes) ? vRes : (vRes.data || []);
-      const tList = Array.isArray(tRes) ? tRes : (tRes.data || []);
+      const vList = Array.isArray(vRes) ? vRes : vRes.data || [];
+      const tList = Array.isArray(tRes) ? tRes : tRes.data || [];
       setVolunteers(vList);
       setTours(tList);
     } catch (e) {
-      Alert.alert('Error', 'Failed to load data');
+      Alert.alert("Error", "Failed to load data");
     }
     setLoading(false);
     setRefreshing(false);
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   const updateStatus = async (volunteerId, status) => {
     try {
-      await api.put('/volunteer/' + volunteerId + '/status', { status });
-      setVolunteers(prev => prev.map(v => v._id === volunteerId ? { ...v, volunteerStatus: status } : v));
+      await api.put("/volunteer/" + volunteerId + "/status", { status });
+      setVolunteers((prev) =>
+        prev.map((v) =>
+          v._id === volunteerId ? { ...v, volunteerStatus: status } : v,
+        ),
+      );
     } catch {
-      Alert.alert('Error', 'Failed to update status');
+      Alert.alert("Error", "Failed to update status");
     }
   };
 
@@ -63,161 +102,368 @@ export default function VolunteerManagementScreen() {
     if (!assigningTourId || !assignModal) return;
     setAssigning(true);
     try {
-      await api.post('/volunteer/assign', { volunteerId: assignModal._id, tourId: assigningTourId });
-      const tour = tours.find(t => t._id === assigningTourId);
-      setVolunteers(prev => prev.map(v =>
-        v._id === assignModal._id
-          ? { ...v, assignedTours: [...(v.assignedTours || []), tour].filter(Boolean) }
-          : v
-      ));
+      await api.post("/volunteer/assign", {
+        volunteerId: assignModal._id,
+        tourId: assigningTourId,
+      });
+      const tour = tours.find((t) => t._id === assigningTourId);
+      setVolunteers((prev) =>
+        prev.map((v) =>
+          v._id === assignModal._id
+            ? {
+                ...v,
+                assignedTours: [...(v.assignedTours || []), tour].filter(
+                  Boolean,
+                ),
+              }
+            : v,
+        ),
+      );
       setAssignModal(null);
       setAssigningTourId(null);
-      Alert.alert('Success', 'Volunteer assigned to tour successfully');
+      Alert.alert("Success", "Volunteer assigned to tour successfully");
     } catch {
-      Alert.alert('Error', 'Failed to assign volunteer');
+      Alert.alert("Error", "Failed to assign volunteer");
     }
     setAssigning(false);
   };
 
+  const deleteVolunteer = async (volunteerId, name) => {
+    Alert.alert(
+      "Delete Volunteer",
+      `Remove ${name} as a volunteer? This cannot be undone and will unassign them from all tours.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.del("/volunteer/" + volunteerId);
+              setVolunteers((prev) =>
+                prev.filter((v) => v._id !== volunteerId),
+              );
+            } catch (e) {
+              Alert.alert("Error", e.message || "Failed to delete volunteer");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const createVolunteer = async () => {
+    const { name, email, phone, password } = createForm;
+    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
+      return Alert.alert("Incomplete", "All fields are required");
+    }
+    if (phone.length < 10)
+      return Alert.alert("Invalid", "Enter a valid phone number");
+    if (password.length < 6)
+      return Alert.alert(
+        "Weak Password",
+        "Password must be at least 6 characters",
+      );
+    setCreating(true);
+    try {
+      const res = await volunteerApi.create({ name, email, phone, password });
+      const newVol = res?.data || res;
+      setVolunteers((prev) => [{ ...newVol, assignedTours: [] }, ...prev]);
+      setCreateForm({ name: "", email: "", phone: "", password: "" });
+      setCreateModal(false);
+      Alert.alert(
+        "Volunteer Created",
+        `${name} has been added as a volunteer and can now log in with their credentials.`,
+      );
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to create volunteer");
+    }
+    setCreating(false);
+  };
+
   const removeFromTour = async (volunteerId, tourId) => {
-    Alert.alert('Remove from Tour', 'Remove this volunteer from the tour?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert("Remove from Tour", "Remove this volunteer from the tour?", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: 'Remove', style: 'destructive',
+        text: "Remove",
+        style: "destructive",
         onPress: async () => {
           try {
-            await api.post('/volunteer/remove-tour', { volunteerId, tourId });
-            setVolunteers(prev => prev.map(v =>
-              v._id === volunteerId
-                ? { ...v, assignedTours: (v.assignedTours || []).filter(t => t._id !== tourId) }
-                : v
-            ));
+            await api.post("/volunteer/remove-tour", { volunteerId, tourId });
+            setVolunteers((prev) =>
+              prev.map((v) =>
+                v._id === volunteerId
+                  ? {
+                      ...v,
+                      assignedTours: (v.assignedTours || []).filter(
+                        (t) => t._id !== tourId,
+                      ),
+                    }
+                  : v,
+              ),
+            );
           } catch {
-            Alert.alert('Error', 'Failed to remove volunteer from tour');
+            Alert.alert("Error", "Failed to remove volunteer from tour");
           }
         },
       },
     ]);
   };
 
-  const filtered = tab === 'all' ? volunteers : volunteers.filter(v => (v.volunteerStatus || 'active') === tab);
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      return Alert.alert("Weak Password", "Password must be at least 6 characters.");
+    }
+    setSavingPwd(true);
+    try {
+      await api.put("/volunteer/" + pwdModal._id + "/change-password", { newPassword });
+      Alert.alert("Success", `Password updated for ${pwdModal.name}.`);
+      setPwdModal(null);
+      setNewPassword("");
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to update password.");
+    }
+    setSavingPwd(false);
+  };
+
+  const filtered =
+    tab === "all"
+      ? volunteers
+      : volunteers.filter((v) => (v.volunteerStatus || "active") === tab);
 
   const renderVolunteer = ({ item }) => {
-    const status = item.volunteerStatus || 'active';
+    const status = item.volunteerStatus || "active";
     const sc = STATUS_COLOR[status] || STATUS_COLOR.pending;
     const assignedTours = item.assignedTours || [];
+    const docsCount = (item.verificationDocs || []).length;
+    const verifiedDocs = (item.verificationDocs || []).filter(
+      (d) => d.status === "verified",
+    ).length;
 
     return (
       <View style={[s.card, shadow?.soft]}>
-        {/* Volunteer info row */}
-        <View style={s.cardRow}>
-          <View style={s.avatar}>
-            <Text style={s.avatarText}>{(item.name || 'V')[0].toUpperCase()}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.volName}>{item.name || 'Volunteer'}</Text>
-            <Text style={s.volEmail}>{item.email || ''}</Text>
-            <Text style={s.volMeta}>{assignedTours.length} tour{assignedTours.length !== 1 ? 's' : ''} assigned</Text>
-          </View>
-          <View style={[s.statusBadge, { backgroundColor: sc.bg }]}>
-            <Text style={[s.statusText, { color: sc.color }]}>{status}</Text>
-          </View>
-        </View>
-
-        {/* Assigned tours */}
-        {assignedTours.length > 0 && (
-          <View style={s.toursSection}>
-            <Text style={s.toursSectionLabel}>Assigned Tours</Text>
-            {assignedTours.map(t => (
-              <View key={t._id} style={s.tourRow}>
-                <View style={s.tourDot} />
-                <View style={{ flex: 1 }}>
-                  <Text style={s.tourTitle}>{t.title}</Text>
-                  <Text style={s.tourMeta}>{t.source} → {t.destination} · {fmtDate(t.startDate)}</Text>
+        {/* Tappable top area — navigates to detail */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push(`/admin/volunteer/${item._id}`)}
+        >
+          <View style={s.cardRow}>
+            <View
+              style={[
+                s.avatar,
+                { backgroundColor: status === "suspended" ? "#9CA3AF" : colors.primary },
+              ]}
+            >
+              <Text style={s.avatarText}>
+                {(item.name || "V")[0].toUpperCase()}
+              </Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={s.volName}>{item.name || "Volunteer"}</Text>
+              <Text style={s.volEmail}>{item.email || ""}</Text>
+              <View style={s.metaRow}>
+                <View style={[s.statusBadge, { backgroundColor: sc.bg }]}>
+                  <View style={[s.statusDot, { backgroundColor: sc.color }]} />
+                  <Text style={[s.statusText, { color: sc.color }]}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Text>
                 </View>
-                <TouchableOpacity onPress={() => removeFromTour(item._id, t._id)} style={s.removeBtn}>
-                  <Ionicons name="close-circle" size={18} color={colors.error} />
-                </TouchableOpacity>
+                {docsCount > 0 && (
+                  <View style={s.docsBadge}>
+                    <Ionicons
+                      name="document-text"
+                      size={10}
+                      color={verifiedDocs === docsCount ? "#16A34A" : "#D97706"}
+                    />
+                    <Text
+                      style={[
+                        s.docsText,
+                        { color: verifiedDocs === docsCount ? "#16A34A" : "#D97706" },
+                      ]}
+                    >
+                      {verifiedDocs}/{docsCount} docs
+                    </Text>
+                  </View>
+                )}
               </View>
-            ))}
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
           </View>
-        )}
 
-        {/* Actions */}
-        <View style={s.actions}>
-          <TouchableOpacity style={s.assignBtn} onPress={() => { setAssignModal(item); setAssigningTourId(null); }}>
-            <Ionicons name="add-circle-outline" size={15} color={colors.primary} />
-            <Text style={s.assignBtnText}>Assign Tour</Text>
+          {assignedTours.length > 0 && (
+            <View style={[s.tourCountRow, { marginTop: 10 }]}>
+              <Ionicons name="bus-outline" size={13} color={colors.primary} />
+              <Text style={s.tourCountTxt}>
+                {assignedTours.length} tour{assignedTours.length !== 1 ? "s" : ""} assigned
+              </Text>
+              <Text style={s.tourNames} numberOfLines={1}>
+                {assignedTours.slice(0, 2).map((t) => t.title).join(", ")}
+                {assignedTours.length > 2 ? ` +${assignedTours.length - 2}` : ""}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Action strip — outside the nav touchable so buttons fire cleanly */}
+        <View style={s.actionStrip}>
+          <TouchableOpacity
+            style={s.stripBtn}
+            onPress={() => { setAssignModal(item); setAssigningTourId(null); }}
+          >
+            <Ionicons name="add-circle-outline" size={14} color={colors.primary} />
+            <Text style={[s.stripBtnTxt, { color: colors.primary }]}>Assign Tour</Text>
           </TouchableOpacity>
 
-          {status !== 'active' ? (
-            <TouchableOpacity style={s.activateBtn} onPress={() => updateStatus(item._id, 'active')}>
-              <Ionicons name="checkmark-circle-outline" size={15} color="#16A34A" />
-              <Text style={[s.actionBtnText, { color: '#16A34A' }]}>Activate</Text>
+          <View style={s.stripDivider} />
+
+          {status !== "active" ? (
+            <TouchableOpacity
+              style={s.stripBtn}
+              onPress={() => updateStatus(item._id, "active")}
+            >
+              <Ionicons name="checkmark-circle-outline" size={14} color="#16A34A" />
+              <Text style={[s.stripBtnTxt, { color: "#16A34A" }]}>Activate</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={s.suspendBtn} onPress={() =>
-              Alert.alert('Suspend Volunteer', 'Are you sure?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Suspend', style: 'destructive', onPress: () => updateStatus(item._id, 'suspended') },
-              ])
-            }>
-              <Ionicons name="pause-circle-outline" size={15} color={colors.error} />
-              <Text style={[s.actionBtnText, { color: colors.error }]}>Suspend</Text>
+            <TouchableOpacity
+              style={s.stripBtn}
+              onPress={() =>
+                Alert.alert("Suspend Volunteer", `Suspend ${item.name}?`, [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Suspend", style: "destructive", onPress: () => updateStatus(item._id, "suspended") },
+                ])
+              }
+            >
+              <Ionicons name="pause-circle-outline" size={14} color="#D97706" />
+              <Text style={[s.stripBtnTxt, { color: "#D97706" }]}>Suspend</Text>
             </TouchableOpacity>
           )}
+
+          <View style={s.stripDivider} />
+
+          <TouchableOpacity
+            style={s.stripBtn}
+            onPress={() => { setPwdModal(item); setNewPassword(""); setShowNewPwd(false); }}
+          >
+            <Ionicons name="key-outline" size={14} color="#7C3AED" />
+            <Text style={[s.stripBtnTxt, { color: "#7C3AED" }]}>Password</Text>
+          </TouchableOpacity>
+
+          <View style={s.stripDivider} />
+
+          <TouchableOpacity
+            style={s.stripBtn}
+            onPress={() => deleteVolunteer(item._id, item.name)}
+          >
+            <Ionicons name="trash-outline" size={14} color={colors.error} />
+            <Text style={[s.stripBtnTxt, { color: colors.error }]}>Delete</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
   };
 
-  const TABS = [
-    { k: 'all',       label: 'All' },
-    { k: 'active',    label: 'Active' },
-    { k: 'pending',   label: 'Pending' },
-    { k: 'suspended', label: 'Suspended' },
-  ];
-
   const stats = {
-    total:     volunteers.length,
-    active:    volunteers.filter(v => (v.volunteerStatus || 'active') === 'active').length,
-    pending:   volunteers.filter(v => v.volunteerStatus === 'pending').length,
-    suspended: volunteers.filter(v => v.volunteerStatus === 'suspended').length,
+    total: volunteers.length,
+    active: volunteers.filter(
+      (v) => (v.volunteerStatus || "active") === "active",
+    ).length,
+    pending: volunteers.filter((v) => v.volunteerStatus === "pending").length,
+    suspended: volunteers.filter((v) => v.volunteerStatus === "suspended")
+      .length,
   };
+
+  const TABS = [
+    { k: "all", label: "All", icon: "people", count: stats.total },
+    {
+      k: "active",
+      label: "Active",
+      icon: "checkmark-circle",
+      count: stats.active,
+    },
+    { k: "pending", label: "Pending", icon: "time", count: stats.pending },
+    {
+      k: "suspended",
+      label: "Suspended",
+      icon: "pause-circle",
+      count: stats.suspended,
+    },
+  ];
 
   return (
     <View style={[s.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <LinearGradient colors={['#1E0A0A', '#5C1615']} style={s.header}>
+      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
           <Ionicons name="arrow-back" size={20} color="white" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>Volunteer Management</Text>
-          <Text style={s.subtitle}>{stats.total} volunteers · {stats.active} active</Text>
+          <Text style={s.subtitle}>
+            {stats.total} volunteers · {stats.active} active
+          </Text>
         </View>
+        <TouchableOpacity
+          style={s.createHeaderBtn}
+          onPress={() => setCreateModal(true)}
+        >
+          <Ionicons name="person-add" size={16} color={colors.primary} />
+          <Text style={s.createHeaderBtnTxt}>Add</Text>
+        </TouchableOpacity>
       </LinearGradient>
 
       {/* Stats row */}
       <View style={s.statsRow}>
         {[
-          { label: 'Total',     count: stats.total,     color: colors.primary },
-          { label: 'Active',    count: stats.active,    color: '#16A34A' },
-          { label: 'Pending',   count: stats.pending,   color: '#D97706' },
-          { label: 'Suspended', count: stats.suspended, color: '#DC2626' },
-        ].map(stat => (
+          { label: "Total", count: stats.total, color: colors.primary },
+          { label: "Active", count: stats.active, color: "#16A34A" },
+          { label: "Pending", count: stats.pending, color: "#D97706" },
+          { label: "Suspended", count: stats.suspended, color: "#DC2626" },
+        ].map((stat) => (
           <View key={stat.label} style={s.statCard}>
-            <Text style={[s.statCount, { color: stat.color }]}>{stat.count}</Text>
+            <Text style={[s.statCount, { color: stat.color }]}>
+              {stat.count}
+            </Text>
             <Text style={s.statLabel}>{stat.label}</Text>
           </View>
         ))}
       </View>
 
-      {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabs}>
-        {TABS.map(t => (
-          <TouchableOpacity key={t.k} style={[s.tab, tab === t.k && s.tabActive]} onPress={() => setTab(t.k)}>
-            <Text style={[s.tabText, tab === t.k && s.tabTextActive]}>{t.label}</Text>
+      {/* Segmented Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.segmentWrapper}
+      >
+        {TABS.map((t) => (
+          <TouchableOpacity
+            key={t.k}
+            style={[s.segment, tab === t.k && s.segmentActive]}
+            onPress={() => setTab(t.k)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={t.icon}
+              size={13}
+              color={tab === t.k ? "white" : colors.textSecondary}
+            />
+            <Text style={[s.segmentText, tab === t.k && s.segmentTextActive]}>
+              {t.label}
+            </Text>
+            {t.count > 0 && (
+              <View
+                style={[s.segmentBadge, tab === t.k && s.segmentBadgeActive]}
+              >
+                <Text
+                  style={[
+                    s.segmentBadgeTxt,
+                    tab === t.k && s.segmentBadgeTxtActive,
+                  ]}
+                >
+                  {t.count}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -227,22 +473,194 @@ export default function VolunteerManagementScreen() {
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={item => String(item._id)}
+          keyExtractor={(item) => String(item._id)}
           renderItem={renderVolunteer}
-          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: insets.bottom + 20 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 12,
+            paddingBottom: insets.bottom + 20,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                load();
+              }}
+              tintColor={colors.primary}
+            />
+          }
           ListEmptyComponent={
             <View style={s.empty}>
-              <Ionicons name="people-outline" size={48} color={colors.textDisabled} />
+              <Ionicons
+                name="people-outline"
+                size={48}
+                color={colors.textDisabled}
+              />
               <Text style={s.emptyText}>No volunteers in this category</Text>
-              <Text style={s.emptySub}>Users with volunteer role will appear here</Text>
+              <Text style={s.emptySub}>
+                Users with volunteer role will appear here
+              </Text>
             </View>
           }
         />
       )}
 
+      {/* Create Volunteer Modal */}
+      <Modal
+        visible={createModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !creating && setCreateModal(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHandle} />
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Create Volunteer</Text>
+              {/* <TouchableOpacity
+                onPress={() => setCreateModal(false)}
+                disabled={creating}
+              >
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </TouchableOpacity> */}
+            </View>
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 13,
+                color: colors.textSecondary,
+                marginBottom: 4,
+              }}
+            >
+              This volunteer will be linked to your operator account and visible
+              only to you.
+            </Text>
+
+            {[
+              {
+                key: "name",
+                label: "Full Name",
+                placeholder: "e.g. Ramesh Kumar",
+                icon: "person-outline",
+              },
+              {
+                key: "email",
+                label: "Email Address",
+                placeholder: "volunteer@email.com",
+                icon: "mail-outline",
+                keyboard: "email-address",
+              },
+              {
+                key: "phone",
+                label: "Phone Number",
+                placeholder: "98765 43210",
+                icon: "call-outline",
+                keyboard: "phone-pad",
+              },
+            ].map((f) => (
+              <View key={f.key} style={s.createField}>
+                <Text style={s.createLabel}>{f.label}</Text>
+                <View style={s.createInputRow}>
+                  <Ionicons
+                    name={f.icon}
+                    size={16}
+                    color={colors.textSecondary}
+                    style={{ marginRight: 8 }}
+                  />
+                  <TextInput
+                    style={s.createInput}
+                    value={createForm[f.key]}
+                    onChangeText={(v) => cf(f.key, v)}
+                    placeholder={f.placeholder}
+                    placeholderTextColor={colors.textDisabled}
+                    keyboardType={f.keyboard || "default"}
+                    autoCapitalize={f.key === "name" ? "words" : "none"}
+                  />
+                </View>
+              </View>
+            ))}
+
+            <View style={s.createField}>
+              <Text style={s.createLabel}>Password</Text>
+              <View style={s.createInputRow}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                  style={{ marginRight: 8 }}
+                />
+                <TextInput
+                  style={[s.createInput, { flex: 1 }]}
+                  value={createForm.password}
+                  onChangeText={(v) => cf("password", v)}
+                  placeholder="Min. 6 characters"
+                  placeholderTextColor={colors.textDisabled}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword((p) => !p)}
+                  style={{ padding: 4 }}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={18}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+              <TouchableOpacity
+                style={[
+                  s.assignConfirmBtn,
+                  { flex: 1, backgroundColor: "#F3F4F6" },
+                ]}
+                onPress={() => setCreateModal(false)}
+                disabled={creating}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.bodyBold,
+                    fontSize: 14,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  s.assignConfirmBtn,
+                  { flex: 2 },
+                  creating && { opacity: 0.6 },
+                ]}
+                onPress={createVolunteer}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="person-add" size={16} color="white" />
+                    <Text style={s.assignConfirmText}>Create Volunteer</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Tour assignment modal */}
-      <Modal visible={!!assignModal} transparent animationType="slide" onRequestClose={() => setAssignModal(null)}>
+      <Modal
+        visible={!!assignModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAssignModal(null)}
+      >
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
@@ -252,44 +670,92 @@ export default function VolunteerManagementScreen() {
                 <Ionicons name="close" size={22} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={s.modalVolName}>Volunteer: <Text style={{ color: colors.primary }}>{assignModal?.name}</Text></Text>
+            <Text style={s.modalVolName}>
+              Volunteer:{" "}
+              <Text style={{ color: colors.primary }}>{assignModal?.name}</Text>
+            </Text>
 
             <Text style={s.tourListLabel}>Select a tour to assign:</Text>
             <ScrollView style={{ maxHeight: 320 }}>
-              {tours.filter(t => {
-                const assigned = assignModal?.assignedTours || [];
-                return !assigned.some(a => a._id === t._id);
-              }).map(t => (
-                <TouchableOpacity
-                  key={t._id}
-                  style={[s.tourOption, assigningTourId === t._id && s.tourOptionActive]}
-                  onPress={() => setAssigningTourId(t._id)}
-                >
-                  <View style={s.tourOptionLeft}>
-                    <Ionicons name="bus-outline" size={18} color={assigningTourId === t._id ? colors.primary : colors.textSecondary} />
-                    <View>
-                      <Text style={[s.tourOptionTitle, assigningTourId === t._id && { color: colors.primary }]}>{t.title}</Text>
-                      <Text style={s.tourOptionMeta}>{t.source} → {t.destination} · {fmtDate(t.startDate)}</Text>
+              {tours
+                .filter((t) => {
+                  const assigned = assignModal?.assignedTours || [];
+                  return !assigned.some((a) => a._id === t._id);
+                })
+                .map((t) => (
+                  <TouchableOpacity
+                    key={t._id}
+                    style={[
+                      s.tourOption,
+                      assigningTourId === t._id && s.tourOptionActive,
+                    ]}
+                    onPress={() => setAssigningTourId(t._id)}
+                  >
+                    <View style={s.tourOptionLeft}>
+                      <Ionicons
+                        name="bus-outline"
+                        size={18}
+                        color={
+                          assigningTourId === t._id
+                            ? colors.primary
+                            : colors.textSecondary
+                        }
+                      />
+                      <View>
+                        <Text
+                          style={[
+                            s.tourOptionTitle,
+                            assigningTourId === t._id && {
+                              color: colors.primary,
+                            },
+                          ]}
+                        >
+                          {t.title}
+                        </Text>
+                        <Text style={s.tourOptionMeta}>
+                          {t.source} → {t.destination} · {fmtDate(t.startDate)}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                  {assigningTourId === t._id && (
-                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-              {tours.filter(t => !(assignModal?.assignedTours || []).some(a => a._id === t._id)).length === 0 && (
-                <Text style={{ textAlign: 'center', color: colors.textSecondary, padding: 20, fontFamily: fonts.body }}>
+                    {assigningTourId === t._id && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              {tours.filter(
+                (t) =>
+                  !(assignModal?.assignedTours || []).some(
+                    (a) => a._id === t._id,
+                  ),
+              ).length === 0 && (
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: colors.textSecondary,
+                    padding: 20,
+                    fontFamily: fonts.body,
+                  }}
+                >
                   All active tours already assigned
                 </Text>
               )}
             </ScrollView>
 
             <TouchableOpacity
-              style={[s.assignConfirmBtn, (!assigningTourId || assigning) && { opacity: 0.5 }]}
+              style={[
+                s.assignConfirmBtn,
+                (!assigningTourId || assigning) && { opacity: 0.5 },
+              ]}
               onPress={assignToTour}
               disabled={!assigningTourId || assigning}
             >
-              {assigning ? <ActivityIndicator color="white" size="small" /> : (
+              {assigning ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
                 <>
                   <Ionicons name="checkmark" size={18} color="white" />
                   <Text style={s.assignConfirmText}>Confirm Assignment</Text>
@@ -299,69 +765,517 @@ export default function VolunteerManagementScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Change Password Modal */}
+      <Modal
+        visible={!!pwdModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !savingPwd && setPwdModal(null)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHandle} />
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Change Password</Text>
+              <TouchableOpacity onPress={() => setPwdModal(null)} disabled={savingPwd}>
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, marginBottom: 16 }}>
+              Set a new password for{" "}
+              <Text style={{ fontFamily: fonts.bodyBold, color: colors.secondary }}>
+                {pwdModal?.name}
+              </Text>
+              . They will need this to log in.
+            </Text>
+
+            <View style={s.createField}>
+              <Text style={s.createLabel}>New Password</Text>
+              <View style={s.createInputRow}>
+                <Ionicons name="lock-closed-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={[s.createInput, { flex: 1 }]}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Min. 6 characters"
+                  placeholderTextColor={colors.textDisabled}
+                  secureTextEntry={!showNewPwd}
+                  autoCapitalize="none"
+                  autoFocus
+                />
+                <TouchableOpacity onPress={() => setShowNewPwd(p => !p)} style={{ padding: 4 }}>
+                  <Ionicons name={showNewPwd ? "eye-off-outline" : "eye-outline"} size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+              <TouchableOpacity
+                style={[s.assignConfirmBtn, { flex: 1, backgroundColor: "#F3F4F6" }]}
+                onPress={() => setPwdModal(null)}
+                disabled={savingPwd}
+              >
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textSecondary }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.assignConfirmBtn, { flex: 2, backgroundColor: "#7C3AED" }, savingPwd && { opacity: 0.6 }]}
+                onPress={handleChangePassword}
+                disabled={savingPwd}
+              >
+                {savingPwd ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="key" size={16} color="white" />
+                    <Text style={s.assignConfirmText}>Update Password</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { paddingHorizontal: 16, paddingBottom: 18, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: 'white' },
-  subtitle: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+    paddingTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "white" },
+  subtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 2,
+  },
 
-  statsRow: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  statCard: { flex: 1, alignItems: 'center', paddingVertical: 10, backgroundColor: '#F9FAFB', borderRadius: radius.lg },
+  statsRow: {
+    flexDirection: "row",
+    padding: 12,
+    gap: 8,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  statCard: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: "#F9FAFB",
+    borderRadius: radius.lg,
+  },
   statCount: { fontFamily: fonts.bodyBold, fontSize: 20 },
-  statLabel: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 2 },
+  statLabel: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
 
-  tabs: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  tab: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: '#F3F4F6' },
+  tabs: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    minHeight: 52,
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    backgroundColor: "#F3F4F6",
+    alignSelf: "center",
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tabActive: { backgroundColor: colors.primary },
-  tabText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
-  tabTextActive: { color: 'white' },
+  tabText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  tabTextActive: { color: "white" },
 
-  card: { backgroundColor: 'white', borderRadius: radius.xl, padding: 14, gap: 12 },
-  cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.bodyBold, fontSize: 18, color: 'white' },
-  volName: { fontFamily: fonts.bodyBold, fontSize: 15, color: '#1F2937' },
-  volEmail: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 1 },
-  volMeta: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.primary, marginTop: 3 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, alignSelf: 'flex-start' },
-  statusText: { fontFamily: fonts.bodyBold, fontSize: 11, textTransform: 'capitalize' },
+  card: {
+    backgroundColor: "white",
+    borderRadius: radius.xl,
+    padding: 14,
+    gap: 12,
+  },
+  cardRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontFamily: fonts.bodyBold, fontSize: 18, color: "white" },
+  volName: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1F2937" },
+  volEmail: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  volMeta: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    color: colors.primary,
+    marginTop: 3,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statusDot: { width: 6, height: 6, borderRadius: 3
+  },
+  statusText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    textTransform: "capitalize",
+  },
 
-  toursSection: { backgroundColor: '#F9FAFB', borderRadius: radius.lg, padding: 10, gap: 8 },
-  toursSectionLabel: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary, marginBottom: 2 },
-  tourRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tourDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  tourTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#1F2937' },
-  tourMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  toursSection: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: radius.lg,
+    padding: 10,
+    gap: 8,
+  },
+  toursSectionLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  tourRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  tourDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  tourTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#1F2937" },
+  tourMeta: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
   removeBtn: { padding: 4 },
 
-  actions: { flexDirection: 'row', gap: 8 },
-  assignBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.lg, backgroundColor: '#FEE8E2', borderWidth: 1, borderColor: colors.primary + '30' },
-  assignBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
-  activateBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.lg, backgroundColor: '#DCFCE7', borderWidth: 1, borderColor: '#16A34A30' },
-  suspendBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: radius.lg, backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: colors.error + '30' },
+  actions: { flexDirection: "row", gap: 8 },
+  assignBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: radius.lg,
+    backgroundColor: "#FEE8E2",
+    borderWidth: 1,
+    borderColor: colors.primary + "30",
+  },
+  assignBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.primary,
+  },
+  activateBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: radius.lg,
+    backgroundColor: "#DCFCE7",
+    borderWidth: 1,
+    borderColor: "#16A34A30",
+  },
+  suspendBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: radius.lg,
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: colors.error + "30",
+  },
   actionBtnText: { fontFamily: fonts.bodyBold, fontSize: 13 },
 
-  empty: { alignItems: 'center', paddingVertical: 60, gap: 8 },
-  emptyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#374151' },
-  emptySub: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
+  empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
+  emptyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#374151" },
+  emptySub: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 34, gap: 12 },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginBottom: 4 },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  modalTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: '#1F2937' },
-  modalVolName: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
-  tourListLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
-  tourOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderRadius: radius.lg, borderWidth: 1.5, borderColor: '#E5E7EB', marginBottom: 8, gap: 10 },
-  tourOptionActive: { borderColor: colors.primary, backgroundColor: '#FEE8E2' },
-  tourOptionLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  tourOptionTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#1F2937' },
-  tourOptionMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  assignConfirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: radius.lg, paddingVertical: 14, marginTop: 4 },
-  assignConfirmText: { fontFamily: fonts.bodyBold, fontSize: 15, color: 'white' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 34,
+    gap: 12,
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#E5E7EB",
+    alignSelf: "center",
+    marginBottom: 4,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitle: {
+    fontFamily: "Philosopher_700Bold",
+    fontSize: 20,
+    color: "#1F2937",
+  },
+  modalVolName: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  tourListLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  tourOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    marginBottom: 8,
+    gap: 10,
+  },
+  tourOptionActive: { borderColor: colors.primary, backgroundColor: "#FEE8E2" },
+  tourOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  tourOptionTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: "#1F2937",
+  },
+  tourOptionMeta: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  assignConfirmBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  assignConfirmText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: "white",
+  },
+  createHeaderBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+  },
+  createHeaderBtnTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: colors.primary,
+  },
+  createField: { marginBottom: 12 },
+  createLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  createInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderRadius: radius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#F9FAFB",
+  },
+  createInput: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: "#1F2937",
+  },
+
+  // Segmented tabs
+  segmentWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  segment: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    backgroundColor: "#F3F4F6",
+    height: 34,
+  },
+  segmentActive: { backgroundColor: colors.primary },
+  segmentText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  segmentTextActive: { color: "white" },
+  segmentBadge: {
+    backgroundColor: "rgba(0,0,0,0.1)",
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    minWidth: 18,
+    alignItems: "center",
+  },
+  segmentBadgeActive: { backgroundColor: "rgba(255,255,255,0.25)" },
+  segmentBadgeTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: colors.textSecondary,
+  },
+  segmentBadgeTxtActive: { color: "white" },
+
+  // Card new styles
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+    flexWrap: "wrap",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  docsBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#F9FAFB",
+    borderRadius: radius.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  docsText: { fontFamily: fonts.bodyBold, fontSize: 10 },
+  tourCountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F0F9FF",
+    borderRadius: radius.lg,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  tourCountTxt: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: colors.primary,
+  },
+  tourNames: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  actionStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    paddingTop: 10,
+    marginTop: 2,
+  },
+  stripBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 4,
+  },
+  stripBtnTxt: { fontFamily: fonts.bodyMedium, fontSize: 12 },
+  stripDivider: { width: 1, height: 20, backgroundColor: "#E5E7EB" },
 });

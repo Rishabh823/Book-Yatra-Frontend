@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts, radius, shadow } from "../lib/theme";
+import { DateInput } from "./DateInput";
 
 const TOUR_TYPES = [
   { k: "temple", label: "Temple" },
@@ -52,6 +53,8 @@ export const DEFAULT_FILTERS = {
   durations: [],
   priceRanges: [],
   sortBy: "date_asc",
+  dateFrom: "",
+  dateTo: "",
 };
 
 export default function FilterSheet({
@@ -95,7 +98,9 @@ export default function FilterSheet({
     local.types.length +
     local.durations.length +
     local.priceRanges.length +
-    (local.sortBy !== "date_asc" ? 1 : 0);
+    (local.sortBy !== "date_asc" ? 1 : 0) +
+    (local.dateFrom ? 1 : 0) +
+    (local.dateTo ? 1 : 0);
 
   const handleReset = useCallback(() => setLocal(DEFAULT_FILTERS), []);
   const handleApply = useCallback(() => {
@@ -150,6 +155,37 @@ export default function FilterSheet({
           showsVerticalScrollIndicator={false}
           style={{ flexGrow: 1 }}
         >
+          {/* Date Range */}
+          <View style={styles.group}>
+            <Text style={styles.groupLabel}>Travel Date Range</Text>
+            <View style={styles.dateRow}>
+              <View style={{ flex: 1 }}>
+                <DateInput
+                  label="From"
+                  value={local.dateFrom}
+                  onChange={(v) => setLocal((prev) => ({ ...prev, dateFrom: v, dateTo: prev.dateTo && v && prev.dateTo < v ? "" : prev.dateTo }))}
+                />
+              </View>
+              <Ionicons name="arrow-forward" size={14} color={colors.textDisabled} style={{ marginBottom: 8 }} />
+              <View style={{ flex: 1 }}>
+                <DateInput
+                  label="To"
+                  value={local.dateTo}
+                  onChange={(v) => setLocal((prev) => ({ ...prev, dateTo: v }))}
+                  minDate={local.dateFrom ? new Date(local.dateFrom + "T12:00:00") : undefined}
+                />
+              </View>
+              {(local.dateFrom || local.dateTo) && (
+                <TouchableOpacity
+                  onPress={() => setLocal((prev) => ({ ...prev, dateFrom: "", dateTo: "" }))}
+                  style={{ padding: 4, marginBottom: 8 }}
+                >
+                  <Ionicons name="close-circle" size={22} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
           {/* Sort */}
           <View style={styles.group}>
             <Text style={styles.groupLabel}>Sort By</Text>
@@ -323,6 +359,7 @@ const styles = StyleSheet.create({
   },
 
   group: { paddingHorizontal: 20, paddingTop: 20 },
+  dateRow: { flexDirection: "row", alignItems: "flex-end", gap: 6 },
   groupLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,

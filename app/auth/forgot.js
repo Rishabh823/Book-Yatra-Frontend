@@ -180,13 +180,13 @@ export default function Forgot() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.secondary }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+          contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={false}
@@ -472,8 +472,7 @@ const s = StyleSheet.create({
     marginTop: -28,
     paddingHorizontal: 24,
     paddingTop: 28,
-    paddingBottom: 40,
-    minHeight: 460,
+    paddingBottom: 48,
   },
 
   // ── Stepper ───────────────────────────────

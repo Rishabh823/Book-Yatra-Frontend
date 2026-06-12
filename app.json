@@ -5,8 +5,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "bookyatra",
+    "jsEngine": "jsc",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
+    "icon": "./assets/khatuShyamJiWallpapers.png",
+    "splash": {
+      "image": "./assets/khatuShyamJiWallpapers.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#5C1615"
+    },
     "plugins": [
       "expo-router",
       "expo-font",
@@ -19,7 +26,12 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.svg",
+      "name": "Book Yatra",
+      "shortName": "BK",
+      "description": "Sacred pilgrimage booking platform",
+      "themeColor": "#5C1615",
+      "backgroundColor": "#5C1615"
     },
     "extra": {
       "router": {
@@ -30,7 +42,15 @@
       }
     },
     "android": {
-      "package": "com.rishabh8233.bookyatramobile"
+      "package": "com.rishabh8233.bookyatramobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/khatuShyamJiWallpapers.png",
+        "backgroundColor": "#5C1615"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.rishabh8233.bookyatramobile",
+      "supportsTablet": true
     }
   }
 }

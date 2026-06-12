@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,22 +6,102 @@ import {
   TouchableOpacity,
   Alert,
   Vibration,
+  FlatList,
+  ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { api } from "../../lib/api";
-import { colors, fonts, radius } from "../../lib/theme";
+import { api, volunteerApi } from "../../lib/api";
+import { colors, fonts, radius, shadow } from "../../lib/theme";
+
+function TourPickerForScan({ onSelect }) {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [tours, setTours] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const res = await volunteerApi.dashboard();
+          setTours(res.data?.assignedTours || []);
+        } catch {}
+        setLoading(false);
+      })();
+    }, []),
+  );
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.bg }]}>
+      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={20} color="white" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Select Tour</Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+            Choose a tour to scan QR codes
+          </Text>
+        </View>
+      </LinearGradient>
+
+      {loading ? (
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+      ) : tours.length === 0 ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
+          <Ionicons name="bus-outline" size={48} color={colors.textDisabled} />
+          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary }}>
+            No tours assigned to you
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={tours}
+          keyExtractor={(t) => String(t._id)}
+          contentContainerStyle={{ padding: 16, gap: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16 }, shadow.soft]}
+              onPress={() => onSelect(item._id)}
+              activeOpacity={0.85}
+            >
+              <View style={{ width: 48, height: 48, borderRadius: radius.lg, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="qr-code" size={22} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary }} numberOfLines={1}>{item.title}</Text>
+                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{item.source} → {item.destination}</Text>
+                <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.primary, marginTop: 2 }}>{fmtDate(item.startDate)}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.textDisabled} />
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
+  );
+}
 
 export default function CheckInScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { tourId } = useLocalSearchParams();
+  const { tourId: paramTourId } = useLocalSearchParams();
+  const [activeTourId, setActiveTourId] = useState(paramTourId || null);
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState(null);
+
+  // Show tour picker if no tour is selected
+  if (!activeTourId) {
+    return <TourPickerForScan onSelect={(id) => setActiveTourId(id)} />;
+  }
 
   const handleScan = async ({ data }) => {
     if (scanned || loading) return;
@@ -31,7 +111,7 @@ export default function CheckInScreen() {
     try {
       const res = await api.post("/volunteer/scan-qr", {
         qrData: data,
-        tourId,
+        tourId: activeTourId,
       });
       setLastResult({
         success: true,
@@ -112,7 +192,7 @@ export default function CheckInScreen() {
           <Text style={styles.titleOverlay}>Scan Passenger QR</Text>
           <TouchableOpacity
             onPress={() =>
-              router.push("/volunteer/passengers?tourId=" + tourId)
+              router.push("/volunteer/passengers?tourId=" + activeTourId)
             }
             style={styles.listBtn}
           >

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   ActivityIndicator, RefreshControl, TextInput, ScrollView,
-  useWindowDimensions,
+  useWindowDimensions, Share,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -63,6 +63,23 @@ export default function AdminBookings() {
 
   const fmtRev = (n) => n >= 1000 ? `₹${(n / 1000).toFixed(1)}k` : `₹${n}`;
 
+  const exportCSV = async () => {
+    if (!filtered.length) return;
+    const header = "BookingID,Passenger,Tour,Date,Seats,Amount,Status,Payment";
+    const rows = filtered.map(b => [
+      String(b._id || "").slice(-8).toUpperCase(),
+      b.name || b.passengerName || b.userId?.name || "—",
+      b.tourTitle || b.tour?.title || "—",
+      b.tourId?.startDate ? new Date(b.tourId.startDate).toLocaleDateString("en-IN") : "—",
+      b.numberOfSeats || b.seats || 1,
+      b.totalAmount || b.amount || 0,
+      b.status || "—",
+      b.paymentStatus || "—",
+    ].map(v => `"${String(v).replace(/"/g, "'")}"`).join(","));
+    const csv = [header, ...rows].join("\n");
+    await Share.share({ message: `Bookings Export\n\n${csv}`, title: "Bookings CSV" });
+  };
+
   return (
     <AdminShell title="Manage Bookings" subtitle={`${filtered.length} of ${items.length}`}>
       {/* Stats strip */}
@@ -74,6 +91,10 @@ export default function AdminBookings() {
         <StripStat label="Pending" value={stats.pending} color="#D97706" />
         <View style={s.stripDiv} />
         <StripStat label="Revenue" value={fmtRev(stats.revenue)} color={colors.primary} />
+        <TouchableOpacity style={s.exportBtn} onPress={exportCSV}>
+          <Ionicons name="share-outline" size={14} color={colors.primary} />
+          <Text style={s.exportTxt}>Export</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Search + Filter */}
@@ -204,8 +225,10 @@ function StripStat({ label, value, color }) {
 }
 
 const s = StyleSheet.create({
-  statsStrip: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
-  stripDiv:   { width: 1, backgroundColor: colors.borderSubtle },
+  statsStrip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
+  stripDiv:   { width: 1, backgroundColor: colors.borderSubtle, height: 24, marginHorizontal: 6 },
+  exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: radius.lg },
+  exportTxt:  { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   stripVal:   { fontFamily: fonts.heading, fontSize: 18 },
   stripLbl:   { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
 

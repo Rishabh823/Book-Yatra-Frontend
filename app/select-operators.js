@@ -88,7 +88,7 @@ export default function SelectOperators() {
       user.joinedOperators = selectedOperators;
       await AsyncStorage.setItem('user', JSON.stringify(user));
       showToast(selectedIds.length === 0 ? 'All operators removed.' : 'Operators saved!', 'success');
-      setTimeout(() => router.back(), 800);
+      setTimeout(() => router.replace('/(tabs)'), 800);
     } catch (e) {
       showToast(e.message || 'Failed to save selection. Please try again.');
     } finally {
@@ -97,7 +97,7 @@ export default function SelectOperators() {
   };
 
   const isFirstTime = initialSelection.size === 0;
-  const onSkip = () => router.back();
+  const onSkip = () => router.replace('/(tabs)');
 
   const renderOperator = ({ item }) => {
     const isSelected = selected.has(item._id);

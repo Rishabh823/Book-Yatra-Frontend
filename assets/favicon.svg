@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7B1E1A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#3D0A0A;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5D78A;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#C49A28;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded rectangle -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- Subtle inner glow overlay -->
+  <rect width="512" height="512" rx="96" fill="none" stroke="#A0391A" stroke-width="2" opacity="0.5"/>
+
+  <!-- Decorative gold ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.4"/>
+  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#gold)" stroke-width="1" opacity="0.2"/>
+
+  <!-- Top decorative dot accent -->
+  <circle cx="256" cy="70" r="6" fill="url(#gold)" opacity="0.7"/>
+  <circle cx="256" cy="442" r="6" fill="url(#gold)" opacity="0.7"/>
+  <circle cx="70" cy="256" r="6" fill="url(#gold)" opacity="0.7"/>
+  <circle cx="442" cy="256" r="6" fill="url(#gold)" opacity="0.7"/>
+
+  <!-- Om symbol subtle (optional decorative) -->
+  <text x="256" y="158" font-family="serif" font-size="44" fill="url(#gold)" text-anchor="middle" opacity="0.5">ॐ</text>
+
+  <!-- BK main text -->
+  <text x="256" y="320" font-family="Georgia, Times New Roman, serif" font-size="220" font-weight="bold" fill="url(#gold)" text-anchor="middle" dominant-baseline="auto" letter-spacing="-8" filter="url(#glow)">BK</text>
+
+  <!-- Thin divider line -->
+  <rect x="156" y="340" width="200" height="2" rx="1" fill="url(#gold)" opacity="0.6"/>
+
+  <!-- BOOK YATRA subtitle -->
+  <text x="256" y="392" font-family="Georgia, serif" font-size="36" fill="#FFE9C0" text-anchor="middle" letter-spacing="6" opacity="0.9">BOOK YATRA</text>
+</svg>

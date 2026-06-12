@@ -54,19 +54,23 @@ export default function AnalyticsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [topTours, setTopTours] = useState([]);
+
   const load = useCallback(async (p) => {
     const activePeriod = p || period;
     try {
-      const [sumRes, chartRes, occRes] = await Promise.all([
-        api.get('/analytics/dashboard'),
+      const [sumRes, chartRes, occRes, toursRes] = await Promise.all([
+        api.get('/analytics/dashboard-summary'),
         api.get('/analytics/revenue?period=' + activePeriod),
         api.get('/analytics/occupancy'),
+        api.get('/analytics/tours?limit=5'),
       ]);
-      setSummary(sumRes.data);
+      setSummary(sumRes.data || sumRes);
       setChartData(
-        chartRes.data?.map(d => ({ label: d._id, value: d.revenue })) || []
+        (chartRes.data || chartRes || []).map(d => ({ label: d._id || d.label, value: d.revenue || d.total || 0 }))
       );
-      setOccupancy(occRes.data?.slice(0, 8) || []);
+      setOccupancy((occRes.data || occRes || []).slice(0, 8));
+      setTopTours((toursRes.data || toursRes || []).slice(0, 5));
     } catch {}
     setLoading(false);
     setRefreshing(false);
@@ -84,7 +88,7 @@ export default function AnalyticsScreen() {
     {
       label: 'Total Revenue',
       value: fmtCurrency(summary?.totalRevenue),
-      growth: summary?.revenueGrowth,
+      sub: 'This month: ' + fmtCurrency(summary?.monthRevenue),
       icon: 'cash',
       color: '#16A34A',
       bg: '#DCFCE7',
@@ -92,22 +96,24 @@ export default function AnalyticsScreen() {
     {
       label: 'Bookings',
       value: summary?.totalBookings || 0,
-      growth: summary?.bookingGrowth,
+      sub: summary?.monthlyGrowth != null ? pct(Number(summary.monthlyGrowth)) + ' MoM' : '',
       icon: 'calendar',
       color: '#2563EB',
       bg: '#DBEAFE',
     },
     {
-      label: 'Avg Occupancy',
-      value: (summary?.avgOccupancy || 0).toFixed(0) + '%',
-      icon: 'people',
+      label: 'Tours',
+      value: summary?.tourCount || 0,
+      sub: 'Total created',
+      icon: 'bus',
       color: '#7C3AED',
       bg: '#EDE9FE',
     },
     {
-      label: 'Active Tours',
-      value: summary?.activeTours || 0,
-      icon: 'map',
+      label: 'This Month',
+      value: fmtCurrency(summary?.monthRevenue),
+      sub: 'Revenue',
+      icon: 'trending-up',
       color: '#D97706',
       bg: '#FEF3C7',
     },
@@ -143,13 +149,9 @@ export default function AnalyticsScreen() {
                 <View style={[styles.kpiIconWrap, { backgroundColor: k.color + '22' }]}>
                   <Ionicons name={k.icon} size={18} color={k.color} />
                 </View>
-                <Text style={[styles.kpiValue, { color: k.color }]}>{k.value}</Text>
+                <Text style={[styles.kpiValue, { color: k.color }]}>{String(k.value)}</Text>
                 <Text style={styles.kpiLabel}>{k.label}</Text>
-                {k.growth !== undefined && (
-                  <Text style={[styles.kpiGrowth, { color: k.growth >= 0 ? '#16A34A' : '#DC2626' }]}>
-                    {pct(k.growth)} MoM
-                  </Text>
-                )}
+                {k.sub ? <Text style={styles.kpiGrowth}>{k.sub}</Text> : null}
               </View>
             ))}
           </View>
@@ -212,6 +214,47 @@ export default function AnalyticsScreen() {
               ))}
             </View>
           )}
+
+          {/* Top performing tours */}
+          {topTours.length > 0 && (
+            <View style={[styles.section, shadow.soft]}>
+              <Text style={styles.sectionTitle}>Top Tours by Revenue</Text>
+              {topTours.map((t, i) => (
+                <View key={t._id || i} style={styles.tourRow}>
+                  <View style={[styles.tourRankBadge, { backgroundColor: i === 0 ? '#FDE68A' : colors.borderSubtle }]}>
+                    <Text style={[styles.tourRankTxt, { color: i === 0 ? '#D97706' : colors.textSecondary }]}>#{i + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.tourRowTitle} numberOfLines={1}>{t.title || 'Tour'}</Text>
+                    <Text style={styles.tourRowMeta}>{t.totalBookings || 0} bookings · {fmtCurrency(t.revenue || t.totalRevenue || 0)}</Text>
+                  </View>
+                  <Text style={[styles.occPct, { color: colors.primary }]}>{fmtCurrency(t.revenue || t.totalRevenue || 0)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Quick actions */}
+          <View style={[styles.section, shadow.soft]}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {[
+                { label: 'All Bookings', icon: 'ticket', route: '/admin/bookings', color: '#2563EB', bg: '#DBEAFE' },
+                { label: 'My Tours', icon: 'bus', route: '/admin/tours', color: '#7C3AED', bg: '#EDE9FE' },
+                { label: 'Members', icon: 'people', route: '/admin/members', color: '#16A34A', bg: '#DCFCE7' },
+                { label: 'Enquiries', icon: 'chatbubble', route: '/admin/enquiries', color: '#D97706', bg: '#FEF3C7' },
+              ].map(a => (
+                <TouchableOpacity
+                  key={a.label}
+                  style={[styles.actionBtn, { backgroundColor: a.bg }]}
+                  onPress={() => router.push(a.route)}
+                >
+                  <Ionicons name={a.icon} size={16} color={a.color} />
+                  <Text style={[styles.actionBtnTxt, { color: a.color }]}>{a.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </ScrollView>
       )}
     </View>
@@ -290,4 +333,11 @@ const styles = StyleSheet.create({
     width: 36,
     textAlign: 'right',
   },
+  tourRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
+  tourRankBadge: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  tourRankTxt: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  tourRowTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
+  tourRowMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.lg },
+  actionBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });

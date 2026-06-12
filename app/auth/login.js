@@ -132,12 +132,16 @@ export default function Login() {
     setLoading(true);
     try {
       let res;
-      if (tab === 1) {
+      if (tab === 2) {
         res = await authApi.loginManager(emailOrMobile.trim(), password);
       } else {
         res = await authApi.login(emailOrMobile.trim(), password);
       }
-      if (
+      if (res?.user?.role === "volunteer" && res?.user?.isFirstLogin !== false) {
+        router.replace("/volunteer/onboarding");
+      } else if (res?.user?.role === "volunteer") {
+        router.replace("/volunteer");
+      } else if (
         res?.user?.role === "user" &&
         !(res?.user?.joinedOperators?.length > 0)
       ) {
@@ -206,11 +210,13 @@ export default function Login() {
             </View>
             <Text style={s.appLabel}>BOOK YATRA</Text>
             <Text style={s.heroTitle}>
-              {tab === 0 ? "Welcome Back" : "Manager Login"}
+              {tab === 0 ? "Welcome Back" : tab === 1 ? "Volunteer Login" : "Manager Login"}
             </Text>
             <Text style={s.heroSub}>
               {tab === 0
                 ? "Sign in to continue your sacred journey"
+                : tab === 1
+                ? "Access your volunteer dashboard"
                 : "Access your tour operator dashboard"}
             </Text>
           </LinearGradient>
@@ -221,20 +227,21 @@ export default function Login() {
             <View style={s.tabBar}>
               {[
                 { label: "Yatra Users", icon: "people-outline" },
-                { label: "Yatra Manager", icon: "bus-outline" },
+                { label: "Volunteer", icon: "shield-checkmark-outline" },
+                { label: "Manager", icon: "bus-outline" },
               ].map((item, i) => (
                 <TouchableOpacity
                   key={i}
                   style={[s.tabItem, tab === i && s.tabItemActive]}
                   onPress={() => switchTab(i)}
-                  testID={i === 0 ? "tab-users" : "tab-manager"}
+                  testID={i === 0 ? "tab-users" : i === 1 ? "tab-volunteer" : "tab-manager"}
                 >
                   <Ionicons
                     name={item.icon}
-                    size={15}
+                    size={14}
                     color={tab === i ? "#fff" : colors.textSecondary}
                   />
-                  <Text style={[s.tabText, tab === i && s.tabTextActive]}>
+                  <Text style={[s.tabText, tab === i && s.tabTextActive, { fontSize: 11 }]}>
                     {item.label}
                   </Text>
                 </TouchableOpacity>
@@ -246,13 +253,15 @@ export default function Login() {
               icon="mail-outline"
               label="Email or Mobile Number"
               placeholder={
-                tab === 1
+                tab === 2
                   ? "operator@example.com"
+                  : tab === 1
+                  ? "volunteer@example.com"
                   : "you@example.com or 98xxxxxxxx"
               }
               value={emailOrMobile}
               onChange={setEmailOrMobile}
-              kbType={tab === 1 ? "email-address" : "default"}
+              kbType={tab === 2 ? "email-address" : "default"}
               testID="login-email-input"
             />
             <InputField
@@ -288,7 +297,7 @@ export default function Login() {
               ) : (
                 <>
                   <Text style={s.ctaTxt}>
-                    {tab === 1 ? "Login as Manager" : "Sign In"}
+                    {tab === 2 ? "Login as Manager" : tab === 1 ? "Volunteer Sign In" : "Sign In"}
                   </Text>
                   <View style={s.ctaChevron}>
                     <Ionicons
@@ -300,6 +309,15 @@ export default function Login() {
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Volunteer hint */}
+            {tab === 1 && (
+              <View style={{ backgroundColor: "#EFF6FF", borderRadius: 12, padding: 12, marginTop: 4 }}>
+                <Text style={{ fontFamily: fonts.body, fontSize: 12, color: "#1E40AF", textAlign: "center" }}>
+                  Volunteer accounts are created by your bus operator admin. Contact them for your login credentials.
+                </Text>
+              </View>
+            )}
 
             {/* Guest option — Yatra Users only */}
             {tab === 0 && (
@@ -334,24 +352,26 @@ export default function Login() {
               </>
             )}
 
-            {/* Register link */}
-            <View style={s.regRow}>
-              <Text style={s.regTxt}>
-                {tab === 1 ? "New operator? " : "Don't have an account? "}
-              </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  router.push(
-                    `/auth/register?type=${tab === 1 ? "manager" : "user"}`,
-                  )
-                }
-                testID="goto-register"
-              >
-                <Text style={s.regLink}>
-                  {tab === 1 ? "Register here" : "Create account"}
+            {/* Register link — not shown for volunteer tab */}
+            {tab !== 1 && (
+              <View style={s.regRow}>
+                <Text style={s.regTxt}>
+                  {tab === 2 ? "New operator? " : "Don't have an account? "}
                 </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push(
+                      `/auth/register?type=${tab === 2 ? "manager" : "user"}`,
+                    )
+                  }
+                  testID="goto-register"
+                >
+                  <Text style={s.regLink}>
+                    {tab === 2 ? "Register here" : "Create account"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Admin entry — discreet */}
             <TouchableOpacity

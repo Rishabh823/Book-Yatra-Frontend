@@ -53,9 +53,28 @@ export default function VolunteerDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Redirect to onboarding if first login docs not yet submitted
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+          const userStr = await AsyncStorage.getItem("user");
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.role === "volunteer" && user.isFirstLogin !== false) {
+              router.replace("/volunteer/onboarding");
+              return;
+            }
+          }
+        } catch {}
+      })();
+    }, [])
+  );
+
   const load = useCallback(async () => {
     try {
-      const res = await api.get("/volunteers/dashboard");
+      const res = await api.get("/volunteer/dashboard");
       setData(res.data);
     } catch {}
     setLoading(false);

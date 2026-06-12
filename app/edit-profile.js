@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
-  ActivityIndicator, KeyboardAvoidingView, Platform, Image,
+  ActivityIndicator, KeyboardAvoidingView, Platform, Image, DeviceEventEmitter,
 } from 'react-native';
 import Toast from '../components/Toast';
 import { useToast } from '../lib/hooks/useToast';
@@ -65,6 +65,7 @@ export default function EditProfile() {
         setP('photoUrl', newUrl);
         const cached = await authApi.getUser();
         await AsyncStorage.setItem('user', JSON.stringify({ ...cached, photoUrl: newUrl }));
+        DeviceEventEmitter.emit('userPhotoChanged', newUrl);
         showToast('Profile photo updated.', 'success');
       }
     } catch (e) {

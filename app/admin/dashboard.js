@@ -16,9 +16,10 @@ const MODULES = [
   { icon: 'people',         label: 'Members',   route: '/admin/members',   color: '#16A34A',       bg: '#F0FDF4' },
   { icon: 'person',         label: 'Users',     route: '/admin/users',     color: '#0284C7',       bg: '#EFF6FF' },
   { icon: 'chatbubble',     label: 'Enquiries', route: '/admin/enquiries', color: '#D97706',       bg: '#FFFBEB' },
-  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',  color: '#EA580C',       bg: '#FFF7ED' },
-  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',   color: '#0891B2',       bg: '#ECFEFF' },
-  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',  color: colors.secondary, bg: '#FEF2F2' },
+  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',   color: '#EA580C',       bg: '#FFF7ED' },
+  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',    color: '#0891B2',       bg: '#ECFEFF' },
+  { icon: 'shield-checkmark', label: 'Moderate', route: '/admin/community', color: '#7C3AED',       bg: '#F5F3FF' },
+  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',   color: colors.secondary, bg: '#FEF2F2' },
 ];
 
 export default function AdminDashboard() {

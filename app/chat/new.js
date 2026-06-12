@@ -22,7 +22,7 @@ export default function NewChatScreen() {
     setSearching(true);
     try {
       const res = await api.get('/users/search?q=' + encodeURIComponent(text));
-      setResults(res.users || res.data || []);
+      setResults(Array.isArray(res) ? res : res.users || res.data || []);
     } catch {}
     setSearching(false);
   };

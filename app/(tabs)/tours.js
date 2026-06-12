@@ -3,38 +3,26 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Dimensions,
 } from "react-native";
-import { DateInput } from "../../components/DateInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+const { width: SCREEN_W } = Dimensions.get("window");
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
-import { tours as toursApi, auth as authApi } from "../../lib/api";
+import { tours as toursApi, auth as authApi, volunteerApi } from "../../lib/api";
 import SmartSearchBar from "../../components/SmartSearchBar";
 import FilterSheet, { DEFAULT_FILTERS } from "../../components/FilterSheet";
 import { useFavorites } from "../../lib/hooks/useFavorites";
-
-const FALLBACK =
-  "https://images.pexels.com/photos/11398067/pexels-photo-11398067.jpeg";
-
-const TOUR_TYPES = [
-  { k: "all", label: "All", icon: "apps-outline" },
-  { k: "temple", label: "Temple", icon: "business-outline" },
-  { k: "pilgrimage", label: "Pilgrimage", icon: "walk-outline" },
-  { k: "mountain", label: "Mountain", icon: "triangle-outline" },
-  { k: "leisure", label: "Leisure", icon: "sunny-outline" },
-  { k: "heritage", label: "Heritage", icon: "library-outline" },
-  { k: "beach", label: "Beach", icon: "water-outline" },
-  { k: "other", label: "Other", icon: "ellipsis-horizontal-outline" },
-];
+import { TourCardSkeleton } from "../../components/SkeletonCard";
+import FallbackImage from "../../components/FallbackImage";
 
 export default function Tours() {
   const router = useRouter();
@@ -43,8 +31,6 @@ export default function Tours() {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [opFilter, setOpFilter] = useState("all");
   const [q, setQ] = useState("");
@@ -52,12 +38,15 @@ export default function Tours() {
   const [userJoinedOps, setUserJoinedOps] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [advFilters, setAdvFilters] = useState(DEFAULT_FILTERS);
+  const [assignedTours, setAssignedTours] = useState([]);
+  const [volunteerLoading, setVolunteerLoading] = useState(false);
 
   const { isFav, toggle: toggleFav } = useFavorites();
 
   const isOperator =
     role === "admin" || role === "super_admin" || role === "manager";
   const isSuperAdmin = role === "super_admin";
+  const isVolunteer = role === "volunteer";
 
   const loadUserData = useCallback(async () => {
     const loggedIn = await authApi.isAuthenticated();
@@ -66,6 +55,14 @@ export default function Tours() {
     if (!loggedIn) return;
     const r = await authApi.getRole();
     setRole(r || "user");
+    if (r === "volunteer") {
+      setVolunteerLoading(true);
+      try {
+        const res = await volunteerApi.dashboard();
+        setAssignedTours(res.data?.assignedTours || []);
+      } catch {}
+      setVolunteerLoading(false);
+    }
     if (r === "user" || r === "volunteer" || r === "guest") {
       let ops = [];
       // 1. Try fresh from backend
@@ -195,16 +192,16 @@ export default function Tours() {
       if (!joinedIds.has(tourOpId)) return false;
     }
     // Date range filter — applies to everyone when set, otherwise hide past tours for users
-    if (dateFrom) {
-      const from = new Date(dateFrom + "T00:00:00");
+    if (advFilters.dateFrom) {
+      const from = new Date(advFilters.dateFrom + "T00:00:00");
       if (new Date(t.startDate) < from) return false;
     }
-    if (dateTo) {
-      const to = new Date(dateTo + "T23:59:59");
+    if (advFilters.dateTo) {
+      const to = new Date(advFilters.dateTo + "T23:59:59");
       if (new Date(t.startDate) > to) return false;
     }
-    // Hide past tours for regular users when no date filter active
-    if (!isOperator && !dateFrom && !dateTo) {
+    // Hide past tours only when user has no joined operator and no date filter set
+    if (!isOperator && userJoinedOps.length === 0 && !advFilters.dateFrom && !advFilters.dateTo) {
       if (new Date(t.startDate) < now) return false;
     }
 
@@ -245,69 +242,75 @@ export default function Tours() {
 
   const sortFn = (a, b) => {
     const s = advFilters.sortBy;
-    if (s === "price_asc") return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
-    if (s === "price_desc") return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
+    if (s === "price_asc")
+      return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+    if (s === "price_desc")
+      return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
     if (s === "date_desc") return new Date(b.startDate) - new Date(a.startDate);
-    if (s === "popular") return (b.totalSeats - b.availableSeats || 0) - (a.totalSeats - a.availableSeats || 0);
+    if (s === "popular")
+      return (
+        (b.totalSeats - b.availableSeats || 0) -
+        (a.totalSeats - a.availableSeats || 0)
+      );
     // date_asc (default)
     return new Date(a.startDate) - new Date(b.startDate);
   };
   filtered.sort(sortFn);
+
+  const activeFilterCount =
+    advFilters.types.length +
+    advFilters.priceRanges.length +
+    advFilters.durations.length +
+    (advFilters.sortBy !== "date_asc" ? 1 : 0) +
+    (advFilters.dateFrom ? 1 : 0) +
+    (advFilters.dateTo ? 1 : 0);
 
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top"]}
     >
-      <View style={s.header}>
-        <Text style={s.title}>Yatras</Text>
-        <Text style={s.sub}>Find your perfect journey</Text>
-      </View>
-
-      {/* Smart Search + Filter button */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
-          gap: 8,
-          marginHorizontal: 16,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <SmartSearchBar
-            value={q}
-            onChangeText={setQ}
-            onSubmit={(text) => setQ(text)}
-            onClear={() => setQ("")}
-            placeholder="Search destination, tour..."
-          />
+      {/* Gradient header */}
+      <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.header}>
+        <View style={s.headerTop}>
+          <View>
+            <Text style={s.title}>Yatras</Text>
+            <Text style={s.sub}>Find your perfect pilgrimage</Text>
+          </View>
+          {activeFilterCount > 0 && (
+            <View style={s.filterCountBadge}>
+              <Text style={s.filterCountTxt}>{activeFilterCount} Filters</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity
-          style={[
-            s.filterBtn,
-            advFilters.types.length +
-              advFilters.priceRanges.length +
-              advFilters.durations.length +
-              (advFilters.sortBy !== "date_asc" ? 1 : 0) >
-              0 && s.filterBtnActive,
-          ]}
-          onPress={() => setShowFilters(true)}
-        >
-          <Ionicons
-            name="options"
-            size={20}
-            color={
-              advFilters.types.length +
-                advFilters.priceRanges.length +
-                advFilters.durations.length +
-                (advFilters.sortBy !== "date_asc" ? 1 : 0) >
-              0
-                ? "white"
-                : colors.textSecondary
-            }
-          />
-        </TouchableOpacity>
-      </View>
+        {/* Search bar inside header */}
+        <View style={s.searchRow}>
+          <View style={s.searchBarWrap}>
+            <SmartSearchBar
+              value={q}
+              onChangeText={setQ}
+              onSubmit={(text) => setQ(text)}
+              onClear={() => setQ("")}
+              placeholder="Search destination, tour..."
+              style={s.searchBarInner}
+            />
+          </View>
+          <TouchableOpacity
+            style={[s.filterBtn, activeFilterCount > 0 && s.filterBtnActive]}
+            onPress={() => setShowFilters(true)}
+          >
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color={activeFilterCount > 0 ? "white" : "rgba(255,255,255,0.8)"}
+            />
+            {activeFilterCount > 0 && (
+              <View style={s.filterDot} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+
       <FilterSheet
         visible={showFilters}
         filters={advFilters}
@@ -315,50 +318,9 @@ export default function Tours() {
         onClose={() => setShowFilters(false)}
       />
 
-      {/* Date range filter — all logged-in users */}
-      {isLoggedIn && (
-        <View style={s.dateRow}>
-          <DateInput
-            label="From"
-            value={dateFrom}
-            onChange={setDateFrom}
-            style={{ flex: 1 }}
-          />
-          <Ionicons
-            name="arrow-forward"
-            size={14}
-            color={colors.textDisabled}
-          />
-          <DateInput
-            label="To"
-            value={dateTo}
-            onChange={(v) => {
-              setDateTo(v);
-            }}
-            minDate={dateFrom ? new Date(dateFrom + "T12:00:00") : undefined}
-            style={{ flex: 1 }}
-          />
-          {(dateFrom || dateTo) && (
-            <TouchableOpacity
-              onPress={() => {
-                setDateFrom("");
-                setDateTo("");
-              }}
-              style={s.clearDateBtn}
-            >
-              <Ionicons
-                name="close-circle"
-                size={22}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
       {/* Operator filter — shown when user follows multiple operators OR super_admin */}
       {showOpFilter && (
-        <View style={s.opRow}>
+        <View style={[s.opRow, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }]}>
           <Ionicons
             name="business-outline"
             size={13}
@@ -403,28 +365,72 @@ export default function Tours() {
         </View>
       )}
 
-      {/* Tour type chips */}
-      <View style={s.typeRow}>
-        {TOUR_TYPES.map((tt) => (
-          <TouchableOpacity
-            key={tt.k}
-            style={[s.typeChip, typeFilter === tt.k && s.typeChipActive]}
-            onPress={() => setTypeFilter(tt.k)}
-            testID={`type-${tt.k}`}
-          >
-            <Ionicons
-              name={tt.icon}
-              size={12}
-              color={typeFilter === tt.k ? "#fff" : colors.textSecondary}
-            />
-            <Text style={[s.typeText, typeFilter === tt.k && s.typeTextActive]}>
-              {tt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {authChecked && !isLoggedIn ? (
+      {authChecked && isLoggedIn && isVolunteer ? (
+        volunteerLoading ? (
+          <ActivityIndicator color={colors.primary} style={{ marginTop: 60 }} />
+        ) : assignedTours.length === 0 ? (
+          <View style={s.guest}>
+            <View style={s.guestIcon}>
+              <Ionicons name="bus-outline" size={40} color={colors.primary} />
+            </View>
+            <Text style={s.guestTitle}>No Assigned Tours</Text>
+            <Text style={s.guestSub}>You have not been assigned to any tours yet. Contact your admin.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={assignedTours}
+            keyExtractor={(t) => String(t._id)}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 4 }}
+            ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
+            renderItem={({ item }) => (
+              <View style={[s.volCard, shadow.card]}>
+                <View style={s.volCardTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.volCardTitle} numberOfLines={1}>{item.title}</Text>
+                    <View style={s.row}>
+                      <Ionicons name="location" size={12} color={colors.primary} />
+                      <Text style={s.volCardMeta}>{item.source} → {item.destination}</Text>
+                    </View>
+                    <View style={s.row}>
+                      <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
+                      <Text style={s.volCardDate}>
+                        {item.startDate ? new Date(item.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={s.volBadge}>
+                    <Ionicons name="shield-checkmark" size={13} color="#16A34A" />
+                    <Text style={s.volBadgeTxt}>Assigned</Text>
+                  </View>
+                </View>
+                <View style={s.volActions}>
+                  <TouchableOpacity
+                    style={[s.volBtn, { backgroundColor: "#DCFCE7" }]}
+                    onPress={() => router.push("/volunteer/checkin?tourId=" + item._id)}
+                  >
+                    <Ionicons name="location" size={15} color="#16A34A" />
+                    <Text style={[s.volBtnTxt, { color: "#16A34A" }]}>Check In</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[s.volBtn, { backgroundColor: "#EDE9FE" }]}
+                    onPress={() => router.push("/volunteer/checkin?tourId=" + item._id)}
+                  >
+                    <Ionicons name="qr-code" size={15} color="#7C3AED" />
+                    <Text style={[s.volBtnTxt, { color: "#7C3AED" }]}>Scan QR</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[s.volBtn, { backgroundColor: "#DBEAFE" }]}
+                    onPress={() => router.push("/volunteer/passengers?tourId=" + item._id)}
+                  >
+                    <Ionicons name="people" size={15} color="#2563EB" />
+                    <Text style={[s.volBtnTxt, { color: "#2563EB" }]}>Passengers</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        )
+      ) : authChecked && !isLoggedIn ? (
         <View style={s.guest}>
           <View style={s.guestIcon}>
             <Ionicons name="bus" size={40} color={colors.primary} />
@@ -470,17 +476,22 @@ export default function Tours() {
           </TouchableOpacity>
         </View>
       ) : loading ? (
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 16 }}>
+          {[1, 2, 3].map((k) => <TourCardSkeleton key={k} />)}
+        </View>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(item, i) => String(item._id || item.id || i)}
           contentContainerStyle={{
             paddingHorizontal: 16,
-            paddingBottom: 24,
-            paddingTop: 4,
+            paddingBottom: 32,
+            paddingTop: 12,
+            gap: 16,
+            maxWidth: 680,
+            alignSelf: "center",
+            width: "100%",
           }}
-          ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -498,14 +509,17 @@ export default function Tours() {
               <Text style={s.emptyText}>No tours match your filter</Text>
               {(typeFilter !== "all" ||
                 opFilter !== "all" ||
-                dateFrom ||
-                dateTo) && (
+                advFilters.dateFrom ||
+                advFilters.dateTo ||
+                advFilters.types.length > 0 ||
+                advFilters.priceRanges.length > 0 ||
+                advFilters.durations.length > 0 ||
+                advFilters.sortBy !== "date_asc") && (
                 <TouchableOpacity
                   onPress={() => {
                     setTypeFilter("all");
                     setOpFilter("all");
-                    setDateFrom("");
-                    setDateTo("");
+                    setAdvFilters(DEFAULT_FILTERS);
                   }}
                 >
                   <Text
@@ -527,6 +541,9 @@ export default function Tours() {
               typeof item.operatorId === "object"
                 ? item.operatorId?.businessName || item.operatorId?.name
                 : null;
+            const seatsLeft = item.availableSeats != null ? item.availableSeats : null;
+            const seatsTotal = item.totalSeats || null;
+            const seatsPercent = seatsLeft != null && seatsTotal ? (seatsLeft / seatsTotal) : null;
             return (
               <TouchableOpacity
                 activeOpacity={0.92}
@@ -534,69 +551,70 @@ export default function Tours() {
                 style={s.card}
                 testID={`tour-list-${item._id || item.id}`}
               >
-                <Image
-                  source={{ uri: item.coverPhotoUrl || FALLBACK }}
-                  style={s.img}
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.65)"]}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <View style={s.badgeRow}>
-                  <View style={s.badge}>
-                    <Text style={s.badgeText}>
-                      {fmt(item.startDate, item.endDate)}
-                    </Text>
+                {/* Image with gradient */}
+                <View style={s.cardImgWrap}>
+                  <FallbackImage source={{ uri: item.coverPhotoUrl }} style={s.img} />
+                  <LinearGradient
+                    colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.55)"]}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                  {/* Top badges */}
+                  <View style={s.badgeRow}>
+                    <View style={s.badge}>
+                      <Ionicons name="calendar-outline" size={10} color={colors.secondary} />
+                      <Text style={s.badgeText}>{fmt(item.startDate, item.endDate)}</Text>
+                    </View>
+                    {item.tourType && item.tourType !== "other" && (
+                      <View style={[s.badge, s.typeBadge]}>
+                        <Text style={[s.badgeText, { color: colors.primary }]}>
+                          {item.tourType.charAt(0).toUpperCase() + item.tourType.slice(1)}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                  {item.tourType && item.tourType !== "other" && (
-                    <View style={[s.badge, s.typeBadge]}>
-                      <Text style={[s.badgeText, { color: colors.primary }]}>
-                        {item.tourType.charAt(0).toUpperCase() +
-                          item.tourType.slice(1)}
-                      </Text>
+                  {/* Fav button */}
+                  {isLoggedIn && (
+                    <TouchableOpacity
+                      style={s.heartBtn}
+                      onPress={(e) => { e.stopPropagation?.(); toggleFav(item._id); }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons
+                        name={isFav(item._id) ? "heart" : "heart-outline"}
+                        size={17}
+                        color={isFav(item._id) ? "#EF4444" : "rgba(255,255,255,0.9)"}
+                      />
+                    </TouchableOpacity>
+                  )}
+                  {/* Seat pill on image */}
+                  {seatsLeft != null && (
+                    <View style={[s.seatBadge, seatsLeft < 5 && { backgroundColor: "#EF444490" }]}>
+                      <Ionicons name="people" size={10} color="#fff" />
+                      <Text style={s.seatBadgeTxt}>{seatsLeft} left</Text>
                     </View>
                   )}
                 </View>
-                {isLoggedIn && (
-                  <TouchableOpacity
-                    style={s.heartBtn}
-                    onPress={(e) => {
-                      e.stopPropagation?.();
-                      toggleFav(item._id);
-                    }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons
-                      name={isFav(item._id) ? "heart" : "heart-outline"}
-                      size={18}
-                      color={
-                        isFav(item._id) ? "#EF4444" : "rgba(255,255,255,0.8)"
-                      }
-                    />
-                  </TouchableOpacity>
-                )}
-                <View style={s.body}>
-                  <Text style={s.cardTitle} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <View style={s.row}>
-                    <Ionicons name="location" size={12} color="#FFE9C0" />
-                    <Text style={s.meta} numberOfLines={1}>
-                      {item.source} → {item.destination}
-                    </Text>
+
+                {/* Info section */}
+                <View style={s.cardInfo}>
+                  <Text style={s.cardTitle} numberOfLines={1}>{item.title}</Text>
+                  <View style={s.routeRow}>
+                    <Ionicons name="location" size={12} color={colors.primary} />
+                    <Text style={s.routeTxt} numberOfLines={1}>{item.source} → {item.destination}</Text>
                   </View>
                   {opName && (
-                    <View style={s.row}>
-                      <Ionicons name="business" size={11} color="#FFE9C0" />
-                      <Text style={s.meta} numberOfLines={1}>
-                        {opName}
-                      </Text>
+                    <View style={s.routeRow}>
+                      <Ionicons name="business-outline" size={11} color={colors.textSecondary} />
+                      <Text style={[s.routeTxt, { color: colors.textSecondary }]} numberOfLines={1}>{opName}</Text>
                     </View>
                   )}
-                  <View style={s.footer}>
-                    <Text style={s.price}>{item.price || "₹—"}</Text>
+                  <View style={s.cardFooter}>
+                    <View>
+                      <Text style={s.priceLabel}>Per Person</Text>
+                      <Text style={s.price}>{item.price || "₹—"}</Text>
+                    </View>
                     <View style={s.pill}>
-                      <Text style={s.pillText}>View Details</Text>
+                      <Text style={s.pillText}>Book Now</Text>
                       <Ionicons name="arrow-forward" size={11} color="#fff" />
                     </View>
                   </View>
@@ -611,34 +629,74 @@ export default function Tours() {
 }
 
 const s = StyleSheet.create({
-  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 },
+  // New gradient header
+  header: {
+    paddingTop: 8,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    zIndex: 100,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
   title: {
     fontFamily: fonts.heading,
     fontSize: 28,
-    color: colors.secondary,
+    color: "#FFFFFF",
     letterSpacing: -0.5,
   },
   sub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 2,
   },
-
+  filterCountBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  filterCountTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: "#fff" },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    zIndex: 200,
+  },
+  searchBarWrap: {
+    flex: 1,
+    zIndex: 200,
+  },
+  searchBarInner: {
+    borderRadius: radius.lg,
+  },
   filterBtn: {
     width: 46,
     height: 46,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 0,
+    position: "relative",
   },
   filterBtnActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  filterDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#FCD34D",
   },
   heartBtn: {
     position: "absolute",
@@ -651,29 +709,26 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  search: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textPrimary,
-    height: 44,
-  },
-
-  dateRow: {
+  seatBadge: {
+    position: "absolute",
+    bottom: 10,
+    left: 10,
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 6,
-    marginHorizontal: 16,
-    marginTop: 10,
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(22,163,74,0.85)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
   },
-  clearDateBtn: { padding: 4 },
+  seatBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
 
   opRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 16,
-    marginTop: 8,
+    paddingVertical: 8,
   },
   opChip: {
     paddingHorizontal: 11,
@@ -727,14 +782,18 @@ const s = StyleSheet.create({
   },
   typeTextActive: { color: "#fff" },
 
+  // Modern tour card
   card: {
-    height: 248,
     borderRadius: radius.xxl,
     overflow: "hidden",
-    backgroundColor: colors.elevated,
+    backgroundColor: colors.surface,
     ...shadow.card,
   },
-  img: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  cardImgWrap: {
+    height: 190,
+    position: "relative",
+  },
+  img: { width: "100%", height: "100%" },
   badgeRow: {
     position: "absolute",
     top: 12,
@@ -743,43 +802,54 @@ const s = StyleSheet.create({
     gap: 6,
   },
   badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: "rgba(255,255,255,0.95)",
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  typeBadge: { backgroundColor: "rgba(255,255,255,0.9)" },
+  typeBadge: { backgroundColor: "rgba(255,255,255,0.92)" },
   badgeText: {
     fontFamily: fonts.bodyBold,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.secondary,
   },
-  body: { position: "absolute", left: 0, right: 0, bottom: 0, padding: 14 },
-  cardTitle: {
-    color: "#fff",
-    fontFamily: fonts.heading,
-    fontSize: 20,
-    marginBottom: 3,
+  // Card info section (white/surface)
+  cardInfo: {
+    padding: 14,
+    gap: 4,
   },
-  row: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
-  meta: { color: "#FFE9C0", fontFamily: fonts.body, fontSize: 11, flex: 1 },
-  footer: {
+  cardTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  routeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  routeTxt: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, flex: 1 },
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
   },
-  price: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 18 },
+  priceLabel: { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1.5, marginBottom: 2 },
+  price: { color: colors.primary, fontFamily: fonts.bodyBold, fontSize: 18 },
   pill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     backgroundColor: colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: radius.pill,
   },
-  pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 11 },
+  pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 12 },
   empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
   emptyText: {
     fontFamily: fonts.bodyMedium,
@@ -845,4 +915,54 @@ const s = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: 15,
   },
+
+  // Volunteer assigned tour cards
+  volCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  volCardTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 16,
+    gap: 12,
+  },
+  volCardTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    color: colors.textPrimary,
+    marginBottom: 6,
+  },
+  volCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, flex: 1 },
+  volCardDate: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary, flex: 1 },
+  volBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  volBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: "#16A34A" },
+  volActions: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+  },
+  volBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 9,
+    borderRadius: radius.lg,
+  },
+  volBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  row: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
 });

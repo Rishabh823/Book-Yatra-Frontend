@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, Image, View } from "react-native";
+import { Platform, Image, View, DeviceEventEmitter } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts } from "../../lib/theme";
 
-// Profile tab icon — shows user's photo when available, refreshes when focused
+// Profile tab icon — shows user's photo when available, refreshes when focused or when photo changes
 function ProfileTabIcon({ color, focused }) {
   const [photoUrl, setPhotoUrl] = useState(null);
 
@@ -26,14 +26,25 @@ function ProfileTabIcon({ color, focused }) {
     load();
   }, [focused]); // re-check every time tab gains focus
 
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener("userPhotoChanged", (url) => {
+      setPhotoUrl(url || null);
+    });
+    return () => sub.remove();
+  }, []);
+
   if (photoUrl) {
     return (
-      <View style={{
-        width: 28, height: 28, borderRadius: 14,
-        borderWidth: focused ? 2 : 1.5,
-        borderColor: focused ? colors.primary : colors.textDisabled,
-        overflow: "hidden",
-      }}>
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          borderWidth: focused ? 2 : 1.5,
+          borderColor: focused ? colors.primary : colors.textDisabled,
+          overflow: "hidden",
+        }}
+      >
         <Image
           source={{ uri: photoUrl }}
           style={{ width: "100%", height: "100%" }}
@@ -100,10 +111,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="bhajans"
-        options={{ href: null }}
-      />
+      {/* <Tabs.Screen name="bhajans" options={{ href: null }} /> */}
       <Tabs.Screen
         name="bookings"
         options={{

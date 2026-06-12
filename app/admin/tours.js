@@ -102,8 +102,7 @@ export default function AdminTours() {
     : items;
 
   const openCreate = () => {
-    setForm(EMPTY_FORM);
-    setModal(true);
+    router.push("/admin/tour/create");
   };
 
   const f = (v, k) => setForm((prev) => ({ ...prev, [k]: v }));
@@ -166,7 +165,8 @@ export default function AdminTours() {
     if (!validate()) return;
     setSaving(true);
     try {
-      const cleanDate = (v) => (v ? v.replace(/[^0-9-]/g, "").replace(/-{2,}/g, "-") : v);
+      const cleanDate = (v) =>
+        v ? v.replace(/[^0-9-]/g, "").replace(/-{2,}/g, "-") : v;
       await toursApi.create({
         ...form,
         startDate: cleanDate(form.startDate),
@@ -288,6 +288,12 @@ export default function AdminTours() {
             </TouchableOpacity>
           ) : null}
         </View>
+        <TouchableOpacity
+          style={s.draftsBtn}
+          onPress={() => router.push("/admin/drafts")}
+        >
+          <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+        </TouchableOpacity>
         <TouchableOpacity style={s.newBtn} onPress={openCreate}>
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={s.newBtnTxt}>New Tour</Text>
@@ -591,6 +597,16 @@ const s = StyleSheet.create({
     borderRadius: radius.pill,
   },
   newBtnTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 13 },
+  draftsBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.primary + "40",
+  },
 
   card: {
     flexDirection: "row",

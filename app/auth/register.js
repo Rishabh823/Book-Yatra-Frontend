@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
@@ -18,38 +18,38 @@ const STEP_LABELS_REG = ['Email', 'Verify', 'Profile'];
 function StepBar({ step }) {
   return (
     <View style={sd.outer}>
-      <View style={sd.dotsRow}>
+      <View style={sd.track}>
         {[1, 2, 3].map((n, i) => (
-          <View key={n} style={{ flexDirection: 'row', alignItems: 'center', flex: i < 2 ? 1 : 0 }}>
-            <View style={[sd.dot, step >= n && sd.dotActive, step > n && sd.dotDone]}>
-              {step > n
-                ? <Ionicons name="checkmark" size={14} color="#fff" />
-                : <Text style={[sd.num, step >= n && { color: '#fff' }]}>{n}</Text>
-              }
+          <React.Fragment key={n}>
+            {i > 0 && <View style={[sd.line, step > i && sd.lineDone]} />}
+            <View style={sd.stepWrap}>
+              <View style={[sd.dot, step >= n && sd.dotActive, step > n && sd.dotDone]}>
+                {step > n
+                  ? <Ionicons name="checkmark" size={13} color="#fff" />
+                  : <Text style={[sd.num, step >= n && { color: '#fff' }]}>{n}</Text>
+                }
+              </View>
+              <Text style={[sd.lbl, step >= n && sd.lblActive]} numberOfLines={1}>
+                {STEP_LABELS_REG[i]}
+              </Text>
             </View>
-            {i < 2 && <View style={[sd.line, step > n && sd.lineDone]} />}
-          </View>
-        ))}
-      </View>
-      <View style={sd.labelsRow}>
-        {STEP_LABELS_REG.map((lbl, i) => (
-          <Text key={lbl} style={[sd.lbl, step >= i + 1 && sd.lblActive]}>{lbl}</Text>
+          </React.Fragment>
         ))}
       </View>
     </View>
   );
 }
 const sd = StyleSheet.create({
-  outer:     { marginVertical: 16 },
-  dotsRow:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, marginBottom: 8 },
-  dot:       { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.borderSubtle },
+  outer:     { marginVertical: 16, paddingHorizontal: 8 },
+  track:     { flexDirection: 'row', alignItems: 'flex-start' },
+  stepWrap:  { alignItems: 'center', width: 62 },
+  dot:       { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.borderSubtle },
   dotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   dotDone:   { backgroundColor: colors.success, borderColor: colors.success },
   num:       { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
-  line:      { flex: 1, height: 2, backgroundColor: colors.borderSubtle, marginHorizontal: 4 },
+  line:      { flex: 1, height: 2, backgroundColor: colors.borderSubtle, marginTop: 15, marginHorizontal: 2 },
   lineDone:  { backgroundColor: colors.success },
-  labelsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 2 },
-  lbl:       { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, width: 70, textAlign: 'center' },
+  lbl:       { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 5, textAlign: 'center' },
   lblActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 });
 
