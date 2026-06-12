@@ -18,7 +18,30 @@
       "expo-router",
       "expo-font",
       "@react-native-community/datetimepicker",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Book Yatra needs camera access to scan QR codes and capture photos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/khatuShyamJiWallpapers.png",
+          "color": "#5C1615",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Book Yatra needs access to your photos to upload images.",
+          "cameraPermission": "Book Yatra needs camera access to take photos."
+        }
+      ],
+      "expo-local-authentication"
     ],
     "experiments": {
       "typedRoutes": false
@@ -46,7 +69,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/khatuShyamJiWallpapers.png",
         "backgroundColor": "#5C1615"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.rishabh8233.bookyatramobile",
