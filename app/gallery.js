@@ -66,7 +66,7 @@ export default function Gallery() {
           keyExtractor={(it, i) => String(it._id || it.id || i)}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}
           columnWrapperStyle={{ gap: GAP, marginBottom: GAP }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
           ListEmptyComponent={() => (
             <View style={s.empty}>
               <Ionicons name="images-outline" size={48} color={colors.textDisabled} />

@@ -69,7 +69,7 @@ export default function LeaderboardScreen() {
           keyExtractor={(item, i) => String(item._id || i)}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: insets.bottom + 20 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} colors={[colors.primary]} />}
           ListHeaderComponent={
             top3.length >= 3 ? (
               <View style={styles.podium}>

@@ -178,7 +178,7 @@ export default function DocumentVaultScreen() {
                 setRefreshing(true);
                 load();
               }}
-              tintColor={colors.primary}
+              tintColor={colors.primary} colors={[colors.primary]}
             />
           }
           ListEmptyComponent={

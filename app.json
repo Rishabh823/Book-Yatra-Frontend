@@ -5,14 +5,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "bookyatra",
-    "jsEngine": "jsc",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
-    "icon": "./assets/khatuShyamJiWallpapers.png",
+    "newArchEnabled": true,
+    "icon": "./assets/app-icon.png",
     "splash": {
-      "image": "./assets/khatuShyamJiWallpapers.png",
+      "image": "./assets/app-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#5C1615"
+      "backgroundColor": "#3D0A0A"
     },
     "plugins": [
       "expo-router",
@@ -28,7 +27,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/khatuShyamJiWallpapers.png",
+          "icon": "./assets/app-icon.png",
           "color": "#5C1615",
           "defaultChannel": "default",
           "sounds": []
@@ -67,8 +66,8 @@
     "android": {
       "package": "com.rishabh8233.bookyatramobile",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/khatuShyamJiWallpapers.png",
-        "backgroundColor": "#5C1615"
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#3D0A0A"
       },
       "permissions": [
         "android.permission.CAMERA",

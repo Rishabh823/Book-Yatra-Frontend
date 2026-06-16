@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
-  Alert, ScrollView, Switch, Platform,
+  Alert, ScrollView, Switch, Platform, DeviceEventEmitter,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
@@ -20,12 +21,14 @@ const DEFAULTS = {
 };
 
 export default function AdminSettings() {
-  const [cfg, setCfg]     = useState(DEFAULTS);
+  const [cfg, setCfg]         = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [dirty, setDirty]     = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
+    AsyncStorage.getItem('role').then(r => setIsSuperAdmin(r === 'super_admin')).catch(() => {});
     api.get('/settings').then(res => {
       const s = res?.data || res || {};
       setCfg({ ...DEFAULTS, ...s });
@@ -51,6 +54,7 @@ export default function AdminSettings() {
         contactEmail: cfg.contactEmail,
       });
       setDirty(false);
+      DeviceEventEmitter.emit("appSettingsChanged", cfg);
       Alert.alert('Saved', 'Settings updated successfully.');
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to save settings.');
@@ -72,16 +76,18 @@ export default function AdminSettings() {
         {/* ── Platform Control ─────────────────────────────── */}
         <SectionLabel icon="shield-outline" title="Platform Control" />
 
-        <View style={s.card}>
-          <ToggleRow
-            icon="construct-outline"
-            label="Maintenance Mode"
-            hint="Shows a maintenance message to all app users. Admin panel still works."
-            value={cfg.maintenanceMode}
-            onChange={v => set('maintenanceMode', v)}
-            danger
-          />
-        </View>
+        {isSuperAdmin && (
+          <View style={s.card}>
+            <ToggleRow
+              icon="construct-outline"
+              label="Maintenance Mode"
+              hint="Hides all tabs and shows a maintenance screen to all users. Only super admins can access the app."
+              value={cfg.maintenanceMode}
+              onChange={v => set('maintenanceMode', v)}
+              danger
+            />
+          </View>
+        )}
 
         <View style={s.card}>
           <ToggleRow

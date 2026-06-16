@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Fragment } from "react";
 import {
   useFonts,
   Philosopher_400Regular,
@@ -18,12 +18,13 @@ import { colors } from "../lib/theme";
 import { LanguageProvider } from "../lib/LanguageContext";
 import { AppLockProvider, useAppLock } from "../lib/security/appLockContext";
 import AppLockScreen from "../components/AppLockScreen";
-import { ThemeProvider } from "../lib/ThemeContext";
+import { ThemeProvider, useTheme } from "../lib/ThemeContext";
 import { registerPushToken, addNotificationListener, addResponseListener } from "../lib/notifications";
 import { useRouter } from "expo-router";
 
 function AppNavigator() {
   const router = useRouter();
+  const { theme, isDark } = useTheme();
 
   useEffect(() => {
     registerPushToken().catch(() => {});
@@ -48,10 +49,12 @@ function AppNavigator() {
   if (isLocked) return <AppLockScreen />;
 
   return (
+    <Fragment>
+      <StatusBar style={isDark ? "light" : "dark"} />
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.bg },
+        contentStyle: { backgroundColor: theme.bg },
         animation: "fade",
       }}
     >
@@ -219,6 +222,7 @@ function AppNavigator() {
       <Stack.Screen name="admin/super/finance" />
       <Stack.Screen name="admin/super/withdrawals" />
     </Stack>
+    </Fragment>
   );
 }
 
@@ -252,7 +256,6 @@ export default function RootLayout() {
       <ThemeProvider>
         <SafeAreaProvider>
           <AppLockProvider>
-            <StatusBar style="dark" />
             <AppNavigator />
           </AppLockProvider>
         </SafeAreaProvider>

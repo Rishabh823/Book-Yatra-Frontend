@@ -118,7 +118,7 @@ export default function DevicesScreen() {
               setRefreshing(true);
               load(true);
             }}
-            tintColor={colors.primary}
+            tintColor={colors.primary} colors={[colors.primary]}
           />
         }
       >

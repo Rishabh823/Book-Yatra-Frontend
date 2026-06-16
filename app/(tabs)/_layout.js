@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, Image, View, DeviceEventEmitter } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Platform, Image, View, Text, StyleSheet, DeviceEventEmitter } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../../lib/theme";
+import { useTheme } from "../../lib/ThemeContext";
+import { publicSettings } from "../../lib/api";
 
 // Profile tab icon — shows user's photo when available, refreshes when focused or when photo changes
 function ProfileTabIcon({ color, focused }) {
@@ -63,25 +67,79 @@ function ProfileTabIcon({ color, focused }) {
   );
 }
 
+function MaintenanceScreen() {
+  return (
+    <View style={ms.root}>
+      <LinearGradient colors={["#0D0507", "#1E0A0A", "#2D1010"]} style={StyleSheet.absoluteFill} />
+      <View style={ms.iconWrap}>
+        <Ionicons name="construct-outline" size={48} color={colors.primary} />
+      </View>
+      <Text style={ms.title}>Under Maintenance</Text>
+      <Text style={ms.body}>
+        We're making improvements to serve you better.{"\n"}The app will be back shortly.
+      </Text>
+      <View style={ms.divider} />
+      <Text style={ms.brand}>Shyam Sawariya Parivar</Text>
+    </View>
+  );
+}
+
+const ms = StyleSheet.create({
+  root: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, backgroundColor: "#1E0A0A" },
+  iconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(217,93,57,0.15)", borderWidth: 1.5, borderColor: "rgba(217,93,57,0.35)", alignItems: "center", justifyContent: "center", marginBottom: 28 },
+  title: { fontFamily: fonts.heading, fontSize: 26, color: "white", textAlign: "center", marginBottom: 14 },
+  body: { fontFamily: fonts.body, fontSize: 15, color: "rgba(255,255,255,0.55)", textAlign: "center", lineHeight: 24, maxWidth: 290 },
+  divider: { width: 60, height: 1, backgroundColor: "rgba(255,255,255,0.12)", marginVertical: 36 },
+  brand: { fontFamily: fonts.accent, fontSize: 11, color: colors.primary, letterSpacing: 2, textTransform: "uppercase" },
+});
+
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const androidPaddingBottom = Math.max(insets.bottom, 4);
+  const { theme } = useTheme();
+
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      const role = await AsyncStorage.getItem("role").catch(() => null);
+      setIsSuperAdmin(role === "super_admin");
+      try {
+        const settings = await publicSettings.get();
+        setMaintenanceMode(settings?.maintenanceMode ?? false);
+      } catch {}
+    };
+    init();
+
+    const sub = DeviceEventEmitter.addListener("appSettingsChanged", (cfg) => {
+      setMaintenanceMode(cfg.maintenanceMode ?? false);
+    });
+    return () => sub.remove();
+  }, []);
+
+  if (maintenanceMode && !isSuperAdmin) {
+    return <MaintenanceScreen />;
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textDisabled,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textDisabled,
         tabBarLabelStyle: {
           fontFamily: fonts.bodyMedium,
           fontSize: 11,
           marginTop: -2,
         },
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.borderSubtle,
+          backgroundColor: theme.surface,
+          borderTopColor: theme.borderSubtle,
           borderTopWidth: 1,
-          height: Platform.OS === "ios" ? 88 : 68,
+          height: Platform.OS === "ios" ? 88 : 56 + androidPaddingBottom,
           paddingTop: 8,
-          paddingBottom: Platform.OS === "ios" ? 28 : 10,
+          paddingBottom: Platform.OS === "ios" ? 28 : androidPaddingBottom,
         },
       }}
     >

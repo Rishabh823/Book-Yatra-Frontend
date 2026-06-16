@@ -112,7 +112,7 @@ export default function ActivityScreen() {
           renderItem={renderItem}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: insets.bottom + 32, gap: 8, maxWidth: 520, width: '100%', alignSelf: 'center' }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />
           }
           onEndReached={loadMore}
           onEndReachedThreshold={0.3}

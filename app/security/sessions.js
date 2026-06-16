@@ -77,7 +77,7 @@ export default function SessionsScreen() {
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 32, paddingTop: 16, gap: 10, maxWidth: 520, width: '100%', alignSelf: 'center' }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />}
       >
         {!loading && otherSessions.length > 1 && (
           <TouchableOpacity style={styles.revokeAllBtn} onPress={handleRevokeAll}>

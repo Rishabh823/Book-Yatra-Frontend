@@ -94,7 +94,7 @@ export default function SecurityCenter() {
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 24, maxWidth: 520, width: '100%', alignSelf: 'center' }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />}
       >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security Features</Text>

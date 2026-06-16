@@ -125,7 +125,7 @@ export default function NotificationsScreen() {
           keyExtractor={(item, i) => String(item._id || i)}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: insets.bottom + 20 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />}
           onEndReached={() => hasMore && load()}
           onEndReachedThreshold={0.3}
           ListEmptyComponent={

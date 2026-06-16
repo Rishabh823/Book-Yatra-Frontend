@@ -1,6 +1,14 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Animated, Vibration, Alert, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useRef, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Animated,
+  Vibration,
+  Alert,
+  StyleSheet,
+} from "react-native";
+import { useRouter } from "expo-router";
 
 export default function SOSButton({ tourId, size = 60 }) {
   const router = useRouter();
@@ -10,13 +18,25 @@ export default function SOSButton({ tourId, size = 60 }) {
 
   const onPressIn = useCallback(() => {
     setHolding(true);
-    Animated.spring(scaleAnim, { toValue: 0.88, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 0.88,
+      useNativeDriver: true,
+    }).start();
     holdTimer.current = setTimeout(() => {
       Vibration.vibrate([200, 100, 200]);
-      Alert.alert('Trigger SOS?', 'This will alert all administrators and tour guides immediately.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Send SOS', style: 'destructive', onPress: () => router.push('/sos' + (tourId ? '?tourId=' + tourId : '')) }
-      ]);
+      Alert.alert(
+        "Trigger SOS?",
+        "This will alert all administrators and tour guides immediately.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Send SOS",
+            style: "destructive",
+            onPress: () =>
+              router.push("/sos" + (tourId ? "?tourId=" + tourId : "")),
+          },
+        ],
+      );
     }, 2000);
   }, [tourId, router, scaleAnim]);
 
@@ -29,7 +49,10 @@ export default function SOSButton({ tourId, size = 60 }) {
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
-        style={[styles.btn, { width: size, height: size, borderRadius: size / 2 }]}
+        style={[
+          styles.btn,
+          { width: size, height: size, borderRadius: size / 2 },
+        ]}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={0.85}
@@ -42,7 +65,21 @@ export default function SOSButton({ tourId, size = 60 }) {
 }
 
 const styles = StyleSheet.create({
-  btn: { backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', shadowColor: '#DC2626', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 8, elevation: 8 },
-  text: { color: 'white', fontFamily: 'Manrope_700Bold', fontWeight: 'bold' },
-  hint: { color: 'rgba(255,255,255,0.8)', fontSize: 9, position: 'absolute', bottom: '15%' },
+  btn: {
+    backgroundColor: "#DC2626",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#DC2626",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  text: { color: "white", fontFamily: "Manrope_700Bold", fontWeight: "bold" },
+  hint: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 9,
+    position: "absolute",
+    bottom: "15%",
+  },
 });

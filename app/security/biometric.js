@@ -14,12 +14,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBiometric } from "../../lib/hooks/useBiometric";
 import { securityApi } from "../../lib/api";
+import { secureStorage } from "../../lib/security/secureStorage";
+import { useAppLock } from "../../lib/security/appLockContext";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 
 export default function BiometricScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { checkSupport, authenticate } = useBiometric();
+  const { loadSettings } = useAppLock();
 
   const [support, setSupport] = useState(null);
   const [enabled, setEnabled] = useState(false);
@@ -64,10 +67,13 @@ export default function BiometricScreen() {
           await securityApi.enableBiometric({
             biometricType: support.biometricType,
           });
+          // Save locally so the app lock context can detect biometric mode
+          await secureStorage.set('biometric_enabled', { enabled: true, type: support.biometricType });
+          await loadSettings();
           setEnabled(true);
           Alert.alert(
             "Enabled",
-            "Biometric login is now active. You can unlock the app and log in using your biometrics.",
+            "Biometric login is now active. The app will lock when you switch away and unlock with your biometrics.",
           );
         } else {
           Alert.alert(
@@ -80,6 +86,8 @@ export default function BiometricScreen() {
                 style: "destructive",
                 onPress: async () => {
                   await securityApi.disableBiometric();
+                  await secureStorage.remove('biometric_enabled');
+                  await loadSettings();
                   setEnabled(false);
                 },
               },

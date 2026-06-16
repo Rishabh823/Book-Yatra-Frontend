@@ -126,7 +126,7 @@ export default function Favorites() {
           numColumns={1}
           contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32, gap: 12 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />
           }
           onEndReached={loadMore}
           onEndReachedThreshold={0.3}

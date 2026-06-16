@@ -11,6 +11,7 @@ import {
   Animated,
   RefreshControl,
   ActivityIndicator,
+  DeviceEventEmitter,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,16 +30,17 @@ import {
 } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { resolveImageUrl } from "../../lib/utils";
+import { useTheme } from "../../lib/ThemeContext";
 
 const { width } = Dimensions.get("window");
 const BANNERS = [
-  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
-  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
-  "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
-  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
-  "https://images.pexels.com/photos/11398067/pexels-photo-11398067.jpeg?auto=compress&cs=tinysrgb&w=1400",
-  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
+  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+  "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+  "https://images.pexels.com/photos/11398067/pexels-photo-11398067.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
 ];
 
 // ─── Reusable Section Header ──────────────────────────────────────────────────
@@ -212,6 +214,7 @@ function fmtStat(n) {
 export default function Home() {
   const router = useRouter();
   const { lang, t, toggle } = useLang();
+  const { theme } = useTheme();
   const [slide, setSlide] = useState(0);
   const [upcoming, setUpcoming] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -479,6 +482,8 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Prefetch all banner images immediately so carousel loads faster
+    BANNERS.forEach((url) => Image.prefetch(url).catch(() => {}));
     load();
   }, []);
 
@@ -488,6 +493,17 @@ export default function Home() {
       4500,
     );
     return () => clearInterval(i);
+  }, []);
+
+  // Immediately reflect admin settings changes (maintenance mode / announcement)
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener("appSettingsChanged", (cfg) => {
+      setAppSettings({
+        maintenanceMode: cfg.maintenanceMode,
+        announcement: cfg.announcement || "",
+      });
+    });
+    return () => sub.remove();
   }, []);
 
   const onRefresh = async () => {
@@ -716,7 +732,7 @@ export default function Home() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: colors.bg,
+          backgroundColor: theme.bg,
           alignItems: "center",
           justifyContent: "center",
           padding: 32,
@@ -754,7 +770,7 @@ export default function Home() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg }}
+      style={{ flex: 1, backgroundColor: theme.bg }}
       edges={["top"]}
     >
       <ScrollView
@@ -764,13 +780,13 @@ export default function Home() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.primary} colors={[colors.primary]}
           />
         }
         testID="home-scroll"
       >
         {/* Announcement Banner */}
-        {!!appSettings.announcement && (
+        {!!(appSettings.announcement?.trim()) && (
           <View style={styles.announcementBanner}>
             <Ionicons name="megaphone-outline" size={15} color="#92400E" />
             <Text style={styles.announcementText} numberOfLines={3}>
@@ -1605,6 +1621,18 @@ export default function Home() {
           <Text style={styles.mantraEn}>{t.mantraEn}</Text>
         </View>
       </ScrollView>
+
+      {/* Floating SOS button — only for logged-in users */}
+      {isLoggedIn && (
+        <TouchableOpacity
+          style={styles.sosFab}
+          onPress={() => router.push("/sos")}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="warning" size={18} color="white" />
+          <Text style={styles.sosFabTxt}>SOS</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -1829,7 +1857,8 @@ const styles = StyleSheet.create({
 
   quickGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   quickCard: {
-    width: (width - 48 - 12) / 2,
+    flex: 1,
+    minWidth: 130,
     backgroundColor: colors.surface,
     padding: 16,
     borderRadius: radius.xl,
@@ -2098,7 +2127,8 @@ const styles = StyleSheet.create({
 
   whyGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 16 },
   whyCard: {
-    width: (width - 48 - 12) / 2,
+    flex: 1,
+    minWidth: 130,
     backgroundColor: colors.surface,
     padding: 16,
     borderRadius: radius.xl,
@@ -2360,5 +2390,28 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: "uppercase",
     textAlign: "center",
+  },
+  sosFab: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#DC2626",
+    borderRadius: 28,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    shadowColor: "#DC2626",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  sosFabTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: "white",
+    letterSpacing: 1,
   },
 });

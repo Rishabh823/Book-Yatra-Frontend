@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -321,6 +321,7 @@ const sm = StyleSheet.create({
 const STEP_LABELS = ["Personal", "Select Seats", "Review"];
 
 export default function Booking() {
+  const insets = useSafeAreaInsets();
   const { tourId } = useLocalSearchParams();
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
@@ -1102,7 +1103,7 @@ export default function Booking() {
         </ScrollView>
 
         {/* Sticky CTA */}
-        <SafeAreaView edges={["bottom"]} style={s.stickyWrap}>
+        <View style={[s.stickyWrap, { paddingBottom: insets.bottom }]}>
           <View style={s.sticky}>
             {step > 1 && (
               <TouchableOpacity
@@ -1144,7 +1145,7 @@ export default function Booking() {
               </TouchableOpacity>
             )}
           </View>
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
 
       <RazorpayCheckout

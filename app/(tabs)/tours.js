@@ -17,7 +17,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
-import { tours as toursApi, auth as authApi, volunteerApi } from "../../lib/api";
+import {
+  tours as toursApi,
+  auth as authApi,
+  volunteerApi,
+} from "../../lib/api";
 import SmartSearchBar from "../../components/SmartSearchBar";
 import FilterSheet, { DEFAULT_FILTERS } from "../../components/FilterSheet";
 import { useFavorites } from "../../lib/hooks/useFavorites";
@@ -200,9 +204,10 @@ export default function Tours() {
       const to = new Date(advFilters.dateTo + "T23:59:59");
       if (new Date(t.startDate) > to) return false;
     }
-    // Hide past tours only when user has no joined operator and no date filter set
-    if (!isOperator && userJoinedOps.length === 0 && !advFilters.dateFrom && !advFilters.dateTo) {
-      if (new Date(t.startDate) < now) return false;
+    // Hide expired tours for all non-admin users (regardless of joined operators)
+    if (!isOperator && !advFilters.dateFrom && !advFilters.dateTo) {
+      const tourEnd = t.endDate ? new Date(t.endDate) : new Date(t.startDate);
+      if (tourEnd < now) return false;
     }
 
     // ── Advanced filters from FilterSheet ──────────────────────────
@@ -304,9 +309,7 @@ export default function Tours() {
               size={20}
               color={activeFilterCount > 0 ? "white" : "rgba(255,255,255,0.8)"}
             />
-            {activeFilterCount > 0 && (
-              <View style={s.filterDot} />
-            )}
+            {activeFilterCount > 0 && <View style={s.filterDot} />}
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -320,7 +323,16 @@ export default function Tours() {
 
       {/* Operator filter — shown when user follows multiple operators OR super_admin */}
       {showOpFilter && (
-        <View style={[s.opRow, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }]}>
+        <View
+          style={[
+            s.opRow,
+            {
+              backgroundColor: colors.surface,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.borderSubtle,
+            },
+          ]}
+        >
           <Ionicons
             name="business-outline"
             size={13}
@@ -374,56 +386,99 @@ export default function Tours() {
               <Ionicons name="bus-outline" size={40} color={colors.primary} />
             </View>
             <Text style={s.guestTitle}>No Assigned Tours</Text>
-            <Text style={s.guestSub}>You have not been assigned to any tours yet. Contact your admin.</Text>
+            <Text style={s.guestSub}>
+              You have not been assigned to any tours yet. Contact your admin.
+            </Text>
           </View>
         ) : (
           <FlatList
             data={assignedTours}
             keyExtractor={(t) => String(t._id)}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, paddingTop: 4 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 24,
+              paddingTop: 4,
+            }}
             ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
             renderItem={({ item }) => (
               <View style={[s.volCard, shadow.card]}>
                 <View style={s.volCardTop}>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.volCardTitle} numberOfLines={1}>{item.title}</Text>
+                    <Text style={s.volCardTitle} numberOfLines={1}>
+                      {item.title}
+                    </Text>
                     <View style={s.row}>
-                      <Ionicons name="location" size={12} color={colors.primary} />
-                      <Text style={s.volCardMeta}>{item.source} → {item.destination}</Text>
+                      <Ionicons
+                        name="location"
+                        size={12}
+                        color={colors.primary}
+                      />
+                      <Text style={s.volCardMeta}>
+                        {item.source} → {item.destination}
+                      </Text>
                     </View>
                     <View style={s.row}>
-                      <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
+                      <Ionicons
+                        name="calendar-outline"
+                        size={12}
+                        color={colors.textSecondary}
+                      />
                       <Text style={s.volCardDate}>
-                        {item.startDate ? new Date(item.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                        {item.startDate
+                          ? new Date(item.startDate).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )
+                          : "—"}
                       </Text>
                     </View>
                   </View>
                   <View style={s.volBadge}>
-                    <Ionicons name="shield-checkmark" size={13} color="#16A34A" />
+                    <Ionicons
+                      name="shield-checkmark"
+                      size={13}
+                      color="#16A34A"
+                    />
                     <Text style={s.volBadgeTxt}>Assigned</Text>
                   </View>
                 </View>
                 <View style={s.volActions}>
                   <TouchableOpacity
                     style={[s.volBtn, { backgroundColor: "#DCFCE7" }]}
-                    onPress={() => router.push("/volunteer/checkin?tourId=" + item._id)}
+                    onPress={() =>
+                      router.push("/volunteer/checkin?tourId=" + item._id)
+                    }
                   >
                     <Ionicons name="location" size={15} color="#16A34A" />
-                    <Text style={[s.volBtnTxt, { color: "#16A34A" }]}>Check In</Text>
+                    <Text style={[s.volBtnTxt, { color: "#16A34A" }]}>
+                      Check In
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[s.volBtn, { backgroundColor: "#EDE9FE" }]}
-                    onPress={() => router.push("/volunteer/checkin?tourId=" + item._id)}
+                    onPress={() =>
+                      router.push("/volunteer/checkin?tourId=" + item._id)
+                    }
                   >
                     <Ionicons name="qr-code" size={15} color="#7C3AED" />
-                    <Text style={[s.volBtnTxt, { color: "#7C3AED" }]}>Scan QR</Text>
+                    <Text style={[s.volBtnTxt, { color: "#7C3AED" }]}>
+                      Scan QR
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[s.volBtn, { backgroundColor: "#DBEAFE" }]}
-                    onPress={() => router.push("/volunteer/passengers?tourId=" + item._id)}
+                    onPress={() =>
+                      router.push("/volunteer/passengers?tourId=" + item._id)
+                    }
                   >
                     <Ionicons name="people" size={15} color="#2563EB" />
-                    <Text style={[s.volBtnTxt, { color: "#2563EB" }]}>Passengers</Text>
+                    <Text style={[s.volBtnTxt, { color: "#2563EB" }]}>
+                      Passengers
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -477,7 +532,9 @@ export default function Tours() {
         </View>
       ) : loading ? (
         <View style={{ padding: 16, gap: 16 }}>
-          {[1, 2, 3].map((k) => <TourCardSkeleton key={k} />)}
+          {[1, 2, 3].map((k) => (
+            <TourCardSkeleton key={k} />
+          ))}
         </View>
       ) : (
         <FlatList
@@ -497,6 +554,7 @@ export default function Tours() {
               refreshing={refreshing}
               onRefresh={onRefresh}
               tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
           ListEmptyComponent={() => (
@@ -541,9 +599,11 @@ export default function Tours() {
               typeof item.operatorId === "object"
                 ? item.operatorId?.businessName || item.operatorId?.name
                 : null;
-            const seatsLeft = item.availableSeats != null ? item.availableSeats : null;
+            const seatsLeft =
+              item.availableSeats != null ? item.availableSeats : null;
             const seatsTotal = item.totalSeats || null;
-            const seatsPercent = seatsLeft != null && seatsTotal ? (seatsLeft / seatsTotal) : null;
+            const seatsPercent =
+              seatsLeft != null && seatsTotal ? seatsLeft / seatsTotal : null;
             return (
               <TouchableOpacity
                 activeOpacity={0.92}
@@ -553,7 +613,10 @@ export default function Tours() {
               >
                 {/* Image with gradient */}
                 <View style={s.cardImgWrap}>
-                  <FallbackImage source={{ uri: item.coverPhotoUrl }} style={s.img} />
+                  <FallbackImage
+                    source={{ uri: item.coverPhotoUrl }}
+                    style={s.img}
+                  />
                   <LinearGradient
                     colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.55)"]}
                     style={StyleSheet.absoluteFillObject}
@@ -561,13 +624,20 @@ export default function Tours() {
                   {/* Top badges */}
                   <View style={s.badgeRow}>
                     <View style={s.badge}>
-                      <Ionicons name="calendar-outline" size={10} color={colors.secondary} />
-                      <Text style={s.badgeText}>{fmt(item.startDate, item.endDate)}</Text>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={10}
+                        color={colors.secondary}
+                      />
+                      <Text style={s.badgeText}>
+                        {fmt(item.startDate, item.endDate)}
+                      </Text>
                     </View>
                     {item.tourType && item.tourType !== "other" && (
                       <View style={[s.badge, s.typeBadge]}>
                         <Text style={[s.badgeText, { color: colors.primary }]}>
-                          {item.tourType.charAt(0).toUpperCase() + item.tourType.slice(1)}
+                          {item.tourType.charAt(0).toUpperCase() +
+                            item.tourType.slice(1)}
                         </Text>
                       </View>
                     )}
@@ -576,19 +646,29 @@ export default function Tours() {
                   {isLoggedIn && (
                     <TouchableOpacity
                       style={s.heartBtn}
-                      onPress={(e) => { e.stopPropagation?.(); toggleFav(item._id); }}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        toggleFav(item._id);
+                      }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Ionicons
                         name={isFav(item._id) ? "heart" : "heart-outline"}
                         size={17}
-                        color={isFav(item._id) ? "#EF4444" : "rgba(255,255,255,0.9)"}
+                        color={
+                          isFav(item._id) ? "#EF4444" : "rgba(255,255,255,0.9)"
+                        }
                       />
                     </TouchableOpacity>
                   )}
                   {/* Seat pill on image */}
                   {seatsLeft != null && (
-                    <View style={[s.seatBadge, seatsLeft < 5 && { backgroundColor: "#EF444490" }]}>
+                    <View
+                      style={[
+                        s.seatBadge,
+                        seatsLeft < 5 && { backgroundColor: "#EF444490" },
+                      ]}
+                    >
                       <Ionicons name="people" size={10} color="#fff" />
                       <Text style={s.seatBadgeTxt}>{seatsLeft} left</Text>
                     </View>
@@ -597,15 +677,32 @@ export default function Tours() {
 
                 {/* Info section */}
                 <View style={s.cardInfo}>
-                  <Text style={s.cardTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={s.cardTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
                   <View style={s.routeRow}>
-                    <Ionicons name="location" size={12} color={colors.primary} />
-                    <Text style={s.routeTxt} numberOfLines={1}>{item.source} → {item.destination}</Text>
+                    <Ionicons
+                      name="location"
+                      size={12}
+                      color={colors.primary}
+                    />
+                    <Text style={s.routeTxt} numberOfLines={1}>
+                      {item.source} → {item.destination}
+                    </Text>
                   </View>
                   {opName && (
                     <View style={s.routeRow}>
-                      <Ionicons name="business-outline" size={11} color={colors.textSecondary} />
-                      <Text style={[s.routeTxt, { color: colors.textSecondary }]} numberOfLines={1}>{opName}</Text>
+                      <Ionicons
+                        name="business-outline"
+                        size={11}
+                        color={colors.textSecondary}
+                      />
+                      <Text
+                        style={[s.routeTxt, { color: colors.textSecondary }]}
+                        numberOfLines={1}
+                      >
+                        {opName}
+                      </Text>
                     </View>
                   )}
                   <View style={s.cardFooter}>
@@ -740,16 +837,16 @@ const s = StyleSheet.create({
     marginRight: 6,
   },
   opChipActive: {
-    backgroundColor: colors.secondary + "18",
-    borderColor: colors.secondary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   opChipTxt: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
     color: colors.textSecondary,
-    maxWidth: 110,
+    maxWidth: 120,
   },
-  opChipTxtActive: { color: colors.secondary, fontFamily: fonts.bodyBold },
+  opChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
 
   typeRow: {
     flexDirection: "row",
@@ -828,7 +925,12 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   routeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  routeTxt: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, flex: 1 },
+  routeTxt: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
+  },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -838,7 +940,13 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.borderSubtle,
   },
-  priceLabel: { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1.5, marginBottom: 2 },
+  priceLabel: {
+    fontFamily: fonts.accent,
+    fontSize: 9,
+    color: colors.textSecondary,
+    letterSpacing: 1.5,
+    marginBottom: 2,
+  },
   price: { color: colors.primary, fontFamily: fonts.bodyBold, fontSize: 18 },
   pill: {
     flexDirection: "row",
@@ -862,8 +970,8 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 32,
-    paddingTop: 60,
     gap: 0,
+    marginBottom: 60,
   },
   guestIcon: {
     width: 88,
@@ -936,8 +1044,18 @@ const s = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 6,
   },
-  volCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, flex: 1 },
-  volCardDate: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary, flex: 1 },
+  volCardMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  volCardDate: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: colors.primary,
+    flex: 1,
+  },
   volBadge: {
     flexDirection: "row",
     alignItems: "center",

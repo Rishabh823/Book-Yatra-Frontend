@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { useTheme } from "../../lib/ThemeContext";
 import { bookings as bookingsApi, auth as authApi, volunteerApi } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { BookingCardSkeleton } from "../../components/SkeletonCard";
@@ -30,6 +31,7 @@ function fmt(d) {
 export default function Bookings() {
   const router   = useRouter();
   useLang();
+  const { theme } = useTheme();
   const [items,      setItems]      = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -74,7 +76,7 @@ export default function Bookings() {
   // ── Auth gate ────────────────────────────────────────────────────────────
   if (!authed) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={["top"]}>
         <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.heroGate}>
           <Text style={s.heroOm}>ॐ</Text>
           <Text style={s.heroTitle}>My Bookings</Text>
@@ -96,7 +98,7 @@ export default function Bookings() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={["top"]}>
 
       {/* Hero header */}
       <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.hero}>
@@ -160,7 +162,7 @@ export default function Bookings() {
           contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 36 }}
           ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
           }
           ListEmptyComponent={() => (
             <View style={s.empty}>
@@ -193,6 +195,7 @@ function StatPill({ icon, label, value, color }) {
 }
 
 function BookingCard({ item, router, isVolunteer }) {
+  const { theme } = useTheme();
   const status  = (item.status || "pending").toLowerCase();
   const cfg     = STATUS_CFG[status] || STATUS_CFG.pending;
   const seats   = item.numberOfSeats || item.seats || 1;
@@ -206,7 +209,7 @@ function BookingCard({ item, router, isVolunteer }) {
 
   return (
     <TouchableOpacity
-      style={s.card}
+      style={[s.card, { backgroundColor: theme.surface }]}
       activeOpacity={0.93}
       onPress={() => router.push(`/booking/${item._id || item.id}`)}
       testID={`booking-${item._id || item.id}`}
@@ -219,7 +222,7 @@ function BookingCard({ item, router, isVolunteer }) {
           </View>
           <View>
             <Text style={[s.statusLabel, { color: cfg.color }]}>{cfg.label}</Text>
-            <Text style={s.bookingId}>#{bookId}</Text>
+            <Text style={[s.bookingId, { color: theme.textSecondary }]}>#{bookId}</Text>
           </View>
         </View>
         <View style={[s.statusBadge, { backgroundColor: cfg.color }]}>
@@ -231,11 +234,11 @@ function BookingCard({ item, router, isVolunteer }) {
       <View style={s.cardBody}>
         {isVolunteer && passengerName ? (
           <>
-            <Text style={s.tourTitle} numberOfLines={1}>{passengerName}</Text>
+            <Text style={[s.tourTitle, { color: theme.secondary }]} numberOfLines={1}>{passengerName}</Text>
             {tourName ? <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, marginBottom: 6 }} numberOfLines={1}>{tourName}</Text> : null}
           </>
         ) : (
-          <Text style={s.tourTitle} numberOfLines={1}>
+          <Text style={[s.tourTitle, { color: theme.secondary }]} numberOfLines={1}>
             {item.tourTitle || item.tour?.title || "Yatra Booking"}
           </Text>
         )}
@@ -243,7 +246,7 @@ function BookingCard({ item, router, isVolunteer }) {
         {/* Route */}
         {(source || dest) && (
           <View style={s.routeRow}>
-            <View style={s.routeChip}><Text style={s.routeChipTxt} numberOfLines={1}>{source || "—"}</Text></View>
+            <View style={[s.routeChip, { backgroundColor: theme.borderSubtle }]}><Text style={[s.routeChipTxt, { color: theme.textSecondary }]} numberOfLines={1}>{source || "—"}</Text></View>
             <Ionicons name="arrow-forward" size={12} color={colors.textDisabled} />
             <View style={[s.routeChip, { backgroundColor: colors.primaryLight }]}>
               <Text style={[s.routeChipTxt, { color: colors.primary }]} numberOfLines={1}>{dest || "—"}</Text>
@@ -268,9 +271,9 @@ function BookingCard({ item, router, isVolunteer }) {
 
       {/* Ticket tear line */}
       <View style={s.tearWrap}>
-        <View style={s.tearCircleL} />
-        <View style={s.tearLine} />
-        <View style={s.tearCircleR} />
+        <View style={[s.tearCircleL, { backgroundColor: theme.bg }]} />
+        <View style={[s.tearLine, { borderColor: theme.borderSubtle }]} />
+        <View style={[s.tearCircleR, { backgroundColor: theme.bg }]} />
       </View>
 
       {/* Card footer */}

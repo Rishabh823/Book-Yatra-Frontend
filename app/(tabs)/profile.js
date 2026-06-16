@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   DeviceEventEmitter,
+  Alert,
 } from "react-native";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -20,6 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { auth as authApi } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
+import { useTheme } from "../../lib/ThemeContext";
 
 const getUserMenu = (t) => [
   {
@@ -93,6 +95,13 @@ const getUserMenu = (t) => [
     color: "#16A34A",
   },
   {
+    icon: "heart-circle-outline",
+    label: "Donate / Seva Daan",
+    sub: "Support community causes",
+    action: "donate",
+    color: "#D95D39",
+  },
+  {
     icon: "color-palette-outline",
     label: "Appearance",
     sub: "Dark mode & color themes",
@@ -105,6 +114,13 @@ const getUserMenu = (t) => [
     sub: "PIN, biometrics, MFA & more",
     action: "security",
     color: "#5C1615",
+  },
+  {
+    icon: "warning-outline",
+    label: "Emergency SOS",
+    sub: "Tap to send an emergency alert",
+    action: "sos",
+    color: "#DC2626",
   },
   {
     icon: "chatbubbles-outline",
@@ -366,6 +382,7 @@ const ROLE_COLORS = {
 export default function Profile() {
   const router = useRouter();
   const { lang, t, toggle: toggleLang } = useLang();
+  const { theme, isDark } = useTheme();
   const { width } = useWindowDimensions();
   const gridCols = width >= 500 ? 4 : 3;
   const gridCardW = (width - 48 - 12 * (gridCols - 1)) / gridCols;
@@ -430,8 +447,10 @@ export default function Profile() {
     if (a === "members") return router.push("/members");
     if (a === "select-operators") return router.push("/select-operators");
     if (a === "favorites") return router.push("/favorites");
+    if (a === "donate") return router.push("/donate");
     if (a === "theme-settings") return router.push("/theme-settings");
     if (a === "security") return router.push("/security");
+    if (a === "sos") return router.push("/sos");
     if (a === "community") return router.push("/community");
     if (a === "chat") return router.push("/chat");
     if (a === "rewards") return router.push("/rewards");
@@ -446,6 +465,7 @@ export default function Profile() {
     await authApi.logout();
     setAuthed(false);
     setUser(null);
+    DeviceEventEmitter.emit("userPhotoChanged", null);
     showToast(
       wasGuest ? "Guest session ended." : "Logged out successfully.",
       "success",
@@ -466,7 +486,7 @@ export default function Profile() {
   if (!loading && !authed) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: colors.bg }}
+        style={{ flex: 1, backgroundColor: theme.bg }}
         edges={["top"]}
       >
         <LinearGradient
@@ -512,7 +532,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg }}
+      style={{ flex: 1, backgroundColor: theme.bg }}
       edges={["top"]}
     >
       <ScrollView
@@ -611,7 +631,10 @@ export default function Profile() {
                   key={i}
                   style={[
                     s.iconCard,
-                    { width: gridCardW, backgroundColor: m.bg },
+                    {
+                      width: gridCardW,
+                      backgroundColor: isDark ? theme.elevated : m.bg,
+                    },
                   ]}
                   onPress={() => handleAction(m.action)}
                   activeOpacity={0.8}
@@ -621,7 +644,13 @@ export default function Profile() {
                   >
                     <Ionicons name={m.icon} size={22} color={m.color} />
                   </View>
-                  <Text style={s.iconLabel} numberOfLines={1}>
+                  <Text
+                    style={[
+                      s.iconLabel,
+                      isDark && { color: theme.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {m.label}
                   </Text>
                 </TouchableOpacity>
@@ -666,7 +695,10 @@ export default function Profile() {
                   key={i}
                   style={[
                     s.iconCard,
-                    { width: gridCardW, backgroundColor: m.bg },
+                    {
+                      width: gridCardW,
+                      backgroundColor: isDark ? theme.elevated : m.bg,
+                    },
                   ]}
                   onPress={() => handleAction(m.action)}
                   activeOpacity={0.8}
@@ -676,7 +708,13 @@ export default function Profile() {
                   >
                     <Ionicons name={m.icon} size={22} color={m.color} />
                   </View>
-                  <Text style={s.iconLabel} numberOfLines={1}>
+                  <Text
+                    style={[
+                      s.iconLabel,
+                      isDark && { color: theme.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {m.label}
                   </Text>
                 </TouchableOpacity>
@@ -734,6 +772,39 @@ export default function Profile() {
               <Ionicons name="chevron-forward" size={16} color="#DC262644" />
             </TouchableOpacity>
 
+            {!isGuest && (
+              <TouchableOpacity
+                style={s.deleteAccBtn}
+                onPress={() =>
+                  Alert.alert(
+                    "Delete Account",
+                    "This will permanently delete your account, all bookings, and tour data. This cannot be undone.\n\nAre you sure?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Delete Permanently",
+                        style: "destructive",
+                        onPress: async () => {
+                          try {
+                            await authApi.deleteAccount();
+                          } catch {}
+                          await authApi.logout();
+                          DeviceEventEmitter.emit("userPhotoChanged", null);
+                          setAuthed(false);
+                          setUser(null);
+                          router.replace("/auth/login");
+                        },
+                      },
+                    ],
+                  )
+                }
+                testID="delete-account-btn"
+              >
+                <Ionicons name="trash-outline" size={16} color="#DC2626" />
+                <Text style={s.deleteAccTxt}>Delete My Account</Text>
+              </TouchableOpacity>
+            )}
+
             {isGuest && (
               <View style={s.guestNote}>
                 <Ionicons
@@ -764,10 +835,11 @@ export default function Profile() {
 }
 
 function MenuItem({ item, onPress }) {
+  const { theme } = useTheme();
   return (
     <TouchableOpacity
       activeOpacity={0.75}
-      style={s.menuItem}
+      style={[s.menuItem, { backgroundColor: theme.surface }]}
       onPress={onPress}
       testID={`menu-${item.action}`}
     >
@@ -784,8 +856,18 @@ function MenuItem({ item, onPress }) {
         />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={s.menuLabel}>{item.label}</Text>
-        <Text style={s.menuSub}>{item.sub}</Text>
+        <Text
+          style={[s.menuLabel, { color: theme.textPrimary }]}
+          numberOfLines={1}
+        >
+          {item.label}
+        </Text>
+        <Text
+          style={[s.menuSub, { color: theme.textSecondary }]}
+          numberOfLines={1}
+        >
+          {item.sub}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
     </TouchableOpacity>
@@ -1098,5 +1180,23 @@ const s = StyleSheet.create({
     fontSize: 10,
     color: colors.textDisabled,
     letterSpacing: 2,
+  },
+  deleteAccBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: "#DC262633",
+    marginBottom: 10,
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  deleteAccTxt: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: "#DC2626",
   },
 });
