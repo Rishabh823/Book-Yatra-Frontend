@@ -146,48 +146,18 @@ const getUserMenu = (t) => [
 ];
 
 const SUPER_ADMIN_GRID = [
-  {
-    icon: "planet",
-    label: "Overview",
-    action: "super-dashboard",
-    color: "#1E0A0A",
-    bg: "#FEF2F2",
-  },
-  {
-    icon: "business",
-    label: "Operators",
-    action: "super-operators",
-    color: "#7C3AED",
-    bg: "#F5F3FF",
-  },
-  {
-    icon: "people",
-    label: "Users",
-    action: "super-users",
-    color: "#0284C7",
-    bg: "#EFF6FF",
-  },
-  {
-    icon: "bus",
-    label: "Tours",
-    action: "super-tours",
-    color: "#16A34A",
-    bg: "#F0FDF4",
-  },
-  {
-    icon: "ticket",
-    label: "Bookings",
-    action: "super-bookings",
-    color: colors.primary,
-    bg: "#FDECE7",
-  },
-  {
-    icon: "shield-checkmark",
-    label: "Roles",
-    action: "super-roles",
-    color: "#D97706",
-    bg: "#FFFBEB",
-  },
+  { icon: "planet",            label: "Overview",      action: "super-dashboard",     color: "#1E0A0A", bg: "#FEF2F2" },
+  { icon: "business",          label: "Operators",     action: "super-operators",     color: "#7C3AED", bg: "#F5F3FF" },
+  { icon: "people",            label: "Users",         action: "super-users",         color: "#0284C7", bg: "#EFF6FF" },
+  { icon: "bus",               label: "Tours",         action: "super-tours",         color: "#16A34A", bg: "#F0FDF4" },
+  { icon: "ticket",            label: "Bookings",      action: "super-bookings",      color: colors.primary, bg: "#FDECE7" },
+  { icon: "shield-checkmark",  label: "Roles",         action: "super-roles",         color: "#D97706", bg: "#FFFBEB" },
+  { icon: "cash-outline",      label: "Finance",       action: "super-finance",       color: "#16A34A", bg: "#F0FDF4" },
+  { icon: "arrow-up-circle",   label: "Withdrawals",   action: "super-withdrawals",   color: "#7C3AED", bg: "#F5F3FF" },
+  { icon: "heart",             label: "Donations",     action: "super-donations",     color: "#DC2626", bg: "#FEF2F2" },
+  { icon: "notifications",     label: "Notify All",    action: "super-notifications", color: "#0891B2", bg: "#ECFEFF" },
+  { icon: "refresh-circle",    label: "Refunds",       action: "super-refunds",       color: "#D97706", bg: "#FFFBEB" },
+  { icon: "settings",          label: "Settings",      action: "admin-settings",      color: "#6B7280", bg: "#F9FAFB" },
 ];
 
 const ADMIN_GRID = [
@@ -354,12 +324,17 @@ const ROLE_ADMIN_ROUTES = {
   "admin-volunteer-mgmt": "/admin/volunteer-management",
   "admin-coupons": "/admin/coupons",
   "admin-reviews": "/admin/reviews",
-  "super-dashboard": "/admin/super/dashboard",
-  "super-operators": "/admin/super/operators",
-  "super-users": "/admin/super/users",
-  "super-tours": "/admin/super/tours",
-  "super-bookings": "/admin/super/bookings",
-  "super-roles": "/admin/super/roles",
+  "super-dashboard":     "/admin/super/dashboard",
+  "super-operators":     "/admin/super/operators",
+  "super-users":         "/admin/super/users",
+  "super-tours":         "/admin/super/tours",
+  "super-bookings":      "/admin/super/bookings",
+  "super-roles":         "/admin/super/roles",
+  "super-finance":       "/admin/super/finance",
+  "super-withdrawals":   "/admin/super/withdrawals",
+  "super-donations":     "/admin/donations",
+  "super-notifications": "/admin/super/notifications",
+  "super-refunds":       "/admin/super/refunds",
   "volunteer-hub": "/volunteer",
   "volunteer-scan": "/volunteer/checkin",
   "volunteer-list": "/volunteer/passengers",
@@ -679,7 +654,7 @@ export default function Profile() {
         )}
 
         {/* ── Admin Grid ───────────────────────────────── */}
-        {(isAdmin || isSuperAdmin) && (
+        {isAdmin && (
           <View style={s.section}>
             <View style={s.sectionHead}>
               <Ionicons

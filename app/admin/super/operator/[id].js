@@ -27,6 +27,8 @@ export default function OperatorDetail() {
   const [showPwd, setShowPwd] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('tours'); // tours | users | bookings
+  const [commissionRate, setCommissionRate] = useState('');
+  const [commissionSaving, setCommissionSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,6 +45,7 @@ export default function OperatorDetail() {
       const bookings = Array.isArray(bookingsRes) ? bookingsRes : (bookingsRes?.bookings || bookingsRes?.data || []);
 
       setOperator(op);
+      setCommissionRate(String(op?.commissionRate ?? ''));
       setAllTours(tours.filter(t => String(t.operatorId?._id || t.operatorId) === String(id)));
       setAllUsers(users.filter(u => (u.joinedOperators || []).some(o =>
         (typeof o === 'object' ? String(o._id) : String(o)) === String(id)
@@ -80,6 +83,21 @@ export default function OperatorDetail() {
       load();
     } catch (e) { Alert.alert('Error', e.message || 'Update failed'); }
     finally { setSaving(false); }
+  };
+
+  const saveCommission = async () => {
+    const rate = parseFloat(commissionRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      Alert.alert('Invalid', 'Enter a commission rate between 0 and 100.');
+      return;
+    }
+    setCommissionSaving(true);
+    try {
+      await superApi.setCommission(id, rate);
+      setOperator(o => ({ ...o, commissionRate: rate }));
+      Alert.alert('Saved', `Commission rate set to ${rate}%`);
+    } catch (e) { Alert.alert('Error', e.message || 'Failed to update commission'); }
+    finally { setCommissionSaving(false); }
   };
 
   const toggleActive = async () => {
@@ -204,6 +222,42 @@ export default function OperatorDetail() {
             <Ionicons name="trash-outline" size={16} color="#DC2626" />
             <Text style={[s.actionBtnTxt, { color: '#DC2626' }]}>Delete</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Commission Rate */}
+        <View style={[s.commissionCard, { marginHorizontal: 16, marginBottom: 12 }]}>
+          <View style={s.commissionHead}>
+            <View style={s.commissionIcon}>
+              <Ionicons name="cash-outline" size={18} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.commissionTitle}>Platform Commission</Text>
+              <Text style={s.commissionSub}>Percentage deducted from operator earnings</Text>
+            </View>
+          </View>
+          <View style={s.commissionRow}>
+            <TextInput
+              style={s.commissionInput}
+              value={commissionRate}
+              onChangeText={setCommissionRate}
+              placeholder="0"
+              placeholderTextColor={colors.textDisabled}
+              keyboardType="decimal-pad"
+              maxLength={5}
+            />
+            <Text style={s.commissionPct}>%</Text>
+            <TouchableOpacity
+              style={[s.commissionSaveBtn, commissionSaving && { opacity: 0.6 }]}
+              onPress={saveCommission}
+              disabled={commissionSaving}
+              activeOpacity={0.8}
+            >
+              {commissionSaving
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={s.commissionSaveTxt}>Set Rate</Text>
+              }
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Tab switcher */}
@@ -425,6 +479,17 @@ const s = StyleSheet.create({
   sBadgeTxt:        { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   emptyTxt:         { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginTop: 10 },
+
+  commissionCard:       { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, ...shadow.soft },
+  commissionHead:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  commissionIcon:       { width: 38, height: 38, borderRadius: 19, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
+  commissionTitle:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  commissionSub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  commissionRow:        { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  commissionInput:      { flex: 1, backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.bodyBold, fontSize: 20, color: colors.textPrimary },
+  commissionPct:        { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.textSecondary },
+  commissionSaveBtn:    { backgroundColor: '#16A34A', borderRadius: radius.lg, paddingHorizontal: 18, paddingVertical: 12 },
+  commissionSaveTxt:    { fontFamily: fonts.bodyBold, fontSize: 14, color: '#fff' },
 
   overlay:          { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end', alignItems: 'center' },
   sheet:            { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, maxHeight: '92%' },

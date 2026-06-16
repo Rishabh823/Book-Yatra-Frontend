@@ -9,7 +9,7 @@ import { AdminShell } from '../../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
-const STATUSES = ['all', 'pending', 'confirmed', 'cancelled'];
+const STATUSES = ['all', 'pending', 'confirmed', 'checked_in', 'cancelled'];
 const STATUS_COLORS = {
   confirmed: { bg: '#DCFCE7', text: '#16A34A' },
   pending:   { bg: '#FEF9C3', text: '#CA8A04' },
@@ -66,7 +66,7 @@ export default function SuperBookings() {
     return (
       <TouchableOpacity
         style={[s.card, { marginHorizontal: px }]}
-        onPress={() => router.push(`/admin/booking/${item._id}`)}
+        onPress={() => router.push(`/booking/${item._id}`)}
         activeOpacity={0.85}
       >
         <View style={s.cardRow}>
@@ -113,7 +113,8 @@ export default function SuperBookings() {
         {[
           { label: 'Confirmed', value: stats.confirmed, color: '#16A34A' },
           { label: 'Pending', value: stats.pending, color: '#D97706' },
-          { label: 'Revenue', value: `₹${stats.revenue}`, color: colors.primary },
+          { label: 'Cancelled', value: stats.cancelled, color: '#DC2626' },
+          { label: 'Revenue', value: `₹${(stats.revenue/1000).toFixed(0)}k`, color: colors.primary },
         ].map(st => (
           <View key={st.label} style={s.statItem}>
             <Text style={[s.statValue, { color: st.color }]}>{st.value}</Text>

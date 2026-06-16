@@ -188,6 +188,10 @@ function AppNavigator() {
       <Stack.Screen name="admin/super/bookings" />
       <Stack.Screen name="admin/super/operators" />
       <Stack.Screen name="admin/super/operator/[id]" />
+      <Stack.Screen name="admin/super/finance" />
+      <Stack.Screen name="admin/super/withdrawals" />
+      <Stack.Screen name="admin/super/notifications" />
+      <Stack.Screen name="admin/super/refunds" />
 
       {/* Rewards */}
       <Stack.Screen name="rewards/index" />
@@ -218,9 +222,6 @@ function AppNavigator() {
       <Stack.Screen name="admin/wallet/withdraw" />
       <Stack.Screen name="admin/wallet/history" />
 
-      {/* Super Admin Finance */}
-      <Stack.Screen name="admin/super/finance" />
-      <Stack.Screen name="admin/super/withdrawals" />
     </Stack>
     </Fragment>
   );
