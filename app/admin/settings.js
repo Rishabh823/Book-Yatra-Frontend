@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
-  Alert, ScrollView, Switch, Platform, DeviceEventEmitter,
+  ScrollView, Switch, Platform, DeviceEventEmitter,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { api } from '../../lib/api';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const DEFAULTS = {
   bookingRestrictionPeriod: 0,
@@ -26,6 +28,7 @@ export default function AdminSettings() {
   const [saving, setSaving]   = useState(false);
   const [dirty, setDirty]     = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     AsyncStorage.getItem('role').then(r => setIsSuperAdmin(r === 'super_admin')).catch(() => {});
@@ -55,9 +58,9 @@ export default function AdminSettings() {
       });
       setDirty(false);
       DeviceEventEmitter.emit("appSettingsChanged", cfg);
-      Alert.alert('Saved', 'Settings updated successfully.');
+      showToast('Settings updated successfully.', "success");
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to save settings.');
+      showToast(e.message || 'Failed to save settings.', "error");
     } finally { setSaving(false); }
   };
 
@@ -214,6 +217,7 @@ export default function AdminSettings() {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </AdminShell>
   );
 }

@@ -285,7 +285,7 @@ export default function Tours() {
       <View style={s.header}>
         <View style={s.headerTop}>
           <View>
-            <Text style={s.title}>Yatras</Text>
+            <Text style={s.title}>Tours</Text>
             <Text style={s.sub}>Find your perfect pilgrimage</Text>
           </View>
           {activeFilterCount > 0 && (
@@ -333,7 +333,7 @@ export default function Tours() {
           contentContainerStyle={{ gap: 8, paddingRight: 4 }}
         >
           {[
-            { key: "all", label: "All Yatras" },
+            { key: "all", label: "All Tours" },
             { key: "pilgrimage", label: "Pilgrimage" },
             { key: "heritage", label: "Heritage" },
             { key: "spiritual", label: "Spiritual" },
@@ -545,7 +545,7 @@ export default function Tours() {
           <View style={s.guestIcon}>
             <Ionicons name="bus" size={40} color={colors.primary} />
           </View>
-          <Text style={s.guestTitle}>Explore Sacred Yatras</Text>
+          <Text style={s.guestTitle}>Explore Tours</Text>
           <Text style={s.guestSub}>
             Sign in to browse tours, check seat availability and book your
             pilgrimage.
@@ -1053,10 +1053,10 @@ const makeStyles = (colors) => StyleSheet.create({
   guest: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: 36,
+    paddingTop: 60,
     gap: 0,
-    marginBottom: 60,
     backgroundColor: colors.bg,
   },
   guestIcon: {

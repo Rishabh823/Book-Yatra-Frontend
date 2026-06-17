@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
@@ -18,6 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const TYPE_COLORS = {
   post:        { bg: "#EDE9FE", color: "#7C3AED" },
@@ -50,6 +52,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const inputRef = useRef(null);
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +62,7 @@ export default function PostDetailScreen() {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
   const [commentLikes, setCommentLikes] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -103,7 +107,7 @@ export default function PostDetailScreen() {
       setPost((p) => ({ ...p, comments: Array.isArray(updatedComments) ? updatedComments : p.comments }));
       setComment("");
     } catch {
-      Alert.alert("Error", "Failed to post comment");
+      showToast("Failed to post comment", "error");
     }
     setSubmitting(false);
   };
@@ -122,16 +126,13 @@ export default function PostDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
-      { text: "Cancel" },
-      {
-        text: "Delete", style: "destructive",
-        onPress: async () => {
-          try { await api.del("/community/" + id); router.back(); }
-          catch { Alert.alert("Error", "Failed to delete"); }
-        },
-      },
-    ]);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    setShowDeleteConfirm(false);
+    try { await api.del("/community/" + id); router.back(); }
+    catch { showToast("Failed to delete", "error"); }
   };
 
   if (loading) return <View style={s.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
@@ -276,6 +277,17 @@ export default function PostDetailScreen() {
           {submitting ? <ActivityIndicator size="small" color="white" /> : <Ionicons name="send" size={16} color="white" />}
         </TouchableOpacity>
       </View>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Post"
+        message="Are you sure you want to delete this post?"
+        confirmText="Delete"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive={true}
+      />
     </KeyboardAvoidingView>
   );
 }

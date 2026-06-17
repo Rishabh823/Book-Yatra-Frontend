@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    // Keep JS/Expo focused — Java/Gradle extensions can cause noisy errors in this workspace
+  ],
+  "unwantedRecommendations": [
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-gradle",
+    "redhat.java"
+  ]
+}

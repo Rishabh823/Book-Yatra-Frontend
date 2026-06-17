@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -15,6 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const DOC_TYPES = [
   { key: "aadhaar", label: "Aadhaar Card", icon: "card" },
@@ -28,6 +29,7 @@ const DOC_TYPES = [
 export default function AddDocumentScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
   const [docNumber, setDocNumber] = useState("");
@@ -36,11 +38,10 @@ export default function AddDocumentScreen() {
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted")
-      return Alert.alert(
-        "Permission needed",
-        "Please grant camera roll permission",
-      );
+    if (status !== "granted") {
+      showToast("Permission needed to access media library", "error");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
@@ -49,10 +50,9 @@ export default function AddDocumentScreen() {
   };
 
   const submit = async () => {
-    if (!type) return Alert.alert("Error", "Please select document type");
-    if (!title.trim())
-      return Alert.alert("Error", "Please enter document title");
-    if (!fileUri) return Alert.alert("Error", "Please add document image");
+    if (!type) { showToast("Please select document type", "error"); return; }
+    if (!title.trim()) { showToast("Please enter document title", "error"); return; }
+    if (!fileUri) { showToast("Please add document image", "error"); return; }
     setSubmitting(true);
     try {
       await api.post("/documents", {
@@ -63,7 +63,7 @@ export default function AddDocumentScreen() {
       });
       router.back();
     } catch {
-      Alert.alert("Error", "Failed to save document");
+      showToast("Failed to save document", "error");
     }
     setSubmitting(false);
   };
@@ -172,6 +172,7 @@ export default function AddDocumentScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

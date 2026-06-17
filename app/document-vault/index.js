@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -15,6 +14,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const DOC_TYPES = {
   aadhaar: { icon: "card", label: "Aadhaar", color: "#2563EB", bg: "#DBEAFE" },
@@ -61,9 +63,11 @@ const getExpiryStatus = (expiresAt) => {
 export default function DocumentVaultScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingDeleteDoc, setPendingDeleteDoc] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -81,25 +85,18 @@ export default function DocumentVaultScreen() {
   );
 
   const handleDelete = (doc) => {
-    Alert.alert(
-      "Delete Document",
-      'Delete "' + doc.title + '"? This cannot be undone.',
-      [
-        { text: "Cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.del("/documents/" + doc._id);
-              setDocs((prev) => prev.filter((d) => d._id !== doc._id));
-            } catch {
-              Alert.alert("Error", "Failed to delete");
-            }
-          },
-        },
-      ],
-    );
+    setPendingDeleteDoc(doc);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!pendingDeleteDoc) return;
+    try {
+      await api.del("/documents/" + pendingDeleteDoc._id);
+      setDocs((prev) => prev.filter((d) => d._id !== pendingDeleteDoc._id));
+    } catch {
+      showToast("Failed to delete", "error");
+    }
+    setPendingDeleteDoc(null);
   };
 
   const renderDoc = ({ item }) => {
@@ -205,6 +202,17 @@ export default function DocumentVaultScreen() {
           }
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={!!pendingDeleteDoc}
+        title="Delete Document"
+        message={'Delete "' + (pendingDeleteDoc?.title || "") + '"? This cannot be undone.'}
+        confirmText="Delete"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setPendingDeleteDoc(null)}
+        onDismiss={() => setPendingDeleteDoc(null)}
+        destructive={true}
+      />
     </View>
   );
 }

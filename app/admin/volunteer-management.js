@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Modal,
   ScrollView,
   TextInput,
@@ -18,6 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api, volunteerApi } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const fmtDate = (d) =>
   d
@@ -62,6 +64,14 @@ export default function VolunteerManagementScreen() {
   const [showNewPwd, setShowNewPwd] = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
 
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteVolTarget, setDeleteVolTarget] = useState(null); // { id, name }
+  const [showRemoveTourConfirm, setShowRemoveTourConfirm] = useState(false);
+  const [removeTourTarget, setRemoveTourTarget] = useState(null); // { volunteerId, tourId }
+  const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
+  const [suspendTarget, setSuspendTarget] = useState(null); // volunteer item
+
   const load = useCallback(async () => {
     try {
       const [vRes, tRes] = await Promise.all([
@@ -73,7 +83,7 @@ export default function VolunteerManagementScreen() {
       setVolunteers(vList);
       setTours(tList);
     } catch (e) {
-      Alert.alert("Error", "Failed to load data");
+      showToast("Failed to load data", "error");
     }
     setLoading(false);
     setRefreshing(false);
@@ -94,7 +104,7 @@ export default function VolunteerManagementScreen() {
         ),
       );
     } catch {
-      Alert.alert("Error", "Failed to update status");
+      showToast("Failed to update status", "error");
     }
   };
 
@@ -121,49 +131,42 @@ export default function VolunteerManagementScreen() {
       );
       setAssignModal(null);
       setAssigningTourId(null);
-      Alert.alert("Success", "Volunteer assigned to tour successfully");
+      showToast("Volunteer assigned to tour successfully", "success");
     } catch {
-      Alert.alert("Error", "Failed to assign volunteer");
+      showToast("Failed to assign volunteer", "error");
     }
     setAssigning(false);
   };
 
   const deleteVolunteer = async (volunteerId, name) => {
-    Alert.alert(
-      "Delete Volunteer",
-      `Remove ${name} as a volunteer? This cannot be undone and will unassign them from all tours.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.del("/volunteer/" + volunteerId);
-              setVolunteers((prev) =>
-                prev.filter((v) => v._id !== volunteerId),
-              );
-            } catch (e) {
-              Alert.alert("Error", e.message || "Failed to delete volunteer");
-            }
-          },
-        },
-      ],
-    );
+    setDeleteVolTarget({ id: volunteerId, name });
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteVolunteerConfirmed = async () => {
+    if (!deleteVolTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await api.del("/volunteer/" + deleteVolTarget.id);
+      setVolunteers((prev) => prev.filter((v) => v._id !== deleteVolTarget.id));
+    } catch (e) {
+      showToast(e.message || "Failed to delete volunteer", "error");
+    }
+    setDeleteVolTarget(null);
   };
 
   const createVolunteer = async () => {
     const { name, email, phone, password } = createForm;
     if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
-      return Alert.alert("Incomplete", "All fields are required");
+      showToast("All fields are required", "error"); return;
     }
-    if (phone.length < 10)
-      return Alert.alert("Invalid", "Enter a valid phone number");
-    if (password.length < 6)
-      return Alert.alert(
-        "Weak Password",
-        "Password must be at least 6 characters",
-      );
+    if (phone.length < 10) {
+      showToast("Enter a valid phone number", "error"); return;
+    }
+    if (password.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return;
+    }
     setCreating(true);
     try {
       const res = await volunteerApi.create({ name, email, phone, password });
@@ -171,57 +174,54 @@ export default function VolunteerManagementScreen() {
       setVolunteers((prev) => [{ ...newVol, assignedTours: [] }, ...prev]);
       setCreateForm({ name: "", email: "", phone: "", password: "" });
       setCreateModal(false);
-      Alert.alert(
-        "Volunteer Created",
-        `${name} has been added as a volunteer and can now log in with their credentials.`,
-      );
+      showToast(`${name} has been added as a volunteer and can now log in with their credentials.`, "success");
     } catch (e) {
-      Alert.alert("Error", e.message || "Failed to create volunteer");
+      showToast(e.message || "Failed to create volunteer", "error");
     }
     setCreating(false);
   };
 
   const removeFromTour = async (volunteerId, tourId) => {
-    Alert.alert("Remove from Tour", "Remove this volunteer from the tour?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.post("/volunteer/remove-tour", { volunteerId, tourId });
-            setVolunteers((prev) =>
-              prev.map((v) =>
-                v._id === volunteerId
-                  ? {
-                      ...v,
-                      assignedTours: (v.assignedTours || []).filter(
-                        (t) => t._id !== tourId,
-                      ),
-                    }
-                  : v,
-              ),
-            );
-          } catch {
-            Alert.alert("Error", "Failed to remove volunteer from tour");
-          }
-        },
-      },
-    ]);
+    setRemoveTourTarget({ volunteerId, tourId });
+    setShowRemoveTourConfirm(true);
+  };
+
+  const handleRemoveTourConfirmed = async () => {
+    if (!removeTourTarget) return;
+    setShowRemoveTourConfirm(false);
+    const { volunteerId, tourId } = removeTourTarget;
+    try {
+      await api.post("/volunteer/remove-tour", { volunteerId, tourId });
+      setVolunteers((prev) =>
+        prev.map((v) =>
+          v._id === volunteerId
+            ? {
+                ...v,
+                assignedTours: (v.assignedTours || []).filter(
+                  (t) => t._id !== tourId,
+                ),
+              }
+            : v,
+        ),
+      );
+    } catch {
+      showToast("Failed to remove volunteer from tour", "error");
+    }
+    setRemoveTourTarget(null);
   };
 
   const handleChangePassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      return Alert.alert("Weak Password", "Password must be at least 6 characters.");
+      showToast("Password must be at least 6 characters.", "error"); return;
     }
     setSavingPwd(true);
     try {
       await api.put("/volunteer/" + pwdModal._id + "/change-password", { newPassword });
-      Alert.alert("Success", `Password updated for ${pwdModal.name}.`);
+      showToast(`Password updated for ${pwdModal.name}.`, "success");
       setPwdModal(null);
       setNewPassword("");
     } catch (e) {
-      Alert.alert("Error", e.message || "Failed to update password.");
+      showToast(e.message || "Failed to update password.", "error");
     }
     setSavingPwd(false);
   };
@@ -327,12 +327,10 @@ export default function VolunteerManagementScreen() {
           ) : (
             <TouchableOpacity
               style={s.stripBtn}
-              onPress={() =>
-                Alert.alert("Suspend Volunteer", `Suspend ${item.name}?`, [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Suspend", style: "destructive", onPress: () => updateStatus(item._id, "suspended") },
-                ])
-              }
+              onPress={() => {
+                setSuspendTarget(item);
+                setShowSuspendConfirm(true);
+              }}
             >
               <Ionicons name="pause-circle-outline" size={14} color="#D97706" />
               <Text style={[s.stripBtnTxt, { color: "#D97706" }]}>Suspend</Text>
@@ -831,6 +829,41 @@ export default function VolunteerManagementScreen() {
           </View>
         </View>
       </Modal>
+
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Volunteer"
+        message={`Remove ${deleteVolTarget?.name} as a volunteer? This cannot be undone and will unassign them from all tours.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteVolunteerConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
+      <ConfirmModal
+        visible={showRemoveTourConfirm}
+        title="Remove from Tour"
+        message="Remove this volunteer from the tour?"
+        confirmText="Remove"
+        cancelText="Cancel"
+        onConfirm={handleRemoveTourConfirmed}
+        onCancel={() => setShowRemoveTourConfirm(false)}
+        onDismiss={() => setShowRemoveTourConfirm(false)}
+        destructive
+      />
+      <ConfirmModal
+        visible={showSuspendConfirm}
+        title="Suspend Volunteer"
+        message={`Suspend ${suspendTarget?.name}?`}
+        confirmText="Suspend"
+        cancelText="Cancel"
+        onConfirm={() => { setShowSuspendConfirm(false); updateStatus(suspendTarget._id, "suspended"); setSuspendTarget(null); }}
+        onCancel={() => setShowSuspendConfirm(false)}
+        onDismiss={() => setShowSuspendConfirm(false)}
+        destructive
+      />
     </View>
   );
 }

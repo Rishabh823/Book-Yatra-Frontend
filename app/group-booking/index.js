@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const STEPS = ['Type', 'Details', 'Passengers', 'Review', 'Confirm'];
 const GROUP_TYPES = [
@@ -19,8 +22,11 @@ export default function GroupBookingScreen() {
   const { tourId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
 
   const [step, setStep] = useState(0);
+  const [showSuccessConfirm, setShowSuccessConfirm] = useState(false);
+  const [successBookingId, setSuccessBookingId] = useState(null);
   const [type, setType] = useState('group');
   const [groupName, setGroupName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -65,16 +71,10 @@ export default function GroupBookingScreen() {
         seats: passengers.length,
       };
       const res = await api.post('/group-bookings', payload);
-      Alert.alert(
-        'Booking Submitted!',
-        'Your group booking request has been submitted. Booking ID: ' + (res.data?.bookingId || res.bookingId || 'Processing'),
-        [
-          { text: 'View Bookings', onPress: () => router.replace('/booking') },
-          { text: 'Home', onPress: () => router.replace('/(tabs)') },
-        ]
-      );
+      setSuccessBookingId(res.data?.bookingId || res.bookingId || 'Processing');
+      setShowSuccessConfirm(true);
     } catch (err) {
-      Alert.alert('Error', err.message || 'Failed to submit booking');
+      showToast(err.message || 'Failed to submit booking', 'error');
     }
     setSubmitting(false);
   };
@@ -234,6 +234,19 @@ export default function GroupBookingScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showSuccessConfirm}
+        title="Booking Submitted!"
+        message={'Your group booking request has been submitted. Booking ID: ' + successBookingId}
+        confirmText="View Bookings"
+        cancelText="Home"
+        onConfirm={() => { setShowSuccessConfirm(false); router.replace('/booking'); }}
+        onCancel={() => { setShowSuccessConfirm(false); router.replace('/(tabs)'); }}
+        onDismiss={() => { setShowSuccessConfirm(false); router.replace('/(tabs)'); }}
+        destructive={false}
+      />
 
       {/* Bottom navigation */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>

@@ -9,9 +9,9 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   DeviceEventEmitter,
-  Alert,
 } from "react-native";
 import Toast from "../../components/Toast";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useToast } from "../../lib/hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -366,6 +366,8 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const load = useCallback(async () => {
     const ok = await authApi.isAuthenticated();
@@ -479,7 +481,7 @@ export default function Profile() {
           </View>
           <Text style={s.gateTitle}>Sign in to TripKart</Text>
           <Text style={s.gateSub}>
-            Sign in to manage bookings, track yatras, and access your seva
+            Sign in to manage bookings, track tours, and access your seva
             history.
           </Text>
           <TouchableOpacity
@@ -729,7 +731,7 @@ export default function Profile() {
 
             <TouchableOpacity
               style={s.logout}
-              onPress={logout}
+              onPress={() => setShowLogoutConfirm(true)}
               testID="logout-btn"
             >
               <View style={s.logoutIcon}>
@@ -744,29 +746,7 @@ export default function Profile() {
             {!isGuest && (
               <TouchableOpacity
                 style={s.deleteAccBtn}
-                onPress={() =>
-                  Alert.alert(
-                    "Delete Account",
-                    "This will permanently delete your account, all bookings, and tour data. This cannot be undone.\n\nAre you sure?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Delete Permanently",
-                        style: "destructive",
-                        onPress: async () => {
-                          try {
-                            await authApi.deleteAccount();
-                          } catch {}
-                          await authApi.logout();
-                          DeviceEventEmitter.emit("userPhotoChanged", null);
-                          setAuthed(false);
-                          setUser(null);
-                          router.replace("/auth/login");
-                        },
-                      },
-                    ],
-                  )
-                }
+                onPress={() => setShowDeleteConfirm(true)}
                 testID="delete-account-btn"
               >
                 <Ionicons name="trash-outline" size={16} color="#DC2626" />
@@ -798,6 +778,44 @@ export default function Profile() {
         message={toast.message}
         type={toast.type}
         onHide={hideToast}
+      />
+
+      {/* Logout confirmation */}
+      <ConfirmModal
+        visible={showLogoutConfirm}
+        icon="log-out-outline"
+        title={isGuest ? "Exit Guest Session?" : "Logout?"}
+        message={
+          isGuest
+            ? "Your guest session will end. Bookings remain, but you'll need to sign in to access them."
+            : "You will be signed out of your account."
+        }
+        confirmText={isGuest ? "Exit" : "Logout"}
+        cancelText="Stay"
+        destructive
+        onConfirm={() => { setShowLogoutConfirm(false); logout(); }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+
+      {/* Delete account confirmation */}
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        icon="trash-outline"
+        title="Delete Account?"
+        message="This will permanently delete your account, all bookings, and tour data. This cannot be undone."
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        destructive
+        onConfirm={async () => {
+          setShowDeleteConfirm(false);
+          try { await authApi.deleteAccount(); } catch {}
+          await authApi.logout();
+          DeviceEventEmitter.emit("userPhotoChanged", null);
+          setAuthed(false);
+          setUser(null);
+          router.replace("/auth/login");
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </SafeAreaView>
   );

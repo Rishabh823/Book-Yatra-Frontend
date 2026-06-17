@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,6 +14,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { tours as toursApi } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const fmtDate = (d) =>
   d
@@ -33,6 +35,11 @@ export default function DraftsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [publishTarget, setPublishTarget] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -40,7 +47,7 @@ export default function DraftsScreen() {
       const list = Array.isArray(res) ? res : res?.data || [];
       setDrafts(list);
     } catch (e) {
-      Alert.alert("Error", "Failed to load drafts");
+      showToast("Failed to load drafts", "error");
     }
     setLoading(false);
     setRefreshing(false);
@@ -49,51 +56,44 @@ export default function DraftsScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleDelete = (item) => {
-    Alert.alert(
-      "Delete Draft",
-      `Delete "${item.title || "Untitled Tour"}"? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(item._id);
-            try {
-              await toursApi.remove(item._id);
-              setDrafts((prev) => prev.filter((d) => d._id !== item._id));
-            } catch (e) {
-              Alert.alert("Error", e.message || "Failed to delete draft");
-            }
-            setDeleting(null);
-          },
-        },
-      ]
-    );
+    setDeleteTarget(item);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    setDeleting(deleteTarget._id);
+    try {
+      await toursApi.remove(deleteTarget._id);
+      setDrafts((prev) => prev.filter((d) => d._id !== deleteTarget._id));
+    } catch (e) {
+      showToast(e.message || "Failed to delete draft", "error");
+    }
+    setDeleting(null);
+    setDeleteTarget(null);
   };
 
   const handlePublish = (item) => {
     if (!item.title || !item.source || !item.destination) {
-      return Alert.alert(
-        "Incomplete Draft",
-        "Please complete Title, Source and Destination before publishing."
-      );
+      showToast("Please complete Title, Source and Destination before publishing.", "error");
+      return;
     }
-    Alert.alert("Publish Tour", `Publish "${item.title}" and make it visible to travelers?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Publish",
-        onPress: async () => {
-          try {
-            await toursApi.publish(item._id);
-            setDrafts((prev) => prev.filter((d) => d._id !== item._id));
-            Alert.alert("Published!", "Tour is now live for your followers.");
-          } catch (e) {
-            Alert.alert("Error", e.message || "Failed to publish");
-          }
-        },
-      },
-    ]);
+    setPublishTarget(item);
+    setShowPublishConfirm(true);
+  };
+
+  const handlePublishConfirmed = async () => {
+    if (!publishTarget) return;
+    setShowPublishConfirm(false);
+    try {
+      await toursApi.publish(publishTarget._id);
+      setDrafts((prev) => prev.filter((d) => d._id !== publishTarget._id));
+      showToast("Tour is now live for your followers.", "success");
+    } catch (e) {
+      showToast(e.message || "Failed to publish", "error");
+    }
+    setPublishTarget(null);
   };
 
   const progress = (item) => {
@@ -236,6 +236,28 @@ export default function DraftsScreen() {
           }
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Draft"
+        message={`Delete "${deleteTarget?.title || "Untitled Tour"}"? This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
+      <ConfirmModal
+        visible={showPublishConfirm}
+        title="Publish Tour"
+        message={`Publish "${publishTarget?.title}" and make it visible to travelers?`}
+        confirmText="Publish"
+        cancelText="Cancel"
+        onConfirm={handlePublishConfirmed}
+        onCancel={() => setShowPublishConfirm(false)}
+        onDismiss={() => setShowPublishConfirm(false)}
+      />
     </View>
   );
 }

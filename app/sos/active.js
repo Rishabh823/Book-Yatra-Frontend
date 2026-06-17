@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const STATUS_STEPS = [
   { key: "active", label: "SOS Sent", icon: "alert-circle", color: "#DC2626" },
@@ -44,6 +44,7 @@ export default function SOSActiveScreen() {
   const { sosId } = useLocalSearchParams();
   const [sos, setSos] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCancelSOSConfirm, setShowCancelSOSConfirm] = useState(false);
 
   const loadSOS = useCallback(async () => {
     try {
@@ -180,16 +181,7 @@ export default function SOSActiveScreen() {
         {!isResolved && (
           <TouchableOpacity
             style={styles.cancelBtn}
-            onPress={() =>
-              Alert.alert("Cancel SOS", "Mark this SOS as false alarm?", [
-                { text: "No" },
-                {
-                  text: "Yes, Cancel",
-                  style: "destructive",
-                  onPress: () => router.back(),
-                },
-              ])
-            }
+            onPress={() => setShowCancelSOSConfirm(true)}
           >
             <Text style={styles.cancelText}>This was a false alarm</Text>
           </TouchableOpacity>
@@ -204,6 +196,17 @@ export default function SOSActiveScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
+      <ConfirmModal
+        visible={showCancelSOSConfirm}
+        title="Cancel SOS"
+        message="Mark this SOS as false alarm?"
+        confirmText="Yes, Cancel"
+        cancelText="No"
+        onConfirm={() => { setShowCancelSOSConfirm(false); router.back(); }}
+        onCancel={() => setShowCancelSOSConfirm(false)}
+        onDismiss={() => setShowCancelSOSConfirm(false)}
+        destructive={false}
+      />
     </View>
   );
 }

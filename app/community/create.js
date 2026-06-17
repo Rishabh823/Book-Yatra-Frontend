@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const POST_TYPES = ['post','memory','travel_tip','experience'];
 
 export default function CreatePostScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [type, setType] = useState('post');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -18,13 +21,13 @@ export default function CreatePostScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
-    if (!content.trim()) return Alert.alert('Error', 'Content is required');
+    if (!content.trim()) { showToast("Content is required", "error"); return; }
     setSubmitting(true);
     try {
       const tagArr = tags.split(',').map(t => t.trim()).filter(Boolean);
       await api.post('/community', { type, title: title.trim() || undefined, content: content.trim(), tags: tagArr, isPublic: true });
       router.back();
-    } catch { Alert.alert('Error', 'Failed to create post'); }
+    } catch { showToast("Failed to create post", "error"); }
     setSubmitting(false);
   };
 
@@ -63,6 +66,7 @@ export default function CreatePostScreen() {
           <TextInput style={styles.input} value={tags} onChangeText={setTags} placeholder="e.g. vrindavan, mathura, yatra" placeholderTextColor={colors.textSecondary} />
         </View>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

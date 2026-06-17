@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const fmtTime = (d) => {
   if (!d) return '';
@@ -23,6 +25,7 @@ export default function LiveDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const intervalRef = React.useRef(null);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = useCallback(async () => {
     try {
@@ -47,7 +50,7 @@ export default function LiveDashboard() {
     try {
       await api.put('/sos/' + id + '/acknowledge', {});
       setActiveSOS(prev => prev.map(s => s._id === id ? { ...s, status: 'acknowledged' } : s));
-    } catch { Alert.alert('Error', 'Failed to acknowledge'); }
+    } catch { showToast('Failed to acknowledge', "error"); }
   };
 
   const STATS = [
@@ -144,6 +147,7 @@ export default function LiveDashboard() {
           </View>
         </ScrollView>
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

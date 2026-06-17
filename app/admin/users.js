@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  ActivityIndicator, RefreshControl, TextInput, Alert, Image,
+  ActivityIndicator, RefreshControl, TextInput, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -9,6 +9,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AdminShell } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { api, auth as authApi } from '../../lib/api';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const ROLE_COLORS = {
   admin: '#DC2626',
@@ -26,6 +29,11 @@ export default function AdminUsers() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentRole, setCurrentRole] = useState('manager');
   const [blocking, setBlocking]       = useState(null); // userId being toggled
+  const { toast, showToast, hideToast } = useToast();
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [blockTarget, setBlockTarget] = useState(null); // user object
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // user object
 
   const isSuperAdmin = currentRole === 'super_admin';
 
@@ -89,62 +97,50 @@ export default function AdminUsers() {
 
   const toggleBlock = async (user) => {
     if (!myOperatorId) return;
+    setBlockTarget(user);
+    setShowBlockConfirm(true);
+  };
+
+  const handleBlockConfirmed = async () => {
+    if (!blockTarget) return;
+    setShowBlockConfirm(false);
+    const user = blockTarget;
     const blocked = isBlockedByMe(user);
     const action = blocked ? 'unblock' : 'block';
-    Alert.alert(
-      blocked ? 'Unblock User' : 'Block User',
-      blocked
-        ? `Allow ${user.name} to see your operator's tours again?`
-        : `Block ${user.name} from seeing your operator's tours?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: blocked ? 'Unblock' : 'Block',
-          style: blocked ? 'default' : 'destructive',
-          onPress: async () => {
-            setBlocking(String(user._id));
-            try {
-              await api.post(`/users/${user._id}/${action}-for-operator`, { operatorId: myOperatorId });
-              // Optimistically update local state
-              setItems(prev => prev.map(u => {
-                if (String(u._id) !== String(user._id)) return u;
-                const current = u.blockedByOperators || u.blockedOperators || [];
-                const updated = blocked
-                  ? current.filter(op => (typeof op === 'object' ? String(op._id) : String(op)) !== myOperatorId)
-                  : [...current, myOperatorId];
-                return { ...u, blockedByOperators: updated };
-              }));
-            } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to update block status.');
-            } finally {
-              setBlocking(null);
-            }
-          },
-        },
-      ]
-    );
+    setBlocking(String(user._id));
+    try {
+      await api.post(`/users/${user._id}/${action}-for-operator`, { operatorId: myOperatorId });
+      setItems(prev => prev.map(u => {
+        if (String(u._id) !== String(user._id)) return u;
+        const current = u.blockedByOperators || u.blockedOperators || [];
+        const updated = blocked
+          ? current.filter(op => (typeof op === 'object' ? String(op._id) : String(op)) !== myOperatorId)
+          : [...current, myOperatorId];
+        return { ...u, blockedByOperators: updated };
+      }));
+    } catch (e) {
+      showToast(e.message || 'Failed to update block status.', "error");
+    } finally {
+      setBlocking(null);
+      setBlockTarget(null);
+    }
   };
 
   const deleteUser = (user) => {
-    Alert.alert(
-      'Delete User',
-      `Permanently delete ${user.name}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.del(`/users/${user._id}`);
-              setItems(prev => prev.filter(u => String(u._id) !== String(user._id)));
-            } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to delete user.');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTarget(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await api.del(`/users/${deleteTarget._id}`);
+      setItems(prev => prev.filter(u => String(u._id) !== String(deleteTarget._id)));
+    } catch (e) {
+      showToast(e.message || 'Failed to delete user.', "error");
+    }
+    setDeleteTarget(null);
   };
 
   return (
@@ -268,6 +264,29 @@ export default function AdminUsers() {
           }}
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showBlockConfirm}
+        title={blockTarget && isBlockedByMe(blockTarget) ? 'Unblock User' : 'Block User'}
+        message={blockTarget ? (isBlockedByMe(blockTarget) ? `Allow ${blockTarget.name} to see your operator's tours again?` : `Block ${blockTarget.name} from seeing your operator's tours?`) : ''}
+        confirmText={blockTarget && isBlockedByMe(blockTarget) ? 'Unblock' : 'Block'}
+        cancelText="Cancel"
+        onConfirm={handleBlockConfirmed}
+        onCancel={() => setShowBlockConfirm(false)}
+        onDismiss={() => setShowBlockConfirm(false)}
+        destructive={blockTarget ? !isBlockedByMe(blockTarget) : false}
+      />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete User"
+        message={`Permanently delete ${deleteTarget?.name}? This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </AdminShell>
   );
 }

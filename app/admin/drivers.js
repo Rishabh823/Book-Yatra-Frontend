@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  Alert,
   ActivityIndicator,
   RefreshControl,
   ScrollView,
@@ -22,6 +21,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { api, upload as uploadApi } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { DateInput } from '../../components/DateInput';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const EMPTY_FORM = {
   name: '',
@@ -47,6 +49,9 @@ export default function DriversScreen() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploadingKey, setUploadingKey] = useState(null); // 'photo' | 'aadhaarFront' | 'aadhaarBack'
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -88,7 +93,7 @@ export default function DriversScreen() {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert('Permission needed', 'Allow photo access to upload Aadhaar image.');
+        showToast('Allow photo access to upload Aadhaar image.', "error");
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -100,9 +105,9 @@ export default function DriversScreen() {
       setUploadingKey(key);
       const res = await uploadApi.image(result.assets[0].uri);
       if (res?.url) f(key, res.url);
-      else Alert.alert('Upload Failed', 'Could not get image URL.');
+      else showToast('Could not get image URL.', "error");
     } catch (e) {
-      Alert.alert('Upload Failed', e.message || 'Try again.');
+      showToast(e.message || 'Try again.', "error");
     } finally {
       setUploadingKey(null);
     }
@@ -110,7 +115,7 @@ export default function DriversScreen() {
 
   const save = async () => {
     if (!form.name || !form.phone || !form.licenseNo) {
-      return Alert.alert('Error', 'Name, phone and license number are required');
+      showToast('Name, phone and license number are required', "error"); return;
     }
     setSaving(true);
     try {
@@ -126,7 +131,7 @@ export default function DriversScreen() {
       setShowModal(false);
       load();
     } catch {
-      Alert.alert('Error', 'Failed to save driver');
+      showToast('Failed to save driver', "error");
     }
     setSaving(false);
   };
@@ -139,29 +144,25 @@ export default function DriversScreen() {
     } catch {
       // Revert on failure
       setDrivers(prev => prev.map(dr => dr._id === d._id ? { ...dr, isAvailable: !d.isAvailable } : dr));
-      Alert.alert('Error', 'Failed to update availability');
+      showToast('Failed to update availability', "error");
     }
   };
 
   const handleDelete = (d) => {
-    Alert.alert(
-      'Delete Driver',
-      `Remove ${d.name || d.userId?.name || 'this driver'}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete', style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.del('/drivers/' + d._id);
-              setDrivers(prev => prev.filter(dr => dr._id !== d._id));
-            } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to delete driver');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTarget(d);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await api.del('/drivers/' + deleteTarget._id);
+      setDrivers(prev => prev.filter(dr => dr._id !== deleteTarget._id));
+    } catch (e) {
+      showToast(e.message || 'Failed to delete driver', "error");
+    }
+    setDeleteTarget(null);
   };
 
   const renderItem = ({ item }) => (
@@ -389,6 +390,18 @@ export default function DriversScreen() {
           </View>
         </View>
       </Modal>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Driver"
+        message={`Remove ${deleteTarget?.name || deleteTarget?.userId?.name || 'this driver'}? This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </View>
   );
 }

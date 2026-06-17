@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  ActivityIndicator, RefreshControl, Alert, Image, TextInput, Modal, ScrollView,
+  ActivityIndicator, RefreshControl, Image, TextInput, Modal, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AdminShell } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { gallery as galleryApi, api } from '../../lib/api';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function AdminGallery() {
   const [items, setItems] = useState([]);
@@ -17,6 +20,9 @@ export default function AdminGallery() {
   const [showModal, setShowModal] = useState(false);
   const [newItem, setNewItem] = useState({ title: '', type: 'photo', uri: null, videoUrl: '' });
   const [filter, setFilter] = useState('all'); // all | photo | video
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = async () => {
     try {
@@ -32,7 +38,7 @@ export default function AdminGallery() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photo library.');
+      showToast('Please allow access to your photo library.', "error");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -47,15 +53,15 @@ export default function AdminGallery() {
 
   const uploadItem = async () => {
     if (!newItem.title.trim()) {
-      Alert.alert('Required', 'Please enter a title');
+      showToast('Please enter a title', "error");
       return;
     }
     if (newItem.type === 'photo' && !newItem.uri) {
-      Alert.alert('Required', 'Please select a photo to upload');
+      showToast('Please select a photo to upload', "error");
       return;
     }
     if (newItem.type === 'video' && !newItem.videoUrl.trim()) {
-      Alert.alert('Required', 'Please enter a video URL (YouTube embed URL)');
+      showToast('Please enter a video URL (YouTube embed URL)', "error");
       return;
     }
 
@@ -66,32 +72,32 @@ export default function AdminGallery() {
       } else {
         await api.post('/gallery', { type: 'video', src: newItem.videoUrl.trim(), title: newItem.title.trim() });
       }
-      Alert.alert('Uploaded', 'Gallery item added successfully');
+      showToast('Gallery item added successfully', "success");
       setShowModal(false);
       setNewItem({ title: '', type: 'photo', uri: null, videoUrl: '' });
       load();
     } catch (e) {
-      Alert.alert('Upload failed', e.message || 'Please try again');
+      showToast(e.message || 'Please try again', "error");
     } finally {
       setUploading(false);
     }
   };
 
   const deleteItem = (item) => {
-    Alert.alert('Delete?', `Remove "${item.title}" from gallery?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive',
-        onPress: async () => {
-          try {
-            await galleryApi.delete(item._id);
-            setItems((prev) => prev.filter((i) => i._id !== item._id));
-          } catch (e) {
-            Alert.alert('Error', e.message || 'Failed to delete');
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(item);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await galleryApi.delete(deleteTarget._id);
+      setItems((prev) => prev.filter((i) => i._id !== deleteTarget._id));
+    } catch (e) {
+      showToast(e.message || 'Failed to delete', "error");
+    }
+    setDeleteTarget(null);
   };
 
   const filtered = filter === 'all' ? items : items.filter((i) => i.type === filter);
@@ -254,6 +260,18 @@ export default function AdminGallery() {
           </View>
         </View>
       </Modal>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete?"
+        message={`Remove "${deleteTarget?.title}" from gallery?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </AdminShell>
   );
 }

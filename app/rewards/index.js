@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Share,
-  Alert,
   TextInput,
   RefreshControl,
 } from "react-native";
@@ -17,6 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const TIERS = {
   bronze: {
@@ -53,6 +54,7 @@ const TIER_MINS = { bronze: 0, silver: 1000, gold: 5000, platinum: 10000 };
 export default function RewardsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [loyalty, setLoyalty] = useState(null);
   const [badges, setBadges] = useState([]);
   const [redeemPoints, setRedeemPoints] = useState("");
@@ -84,37 +86,26 @@ export default function RewardsScreen() {
     setClaimingDaily(true);
     try {
       const res = await api.post("/gamification/daily-reward", {});
-      Alert.alert(
-        "Daily Reward!",
-        "You earned " + res.data.pointsEarned + " points!",
-      );
+      showToast("You earned " + res.data.pointsEarned + " points!", "success");
       load();
     } catch (err) {
-      Alert.alert(
-        "Already claimed",
-        "Come back tomorrow for your next reward!",
-      );
+      showToast("Come back tomorrow for your next reward!", "error");
     }
     setClaimingDaily(false);
   };
 
   const handleRedeem = async () => {
     const pts = parseInt(redeemPoints);
-    if (!pts || pts < 100) return Alert.alert("Minimum 100 points to redeem");
-    if (pts > (loyalty?.points || 0)) return Alert.alert("Insufficient points");
+    if (!pts || pts < 100) { showToast("Minimum 100 points to redeem", "error"); return; }
+    if (pts > (loyalty?.points || 0)) { showToast("Insufficient points", "error"); return; }
     setRedeeming(true);
     try {
       const res = await api.post("/gamification/redeem", { points: pts });
-      Alert.alert(
-        "Redeemed!",
-        "Discount of ₹" +
-          res.data.discountAmount +
-          " available on next booking.",
-      );
+      showToast("Discount of ₹" + res.data.discountAmount + " available on next booking.", "success");
       setRedeemPoints("");
       load();
     } catch {
-      Alert.alert("Error", "Failed to redeem");
+      showToast("Failed to redeem", "error");
     }
     setRedeeming(false);
   };
@@ -356,6 +347,7 @@ export default function RewardsScreen() {
           <Ionicons name="share-outline" size={20} color={colors.primary} />
         </TouchableOpacity>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

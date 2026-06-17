@@ -1,13 +1,16 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  ActivityIndicator, RefreshControl, Alert,
+  ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const TABS = [
   { key: 'open',     label: 'Open',     color: '#D97706', bg: '#FFFBEB' },
@@ -21,6 +24,9 @@ export default function AdminEnquiries() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expanding, setExpanding]   = useState(null);
+  const { toast, showToast, hideToast } = useToast();
+  const [showResolveConfirm, setShowResolveConfirm] = useState(false);
+  const [resolveTargetId, setResolveTargetId] = useState(null);
 
   const load = async () => {
     try {
@@ -41,13 +47,20 @@ export default function AdminEnquiries() {
   const resolvedCount = items.filter(it => it.status === 'resolved').length;
 
   const resolve = (id) => {
-    Alert.alert('Mark as Resolved?', 'This will close the enquiry.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Resolve', style: 'default', onPress: async () => {
-        try { await api.put(`/contacts/${id}`, { status: 'resolved' }); load(); }
-        catch (e) { Alert.alert('Error', e.message); }
-      }},
-    ]);
+    setResolveTargetId(id);
+    setShowResolveConfirm(true);
+  };
+
+  const handleResolveConfirmed = async () => {
+    if (!resolveTargetId) return;
+    setShowResolveConfirm(false);
+    try {
+      await api.put(`/contacts/${resolveTargetId}`, { status: 'resolved' });
+      load();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+    setResolveTargetId(null);
   };
 
   return (
@@ -150,6 +163,17 @@ export default function AdminEnquiries() {
           }}
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showResolveConfirm}
+        title="Mark as Resolved?"
+        message="This will close the enquiry."
+        confirmText="Resolve"
+        cancelText="Cancel"
+        onConfirm={handleResolveConfirmed}
+        onCancel={() => setShowResolveConfirm(false)}
+        onDismiss={() => setShowResolveConfirm(false)}
+      />
     </AdminShell>
   );
 }

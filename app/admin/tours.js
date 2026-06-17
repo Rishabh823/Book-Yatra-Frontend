@@ -9,7 +9,6 @@ import {
   RefreshControl,
   TextInput,
   Modal,
-  Alert,
   ScrollView,
   Image,
   KeyboardAvoidingView,
@@ -23,6 +22,8 @@ import { AdminShell } from "../../lib/AdminScreen";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { tours as toursApi, upload as uploadApi } from "../../lib/api";
 import { DateInput } from "../../components/DateInput";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const BUS_TYPES = ["AC Bus", "Non AC Bus"];
 const SEAT_STRUCTURES = ["2x2", "2x3"];
@@ -73,6 +74,7 @@ export default function AdminTours() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const { toast, showToast, hideToast } = useToast();
 
   const load = async () => {
     try {
@@ -111,10 +113,7 @@ export default function AdminTours() {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          "Permission needed",
-          "Allow photo access to upload a cover image.",
-        );
+        showToast("Allow photo access to upload a cover image.", "error");
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -127,9 +126,9 @@ export default function AdminTours() {
       setUploading(true);
       const res = await uploadApi.image(result.assets[0].uri);
       if (res?.url) f(res.url, "coverPhotoUrl");
-      else Alert.alert("Upload Failed", "Could not get image URL.");
+      else showToast("Could not get image URL.", "error");
     } catch (e) {
-      Alert.alert("Upload Failed", e.message || "Try again.");
+      showToast(e.message || "Try again.", "error");
     } finally {
       setUploading(false);
     }
@@ -146,16 +145,16 @@ export default function AdminTours() {
       "price",
     ]) {
       if (!form[k]?.trim()) {
-        Alert.alert("Validation", `"${k}" is required.`);
+        showToast(`"${k}" is required.`, "error");
         return false;
       }
     }
     if (!form.coverPhotoUrl) {
-      Alert.alert("Validation", "Please upload a cover photo.");
+      showToast("Please upload a cover photo.", "error");
       return false;
     }
     if (new Date(form.startDate) >= new Date(form.endDate)) {
-      Alert.alert("Validation", "End date must be after start date.");
+      showToast("End date must be after start date.", "error");
       return false;
     }
     return true;
@@ -177,7 +176,7 @@ export default function AdminTours() {
       setModal(false);
       load();
     } catch (e) {
-      Alert.alert("Error", e.message || "Save failed");
+      showToast(e.message || "Save failed", "error");
     } finally {
       setSaving(false);
     }
@@ -511,6 +510,7 @@ export default function AdminTours() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </AdminShell>
   );
 }

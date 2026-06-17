@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell, StatusBadge } from '../../lib/AdminScreen';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { members as membersApi, api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const TABS = [
   { key: 'pending', label: 'Pending' },
@@ -17,6 +20,9 @@ export default function AdminMembers() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { toast, showToast, hideToast } = useToast();
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [updateTarget, setUpdateTarget] = useState(null); // { id, status }
 
   const load = async () => {
     try {
@@ -30,15 +36,20 @@ export default function AdminMembers() {
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const updateMember = (id, status) => {
-    Alert.alert(`${status === 'approved' ? 'Approve' : 'Reject'} Member?`, 'This will update the member status.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', onPress: async () => {
-        try {
-          await api.put(`/members/${id}`, { status });
-          load();
-        } catch (e) { Alert.alert('Error', e.message); }
-      }},
-    ]);
+    setUpdateTarget({ id, status });
+    setShowUpdateConfirm(true);
+  };
+
+  const handleUpdateConfirmed = async () => {
+    if (!updateTarget) return;
+    setShowUpdateConfirm(false);
+    try {
+      await api.put(`/members/${updateTarget.id}`, { status: updateTarget.status });
+      load();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+    setUpdateTarget(null);
   };
 
   return (
@@ -95,6 +106,17 @@ export default function AdminMembers() {
           )}
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showUpdateConfirm}
+        title={`${updateTarget?.status === 'approved' ? 'Approve' : 'Reject'} Member?`}
+        message="This will update the member status."
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={handleUpdateConfirmed}
+        onCancel={() => setShowUpdateConfirm(false)}
+        onDismiss={() => setShowUpdateConfirm(false)}
+      />
     </AdminShell>
   );
 }

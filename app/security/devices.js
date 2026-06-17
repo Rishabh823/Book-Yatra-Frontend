@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +13,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { securityApi } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const PLATFORM_ICON = (p) => {
   const pl = (p || "").toLowerCase();
@@ -34,10 +36,13 @@ const fmtDate = (d) =>
 export default function DevicesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
 
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState(null); // { id, name }
 
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -62,31 +67,26 @@ export default function DevicesScreen() {
         prev.map((d) => (d._id === id ? { ...d, trusted: true } : d)),
       );
     } catch (e) {
-      Alert.alert("Error", e.message);
+      showToast(e.message, "error");
     }
-  }, []);
+  }, [showToast]);
 
   const handleRemove = useCallback((id, name) => {
-    Alert.alert(
-      "Remove Device",
-      `Remove "${name}" from your trusted devices?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await securityApi.removeDevice(id);
-              setDevices((prev) => prev.filter((d) => d._id !== id));
-            } catch (e) {
-              Alert.alert("Error", e.message);
-            }
-          },
-        },
-      ],
-    );
+    setPendingRemove({ id, name });
+    setShowRemoveConfirm(true);
   }, []);
+
+  const handleRemoveConfirmed = useCallback(async () => {
+    setShowRemoveConfirm(false);
+    if (!pendingRemove) return;
+    try {
+      await securityApi.removeDevice(pendingRemove.id);
+      setDevices((prev) => prev.filter((d) => d._id !== pendingRemove.id));
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+    setPendingRemove(null);
+  }, [pendingRemove, showToast]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -202,6 +202,17 @@ export default function DevicesScreen() {
           </Text>
         </View>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showRemoveConfirm}
+        title="Remove Device"
+        message={pendingRemove ? `Remove "${pendingRemove.name}" from your trusted devices?` : ""}
+        confirmText="Remove"
+        onConfirm={handleRemoveConfirmed}
+        onCancel={() => { setShowRemoveConfirm(false); setPendingRemove(null); }}
+        onDismiss={() => { setShowRemoveConfirm(false); setPendingRemove(null); }}
+        destructive={true}
+      />
     </View>
   );
 }

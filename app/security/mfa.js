@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Alert, Image, Clipboard,
+  TextInput, Image, Clipboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,10 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { securityApi } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from '../../components/Toast';
+import { useToast } from '../../lib/hooks/useToast';
 
 export default function MFAScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
 
   const [mfaEnabled,  setMfaEnabled]  = useState(false);
   const [loading,     setLoading]     = useState(true);
@@ -36,10 +39,10 @@ export default function MFAScreen() {
       setSetupData(data);
       setStep('setup');
     } catch (e) {
-      Alert.alert('Error', e.message);
+      showToast(e.message, 'error');
     }
     setSaving(false);
-  }, []);
+  }, [showToast]);
 
   const submitOtp = useCallback(async () => {
     if (otp.length < 6) return;
@@ -50,11 +53,11 @@ export default function MFAScreen() {
       setMfaEnabled(true);
       setStep('backup');
     } catch (e) {
-      Alert.alert('Invalid Code', e.message);
+      showToast(e.message || 'Invalid code', 'error');
     }
     setSaving(false);
     setOtp('');
-  }, [otp]);
+  }, [otp, showToast]);
 
   const submitDisableOtp = useCallback(async () => {
     if (disableOtp.length < 6) return;
@@ -64,11 +67,11 @@ export default function MFAScreen() {
       setMfaEnabled(false);
       setStep('status');
     } catch (e) {
-      Alert.alert('Invalid Code', e.message);
+      showToast(e.message || 'Invalid code', 'error');
     }
     setSaving(false);
     setDisableOtp('');
-  }, [disableOtp]);
+  }, [disableOtp, showToast]);
 
   // ── Backup codes view
   if (step === 'backup') {
@@ -95,6 +98,7 @@ export default function MFAScreen() {
             <Text style={styles.primaryBtnText}>I've saved my backup codes</Text>
           </TouchableOpacity>
         </ScrollView>
+        <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
   }
@@ -130,6 +134,7 @@ export default function MFAScreen() {
             <Text style={styles.primaryBtnText}>{saving ? 'Verifying…' : 'Verify & Enable'}</Text>
           </TouchableOpacity>
         </View>
+        <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
   }
@@ -152,7 +157,7 @@ export default function MFAScreen() {
             </View>
           )}
           {setupData?.manualEntry && (
-            <TouchableOpacity style={[styles.card, shadow.soft]} onPress={() => { Clipboard.setString(setupData.manualEntry); Alert.alert('Copied', 'Secret key copied to clipboard.'); }}>
+            <TouchableOpacity style={[styles.card, shadow.soft]} onPress={() => { Clipboard.setString(setupData.manualEntry); showToast('Secret key copied to clipboard', 'success'); }}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardSub}>Manual entry key (tap to copy)</Text>
                 <Text style={[styles.cardTitle, { fontFamily: fonts.accent, letterSpacing: 2, fontSize: 13 }]}>{setupData.manualEntry}</Text>
@@ -173,6 +178,7 @@ export default function MFAScreen() {
             <Text style={styles.primaryBtnText}>I've scanned the code →</Text>
           </TouchableOpacity>
         </ScrollView>
+        <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
   }
@@ -208,6 +214,7 @@ export default function MFAScreen() {
             <Text style={styles.primaryBtnText}>{saving ? 'Disabling…' : 'Disable MFA'}</Text>
           </TouchableOpacity>
         </View>
+        <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
   }
@@ -223,7 +230,7 @@ export default function MFAScreen() {
         <Text style={styles.heroTitle}>Two-Factor Auth</Text>
         <Text style={styles.heroSub}>Extra protection for your account</Text>
       </LinearGradient>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32, gap: 12 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32, gap: 12, maxWidth: 520, width: '100%', alignSelf: 'center' }}>
         <View style={[styles.card, shadow.card, { borderLeftWidth: 3, borderLeftColor: mfaEnabled ? '#16A34A' : colors.warning }]}>
           <Ionicons name={mfaEnabled ? 'shield-checkmark' : 'shield-outline'} size={24} color={mfaEnabled ? '#16A34A' : colors.warning} />
           <View style={{ flex: 1 }}>
@@ -237,7 +244,7 @@ export default function MFAScreen() {
             <TouchableOpacity style={[styles.card, shadow.soft]} onPress={async () => {
               const res = await securityApi.getBackupCodes().catch(() => null);
               if (res?.backupCodes) setBackupCodes(res.backupCodes.map(b => b.code));
-              Alert.alert('Backup Codes', res?.backupCodes?.map((b, i) => `${i+1}. ${b.code}${b.used ? ' (used)' : ''}`).join('\n') || 'No codes.');
+              showToast('Backup codes generated - save them securely!', 'success');
             }}>
               <Ionicons name="key" size={20} color={colors.primary} />
               <Text style={[styles.cardTitle, { flex: 1 }]}>View Backup Codes</Text>
@@ -265,6 +272,7 @@ export default function MFAScreen() {
           </View>
         ))}
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

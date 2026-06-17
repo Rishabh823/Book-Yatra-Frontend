@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Pressable,
-  Alert,
   Vibration,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -16,6 +15,9 @@ import { pinStorage } from "../../lib/security/secureStorage";
 import { securityApi } from "../../lib/api";
 import { useAppLock } from "../../lib/security/appLockContext";
 import { fonts } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"];
 
@@ -72,6 +74,7 @@ export default function PinScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { loadSettings } = useAppLock();
+  const { toast, showToast, hideToast } = useToast();
 
   const [hasPin, setHasPin] = useState(false);
   const [localPinHash, setLocalPinHash] = useState(false);
@@ -81,6 +84,7 @@ export default function PinScreen() {
   const [firstPin, setFirstPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showRemovePinConfirm, setShowRemovePinConfirm] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -129,7 +133,7 @@ export default function PinScreen() {
           loadSettings();
           setStep("menu");
           setError("");
-          Alert.alert("PIN Enabled", "Your app will now lock when you leave and return.");
+          showToast("PIN enabled - app will lock when you leave", "success");
         } catch {
           setError("Failed to save PIN.");
         }
@@ -155,14 +159,26 @@ export default function PinScreen() {
           loadSettings();
           setStep("menu");
           setError("");
-          Alert.alert("PIN Removed", "App lock has been disabled.");
+          showToast("PIN removed - app lock has been disabled", "success");
         } catch {
           setError("Failed to remove PIN.");
         }
       }
     },
-    [pin, pinLen, step, firstPin, loadSettings],
+    [pin, pinLen, step, firstPin, loadSettings, showToast],
   );
+
+  const handleRemovePinConfirmed = useCallback(async () => {
+    setShowRemovePinConfirm(false);
+    try {
+      await securityApi.disablePin();
+      setHasPin(false);
+      loadSettings();
+      showToast("PIN removed - app lock has been disabled", "success");
+    } catch {
+      showToast("Could not remove PIN.", "error");
+    }
+  }, [loadSettings, showToast]);
 
   const STEP_LABEL = {
     enter_new: `Set a ${pinLen}-digit PIN`,
@@ -210,6 +226,7 @@ export default function PinScreen() {
         <View style={[entry.padWrap, { paddingBottom: insets.bottom + 24 }]}>
           <PinPad onKey={handleKey} />
         </View>
+        <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
   }
@@ -315,27 +332,7 @@ export default function PinScreen() {
                 style={menu.dangerBtn}
                 onPress={() => {
                   if (!localPinHash) {
-                    Alert.alert(
-                      "Remove PIN",
-                      "PIN data not found on this device. Remove it anyway?",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Remove",
-                          style: "destructive",
-                          onPress: async () => {
-                            try {
-                              await securityApi.disablePin();
-                              setHasPin(false);
-                              loadSettings();
-                              Alert.alert("PIN Removed", "App lock has been disabled.");
-                            } catch {
-                              Alert.alert("Error", "Could not remove PIN.");
-                            }
-                          },
-                        },
-                      ],
-                    );
+                    setShowRemovePinConfirm(true);
                   } else {
                     setPin("");
                     setStep("enter_current");
@@ -354,6 +351,17 @@ export default function PinScreen() {
           Your PIN is stored securely on this device only and is never sent to our servers.
         </Text>
       </View>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showRemovePinConfirm}
+        title="Remove PIN"
+        message="PIN data not found on this device. Remove it anyway?"
+        confirmText="Remove"
+        onConfirm={handleRemovePinConfirmed}
+        onCancel={() => setShowRemovePinConfirm(false)}
+        onDismiss={() => setShowRemovePinConfirm(false)}
+        destructive={true}
+      />
     </View>
   );
 }

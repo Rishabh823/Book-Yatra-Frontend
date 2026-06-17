@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 export default function NewChatScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -35,14 +38,14 @@ export default function NewChatScreen() {
   };
 
   const startChat = async () => {
-    if (!selected.length) return Alert.alert('Select at least one person');
+    if (!selected.length) { showToast("Select at least one person", "error"); return; }
     setCreating(true);
     try {
       const type = selected.length > 1 ? 'group' : 'direct';
       const res = await api.post('/chat', { participantIds: selected.map(u => u._id), type, name: selected.length > 1 ? groupName || selected.map(u => u.name).join(', ') : undefined });
       router.replace('/chat/' + res.data._id);
     } catch (err) {
-      Alert.alert('Error', 'Failed to create chat');
+      showToast("Failed to create chat", "error");
     }
     setCreating(false);
   };
@@ -93,6 +96,7 @@ export default function NewChatScreen() {
           <View style={styles.empty}><Text style={styles.emptyText}>No users found</Text></View>
         )}
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

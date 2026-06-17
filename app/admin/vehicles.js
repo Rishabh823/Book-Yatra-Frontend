@@ -1,11 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const TYPES = ['bus', 'mini-bus', 'tempo', 'car', 'van'];
 
@@ -19,6 +22,9 @@ export default function VehiclesScreen() {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ registrationNo: '', type: 'bus', capacity: '', make: '', model: '' });
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -35,7 +41,7 @@ export default function VehiclesScreen() {
   const openEdit = (v) => { setEditing(v); setForm({ registrationNo: v.registrationNo, type: v.type, capacity: String(v.capacity), make: v.make || '', model: v.model || '' }); setShowModal(true); };
 
   const save = async () => {
-    if (!form.registrationNo || !form.capacity) return Alert.alert('Error', 'Registration and capacity are required');
+    if (!form.registrationNo || !form.capacity) { showToast('Registration and capacity are required', "error"); return; }
     setSaving(true);
     try {
       const payload = { ...form, capacity: parseInt(form.capacity) };
@@ -43,14 +49,24 @@ export default function VehiclesScreen() {
       else await api.post('/vehicles', payload);
       setShowModal(false);
       load();
-    } catch { Alert.alert('Error', 'Failed to save vehicle'); }
+    } catch { showToast('Failed to save vehicle', "error"); }
     setSaving(false);
   };
 
-  const remove = (v) => Alert.alert('Delete Vehicle', 'Remove ' + v.registrationNo + '?', [
-    { text: 'Cancel' },
-    { text: 'Delete', style: 'destructive', onPress: async () => { try { await api.del('/vehicles/' + v._id); load(); } catch {} } }
-  ]);
+  const remove = (v) => {
+    setDeleteTarget(v);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await api.del('/vehicles/' + deleteTarget._id);
+      load();
+    } catch {}
+    setDeleteTarget(null);
+  };
 
   const renderItem = ({ item }) => (
     <View style={[styles.card, shadow.soft]}>
@@ -106,6 +122,18 @@ export default function VehiclesScreen() {
           </View>
         </View>
       </Modal>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Vehicle"
+        message={`Remove ${deleteTarget?.registrationNo}?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </View>
   );
 }

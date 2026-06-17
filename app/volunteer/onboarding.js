@@ -4,12 +4,13 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   ScrollView,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -40,6 +41,7 @@ export default function VolunteerOnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const { toast, showToast, hideToast } = useToast();
   const [uploads, setUploads] = useState({}); // key -> { uri, url, uploading }
   const [submitting, setSubmitting] = useState(false);
 
@@ -97,17 +99,15 @@ export default function VolunteerOnboardingScreen() {
         ...p,
         [docKey]: { ...p[docKey], uploading: false },
       }));
-      Alert.alert("Upload Failed", e.message || "Could not upload document");
+      showToast(e.message || "Could not upload document", "error");
     }
   };
 
   const handleSubmit = async () => {
     const missing = DOCS.filter((d) => d.required && !uploads[d.key]?.url);
     if (missing.length > 0) {
-      return Alert.alert(
-        "Missing Documents",
-        `Please upload: ${missing.map((d) => d.label).join(", ")}`,
-      );
+      showToast(`Please upload: ${missing.map((d) => d.label).join(", ")}`, "error");
+      return;
     }
 
     setSubmitting(true);
@@ -133,12 +133,9 @@ export default function VolunteerOnboardingScreen() {
       }
       // Navigate first — Alert callbacks are unreliable on web
       router.replace("/volunteer");
-      Alert.alert(
-        "Documents Submitted",
-        "Your documents have been submitted for verification. You will be notified once reviewed.",
-      );
+      showToast("Your documents have been submitted for verification. You will be notified once reviewed.", "success");
     } catch (e) {
-      Alert.alert("Error", e.message || "Failed to submit documents");
+      showToast(e.message || "Failed to submit documents", "error");
     }
     setSubmitting(false);
   };
@@ -297,6 +294,7 @@ export default function VolunteerOnboardingScreen() {
           <Text style={s.skipBtnTxt}>Skip for now</Text>
         </TouchableOpacity>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Share,
   Image,
 } from "react-native";
@@ -16,6 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const fmtDate = (d) =>
   d
@@ -58,6 +59,7 @@ export default function QRTicketScreen() {
   const { bookingId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
@@ -78,7 +80,7 @@ export default function QRTicketScreen() {
           if (typeof url === "string" && url.startsWith("data:"))
             setQrDataUrl(url);
         })
-        .catch(() => Alert.alert("Error", "Failed to load ticket"))
+        .catch(() => showToast("Failed to load ticket", "error"))
         .finally(() => setLoading(false));
     }, [bookingId]),
   );
@@ -114,12 +116,9 @@ export default function QRTicketScreen() {
   const downloadPDF = async () => {
     try {
       await api.get("/documents/ticket/" + bookingId + "/pdf");
-      Alert.alert(
-        "PDF Ready",
-        "Your ticket PDF has been generated. Check downloads.",
-      );
+      showToast("Your ticket PDF has been generated. Check downloads.", "success");
     } catch {
-      Alert.alert("Error", "Failed to generate PDF");
+      showToast("Failed to generate PDF", "error");
     }
   };
 
@@ -347,6 +346,7 @@ export default function QRTicketScreen() {
           </TouchableOpacity>
         ) : null}
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

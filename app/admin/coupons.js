@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  Alert,
   ActivityIndicator,
   RefreshControl,
   ScrollView,
@@ -20,6 +19,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { coupons as couponsApi } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { DateInput } from '../../components/DateInput';
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -88,6 +90,10 @@ export default function AdminCouponsScreen() {
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  const { toast, showToast, hideToast } = useToast();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   // ── Load ──────────────────────────────────────────────────────────────────
 
   const load = useCallback(async () => {
@@ -145,7 +151,7 @@ export default function AdminCouponsScreen() {
 
   const save = async () => {
     const err = validate();
-    if (err) return Alert.alert('Validation Error', err);
+    if (err) { showToast(err, "error"); return; }
 
     setSaving(true);
     try {
@@ -161,7 +167,7 @@ export default function AdminCouponsScreen() {
         isActive:          form.isActive,
       };
       if (!payload.validTill) {
-        Alert.alert('Validation Error', 'Expiry date is required.');
+        showToast('Expiry date is required.', "error");
         setSaving(false);
         return;
       }
@@ -174,7 +180,7 @@ export default function AdminCouponsScreen() {
       setShowModal(false);
       load();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to save coupon. Please try again.');
+      showToast(e.message || 'Failed to save coupon. Please try again.', "error");
     }
     setSaving(false);
   };
@@ -182,24 +188,20 @@ export default function AdminCouponsScreen() {
   // ── Delete ────────────────────────────────────────────────────────────────
 
   const handleDelete = (item) => {
-    Alert.alert(
-      'Delete Coupon',
-      `Are you sure you want to delete "${item.code}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete', style: 'destructive',
-          onPress: async () => {
-            try {
-              await couponsApi.remove(item._id);
-              setCouponList(prev => prev.filter(c => c._id !== item._id));
-            } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to delete coupon.');
-            }
-          },
-        },
-      ]
-    );
+    setDeleteTarget(item);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    setShowDeleteConfirm(false);
+    try {
+      await couponsApi.remove(deleteTarget._id);
+      setCouponList(prev => prev.filter(c => c._id !== deleteTarget._id));
+    } catch (e) {
+      showToast(e.message || 'Failed to delete coupon.', "error");
+    }
+    setDeleteTarget(null);
   };
 
   // ── Toggle active ─────────────────────────────────────────────────────────
@@ -213,7 +215,7 @@ export default function AdminCouponsScreen() {
     } catch (e) {
       // Revert on failure
       setCouponList(prev => prev.map(c => c._id === item._id ? { ...c, isActive: !newVal } : c));
-      Alert.alert('Error', 'Failed to update coupon status.');
+      showToast('Failed to update coupon status.', "error");
     }
   };
 
@@ -626,6 +628,19 @@ export default function AdminCouponsScreen() {
           </View>
         </View>
       </Modal>
+
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Coupon"
+        message={`Are you sure you want to delete "${deleteTarget?.code}"? This cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </View>
   );
 }

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Switch,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,17 +16,22 @@ import { securityApi } from "../../lib/api";
 import { pinStorage } from "../../lib/security/secureStorage";
 import { useAppLock } from "../../lib/security/appLockContext";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function BiometricScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { checkSupport, authenticate } = useBiometric();
   const { loadSettings } = useAppLock();
+  const { toast, showToast, hideToast } = useToast();
 
   const [support, setSupport] = useState(null);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,12 +47,26 @@ export default function BiometricScreen() {
     })();
   }, []);
 
+  const handleDisableBiometricConfirmed = useCallback(async () => {
+    setShowDisableConfirm(false);
+    try {
+      await securityApi.disableBiometric();
+      // Explicitly set to false (not just remove) for reliability
+      await pinStorage.setBiometricEnabled(false);
+      await loadSettings();
+      setEnabled(false);
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+    setToggling(false);
+  }, [loadSettings, showToast]);
+
   const handleToggle = useCallback(
     async (val) => {
       if (!support?.available) {
-        Alert.alert(
-          "Not Available",
+        showToast(
           "Biometric authentication is not enrolled on this device. Please set up Face ID or fingerprint in device Settings first.",
+          "error",
         );
         return;
       }
@@ -70,36 +88,20 @@ export default function BiometricScreen() {
           await pinStorage.setBiometricEnabled(true, support.biometricType);
           await loadSettings();
           setEnabled(true);
-          Alert.alert(
-            "Enabled",
+          showToast(
             "Biometric login is now active. The app will lock when you switch away and unlock with your biometrics.",
+            "success",
           );
+          setToggling(false);
         } else {
-          Alert.alert(
-            "Disable Biometric",
-            "Are you sure you want to disable biometric login?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Disable",
-                style: "destructive",
-                onPress: async () => {
-                  await securityApi.disableBiometric();
-                  // Explicitly set to false (not just remove) for reliability
-                  await pinStorage.setBiometricEnabled(false);
-                  await loadSettings();
-                  setEnabled(false);
-                },
-              },
-            ],
-          );
+          setShowDisableConfirm(true);
         }
       } catch (e) {
-        Alert.alert("Error", e.message);
+        showToast(e.message, "error");
+        setToggling(false);
       }
-      setToggling(false);
     },
-    [support, authenticate],
+    [support, authenticate, showToast],
   );
 
   const ICON = support?.hasFaceId ? "scan-circle" : "finger-print";
@@ -187,6 +189,17 @@ export default function BiometricScreen() {
           </View>
         )}
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showDisableConfirm}
+        title="Disable Biometric"
+        message="Are you sure you want to disable biometric login?"
+        confirmText="Disable"
+        onConfirm={handleDisableBiometricConfirmed}
+        onCancel={() => { setShowDisableConfirm(false); setToggling(false); }}
+        onDismiss={() => { setShowDisableConfirm(false); setToggling(false); }}
+        destructive={true}
+      />
     </View>
   );
 }

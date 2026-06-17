@@ -1,538 +1,874 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Modal,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  FlatList,
   StyleSheet,
+  Modal,
   Animated,
-  Keyboard,
+  ScrollView,
+  Dimensions,
   ActivityIndicator,
+  Keyboard,
   Platform,
-  StatusBar,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { fonts, colors, radius, shadow } from "../lib/theme";
+import { useRouter } from "expo-router";
+import * as Location from "expo-location";
+import { colors, fonts, radius, shadow } from "../lib/theme";
 import { tours as toursApi, search as searchApi } from "../lib/api";
+import {
+  MAPBOX_TOKEN,
+  MAPBOX_GEOCODE_URL,
+  MAPBOX_COUNTRIES,
+} from "../lib/config";
 
-const STORAGE_KEY = "tripkart_recent_searches";
-const MAX_RECENT = 15;
-const DEBOUNCE_DELAY = 300;
+// ── Try-require voice module (optional: install @react-native-voice/voice) ────
+let Voice = null;
+try {
+  Voice = require("@react-native-voice/voice").default;
+} catch {}
 
-const POPULAR_DESTINATIONS_FALLBACK = [
-  "Kedarnath",
-  "Varanasi",
-  "Haridwar",
-  "Vrindavan",
-  "Tirupati",
-  "Shirdi",
-  "Mathura",
-  "Ayodhya",
-  "Puri",
-  "Dwarka",
+const { height: SCREEN_H } = Dimensions.get("window");
+
+// ── Filter chip definitions ───────────────────────────────────────────────────
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "places", label: "Places" },
+  { key: "tours", label: "Tours" },
+  { key: "pickups", label: "Pickup Points" },
+  { key: "operators", label: "Operators" },
 ];
 
-function debounce(fn, delay) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+// ── Mapbox geocoding ──────────────────────────────────────────────────────────
+async function fetchMapboxPlaces(q) {
+  if (!MAPBOX_TOKEN) return [];
+  try {
+    const url =
+      `${MAPBOX_GEOCODE_URL}/${encodeURIComponent(q)}.json` +
+      `?access_token=${MAPBOX_TOKEN}` +
+      `&country=${MAPBOX_COUNTRIES}` +
+      `&types=place,locality,poi,neighborhood,region` +
+      `&language=en&limit=5`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.features || []).map((f) => ({
+      id: f.id,
+      name: f.text,
+      address: f.place_name,
+      lat: f.center[1],
+      lng: f.center[0],
+    }));
+  } catch {
+    return [];
+  }
 }
 
-export default function SearchModal({
-  visible,
-  onClose,
-  onSelectResult,
-  onSearch,
-  tours = [],
-}) {
-  const [query, setQuery] = useState("");
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [popularDestinations, setPopularDestinations] = useState(
-    POPULAR_DESTINATIONS_FALLBACK
-  );
-
-  const inputRef = useRef(null);
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const headerOpacity = useRef(new Animated.Value(0)).current;
-
-  // ── History helpers ────────────────────────────────────────────────────────
-
-  // Load history: try API first, fall back to AsyncStorage
-  const loadRecentSearches = async () => {
+// ── Reverse geocode for "Near Me" ─────────────────────────────────────────────
+async function reverseGeocode(lat, lng) {
+  if (MAPBOX_TOKEN) {
     try {
-      const res = await searchApi.getHistory();
-      // Backend returns array of objects with _id and query fields
-      const items = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-        ? res.data
-        : [];
-      setRecentSearches(items);
-      return;
-    } catch (_) {}
-    // AsyncStorage fallback (not logged in or network error)
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Normalise: stored items may be plain strings from old code
-        setRecentSearches(parsed);
-      }
-    } catch (_) {}
-  };
-
-  // Save to AsyncStorage as a fallback string list
-  const saveLocalHistory = async (searches) => {
-    try {
-      const strings = searches.map((s) =>
-        typeof s === "string" ? s : s.query || ""
-      );
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(strings));
-    } catch (_) {}
-  };
-
-  // Add a search term to history
-  const addRecentSearch = useCallback(async (term) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    // Try API first
-    try {
-      await searchApi.saveHistory(trimmed);
-      // Reload from backend so IDs are fresh
-      await loadRecentSearches();
-      return;
-    } catch (_) {}
-    // AsyncStorage fallback
-    setRecentSearches((prev) => {
-      const updated = [
-        trimmed,
-        ...prev.filter((s) => {
-          const str = typeof s === "string" ? s : s.query || "";
-          return str.toLowerCase() !== trimmed.toLowerCase();
-        }),
-      ].slice(0, MAX_RECENT);
-      saveLocalHistory(updated);
-      return updated;
+      const url = `${MAPBOX_GEOCODE_URL}/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=place&language=en`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.features?.[0]?.text || null;
+    } catch {}
+  }
+  try {
+    const [addr] = await Location.reverseGeocodeAsync({
+      latitude: lat,
+      longitude: lng,
     });
-  }, []);
+    return addr?.city || addr?.subregion || addr?.region || null;
+  } catch {
+    return null;
+  }
+}
 
-  // Delete one history item
-  const removeRecentSearch = async (item, idx) => {
-    // item can be an object (from API) or a plain string (from AsyncStorage)
-    if (item && typeof item === "object" && item._id) {
-      try {
-        await searchApi.deleteHistory(item._id);
-        setRecentSearches((prev) => prev.filter((_, i) => i !== idx));
-        return;
-      } catch (_) {}
-    }
-    // AsyncStorage fallback
-    setRecentSearches((prev) => {
-      const updated = prev.filter((_, i) => i !== idx);
-      saveLocalHistory(updated);
-      return updated;
-    });
-  };
-
-  // Clear all history
-  const clearAllRecent = async () => {
-    try {
-      await searchApi.clearHistory();
-    } catch (_) {}
-    // Always clear locally too
-    setRecentSearches([]);
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-    } catch (_) {}
-  };
-
-  // ── Popular destinations ───────────────────────────────────────────────────
-
-  const loadPopularDestinations = async () => {
-    try {
-      const res = await searchApi.getPopular();
-      const items = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-        ? res.data
-        : null;
-      if (items && items.length > 0) {
-        // Backend may return strings or objects with a `name` field
-        setPopularDestinations(
-          items.map((d) => (typeof d === "string" ? d : d.name || d.query || d))
-        );
-      }
-    } catch (_) {
-      // Silently fall back to static list
-    }
-  };
-
-  // ── Search via API ─────────────────────────────────────────────────────────
-
-  const performSearch = useCallback(
-    debounce(async (q) => {
-      const trimmed = q.trim();
-      if (!trimmed) {
-        setSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
-      setIsSearching(true);
-      try {
-        const res = await toursApi.search({ q: trimmed });
-        const results = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : Array.isArray(res?.tours)
-          ? res.tours
-          : [];
-        setSearchResults(results);
-      } catch (_) {
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, DEBOUNCE_DELAY),
-    []
-  );
-
-  // Trigger search whenever query changes
+// ── Skeleton loader row ───────────────────────────────────────────────────────
+function SkeletonRow() {
+  const anim = useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
-    if (query.trim().length > 0) {
-      setIsSearching(true);
-      performSearch(query);
-    } else {
-      setSearchResults([]);
-      setIsSearching(false);
-    }
-  }, [query]);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(anim, {
+          toValue: 0.4,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, []);
+  return (
+    <Animated.View style={[sk.row, { opacity: anim }]}>
+      <View style={sk.icon} />
+      <View style={{ flex: 1, gap: 6 }}>
+        <View style={sk.line1} />
+        <View style={sk.line2} />
+      </View>
+    </Animated.View>
+  );
+}
+const sk = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  icon: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#E5E7EB" },
+  line1: {
+    height: 13,
+    borderRadius: 6,
+    backgroundColor: "#E5E7EB",
+    width: "70%",
+  },
+  line2: {
+    height: 11,
+    borderRadius: 5,
+    backgroundColor: "#F3F4F6",
+    width: "50%",
+  },
+});
 
-  // ── Modal open/close animations ────────────────────────────────────────────
+// ── Section header ────────────────────────────────────────────────────────────
+function SectionHeader({ icon, color, label, count }) {
+  return (
+    <View style={sh.row}>
+      <View style={[sh.dot, { backgroundColor: color + "22" }]}>
+        <Ionicons name={icon} size={12} color={color} />
+      </View>
+      <Text style={sh.label}>{label}</Text>
+      {count > 0 && <Text style={sh.count}>{count}</Text>}
+    </View>
+  );
+}
+const sh = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 6,
+  },
+  dot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    flex: 1,
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  count: { fontFamily: fonts.body, fontSize: 12, color: colors.textDisabled },
+});
 
+// ── Result row ────────────────────────────────────────────────────────────────
+const TYPE_CONFIG = {
+  place: { bg: "#EFF6FF", icon: "location-outline", color: "#3B82F6" },
+  tour: { bg: "#FFF4EC", icon: "bus-outline", color: colors.primary },
+  pickup: { bg: "#ECFDF5", icon: "location-sharp", color: "#16A34A" },
+  operator: { bg: "#F5F3FF", icon: "business-outline", color: "#7C3AED" },
+};
+
+function ResultRow({ type, title, subtitle, onPress, highlight }) {
+  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.tour;
+  const parts = highlight
+    ? (title || "").split(
+        new RegExp(
+          `(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+          "i",
+        ),
+      )
+    : null;
+  return (
+    <TouchableOpacity style={rr.row} onPress={onPress} activeOpacity={0.7}>
+      <View style={[rr.icon, { backgroundColor: cfg.bg }]}>
+        <Ionicons name={cfg.icon} size={18} color={cfg.color} />
+      </View>
+      <View style={rr.text}>
+        <Text style={rr.title} numberOfLines={1}>
+          {parts
+            ? parts.map((part, i) =>
+                part.toLowerCase() === highlight.toLowerCase() ? (
+                  <Text key={i} style={rr.hl}>
+                    {part}
+                  </Text>
+                ) : (
+                  part
+                ),
+              )
+            : title}
+        </Text>
+        {subtitle ? (
+          <Text style={rr.sub} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      <Ionicons name="chevron-forward" size={14} color={colors.textDisabled} />
+    </TouchableOpacity>
+  );
+}
+const rr = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  text: { flex: 1 },
+  title: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  hl: { fontFamily: fonts.bodyBold, color: colors.primary },
+  sub: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+});
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function SearchModal({ visible, onClose }) {
+  const router = useRouter();
+  const inputRef = useRef(null);
+  const debounceRef = useRef(null);
+  const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const [query, setQuery] = useState("");
+  const [places, setPlaces] = useState([]);
+  const [tours, setTours] = useState([]);
+  const [pickupPoints, setPickupPoints] = useState([]);
+  const [operators, setOperators] = useState([]);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [isListening, setIsListening] = useState(false);
+
+  // ── Open / close animation ──────────────────────────────────────────────────
   useEffect(() => {
     if (visible) {
-      loadRecentSearches();
-      loadPopularDestinations();
-      setQuery("");
-      setSearchResults([]);
-      setIsSearching(false);
-
       Animated.parallel([
         Animated.spring(slideAnim, {
-          toValue: 1,
-          useNativeDriver: true,
+          toValue: 0,
           tension: 65,
           friction: 11,
-        }),
-        Animated.timing(headerOpacity, {
-          toValue: 1,
-          duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        setTimeout(() => inputRef.current?.focus(), 50);
-      });
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setTimeout(() => inputRef.current?.focus(), 50));
+      loadHomeData();
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 220,
+          toValue: SCREEN_H,
+          duration: 280,
           useNativeDriver: true,
         }),
-        Animated.timing(headerOpacity, {
+        Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 180,
+          duration: 220,
           useNativeDriver: true,
         }),
       ]).start();
     }
   }, [visible]);
 
-  // ── Event handlers ─────────────────────────────────────────────────────────
+  // ── Mic pulse ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isListening) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.4,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isListening]);
 
+  // ── Voice listeners ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!Voice) return;
+    Voice.onSpeechResults = (e) => {
+      const text = e.value?.[0] || "";
+      if (text) {
+        setQuery(text);
+        doSearch(text);
+      }
+      setIsListening(false);
+    };
+    Voice.onSpeechError = () => setIsListening(false);
+    return () => {
+      try {
+        Voice?.destroy?.();
+      } catch {}
+    };
+  }, []);
+
+  // ── Load home data ──────────────────────────────────────────────────────────
+  const loadHomeData = useCallback(async () => {
+    const [hist, trend] = await Promise.allSettled([
+      searchApi.getHistory(),
+      searchApi.getTrending(),
+    ]);
+    if (hist.status === "fulfilled") {
+      setRecentSearches((hist.value?.data || []).slice(0, 8));
+    }
+    setTrending(
+      trend.status === "fulfilled" && trend.value?.data?.length
+        ? trend.value.data
+        : [
+            "Kedarnath",
+            "Goa",
+            "Manali",
+            "Varanasi",
+            "Tirupati",
+            "Haridwar",
+            "Vrindavan",
+            "Shirdi",
+          ],
+    );
+  }, []);
+
+  // ── Debounced query handler ─────────────────────────────────────────────────
+  const handleQueryChange = (text) => {
+    setQuery(text);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!text.trim() || text.trim().length < 2) {
+      setPlaces([]);
+      setTours([]);
+      setPickupPoints([]);
+      setOperators([]);
+      return;
+    }
+    debounceRef.current = setTimeout(() => doSearch(text), 300);
+  };
+
+  // ── Multi-source search ─────────────────────────────────────────────────────
+  const doSearch = async (q) => {
+    const t = q.trim();
+    if (!t || t.length < 2) return;
+    setLoading(true);
+    try {
+      const [mapboxRes, backendRes] = await Promise.allSettled([
+        fetchMapboxPlaces(t),
+        searchApi.unified(t),
+      ]);
+      setPlaces(mapboxRes.status === "fulfilled" ? mapboxRes.value : []);
+      const bd =
+        backendRes.status === "fulfilled" ? backendRes.value?.data || {} : {};
+      if (!bd.tours?.length) {
+        try {
+          const fb = await toursApi.search({ q: t, limit: 8 });
+          setTours(fb?.data || fb || []);
+        } catch {
+          setTours([]);
+        }
+      } else {
+        setTours(bd.tours);
+      }
+      setPickupPoints(bd.pickupPoints || []);
+      setOperators(bd.operators || []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Save to history ─────────────────────────────────────────────────────────
+  const saveHistory = async (term) => {
+    if (!term?.trim()) return;
+    try {
+      await searchApi.saveHistory(term.trim());
+    } catch {}
+    loadHomeData();
+  };
+
+  // ── Close modal ─────────────────────────────────────────────────────────────
   const handleClose = () => {
     Keyboard.dismiss();
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-      Animated.timing(headerOpacity, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-    ]).start(() => onClose?.());
+    setQuery("");
+    setPlaces([]);
+    setTours([]);
+    setPickupPoints([]);
+    setOperators([]);
+    setActiveFilter("all");
+    onClose?.();
   };
 
-  const handleSubmit = () => {
-    const trimmed = query.trim();
-    if (!trimmed) return;
-    addRecentSearch(trimmed);
-    Keyboard.dismiss();
-    onSearch?.(trimmed);
+  // ── Navigate to tour ────────────────────────────────────────────────────────
+  const goTour = async (tour) => {
+    await saveHistory(tour.title || tour.destination);
     handleClose();
+    router.push(`/tour/${tour._id}`);
   };
 
-  const handleSelectTour = (tour) => {
-    addRecentSearch(tour.title || tour.destination || "");
-    Keyboard.dismiss();
-    onSelectResult?.(tour);
-    handleClose();
-  };
-
-  const handleSelectRecent = (item) => {
-    const term = typeof item === "string" ? item : item.query || "";
+  // ── Select place / pickup / operator → re-search ────────────────────────────
+  const selectItem = async (term) => {
+    await saveHistory(term);
     setQuery(term);
-    inputRef.current?.focus();
+    doSearch(term);
+    setActiveFilter("tours");
   };
 
-  const handleSelectDestination = (dest) => {
-    addRecentSearch(dest);
-    setQuery(dest);
-    inputRef.current?.focus();
+  // ── Near Me ────────────────────────────────────────────────────────────────
+  const handleNearMe = async () => {
+    setLocLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const city = await reverseGeocode(
+        loc.coords.latitude,
+        loc.coords.longitude,
+      );
+      if (city) {
+        setQuery(city);
+        doSearch(city);
+      }
+    } catch {
+    } finally {
+      setLocLoading(false);
+    }
   };
 
-  // ── Derived display state ──────────────────────────────────────────────────
-
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [80, 0],
-  });
-
-  const showHome = query.trim().length === 0;
-  const showResults = query.trim().length > 0;
-
-  const formatPrice = (price) => {
-    if (!price) return "";
-    return `₹${Number(price).toLocaleString("en-IN")}`;
+  // ── Delete / clear recent ───────────────────────────────────────────────────
+  const deleteRecent = async (item) => {
+    try {
+      await searchApi.deleteHistory(item._id);
+    } catch {}
+    setRecentSearches((prev) => prev.filter((s) => s._id !== item._id));
   };
 
-  // ── Render helpers ─────────────────────────────────────────────────────────
+  const clearAllRecent = async () => {
+    try {
+      await searchApi.clearHistory();
+    } catch {}
+    setRecentSearches([]);
+  };
 
-  const renderTourCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.resultCard}
-      onPress={() => handleSelectTour(item)}
-      activeOpacity={0.75}
-    >
-      <View style={styles.resultIconBox}>
-        <Ionicons name="bus-outline" size={20} color={colors.primary} />
-      </View>
-      <View style={styles.resultInfo}>
-        <Text style={styles.resultTitle} numberOfLines={1}>
-          {item.title || item.destination}
-        </Text>
-        <Text style={styles.resultMeta} numberOfLines={1}>
-          {[item.destination, item.fromCity && `From ${item.fromCity}`]
-            .filter(Boolean)
-            .join(" · ")}
-        </Text>
-      </View>
-      {item.price ? (
-        <Text style={styles.resultPrice}>{formatPrice(item.price)}</Text>
-      ) : null}
-    </TouchableOpacity>
-  );
+  // ── Voice toggle ────────────────────────────────────────────────────────────
+  const toggleVoice = async () => {
+    if (!Voice) return;
+    if (isListening) {
+      try {
+        await Voice.stop();
+      } catch {}
+      setIsListening(false);
+    } else {
+      try {
+        setIsListening(true);
+        await Voice.start("en-IN");
+      } catch {
+        setIsListening(false);
+      }
+    }
+  };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Derived flags ───────────────────────────────────────────────────────────
+  const hasQuery = query.trim().length >= 2;
+  const totalResults =
+    places.length + tours.length + pickupPoints.length + operators.length;
+  const showPlaces =
+    (activeFilter === "all" || activeFilter === "places") && places.length > 0;
+  const showTours =
+    (activeFilter === "all" || activeFilter === "tours") && tours.length > 0;
+  const showPickups =
+    (activeFilter === "all" || activeFilter === "pickups") &&
+    pickupPoints.length > 0;
+  const showOps =
+    (activeFilter === "all" || activeFilter === "operators") &&
+    operators.length > 0;
+  const noResults = hasQuery && !loading && totalResults === 0;
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <Modal
       visible={visible}
+      transparent
       animationType="none"
-      transparent={false}
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      {/* Backdrop */}
       <Animated.View
-        style={[
-          styles.container,
-          {
-            opacity: headerOpacity,
-            transform: [{ translateY }],
-          },
-        ]}
+        style={[s.backdrop, { opacity: opacityAnim }]}
+        pointerEvents="none"
+      />
+
+      {/* Sheet */}
+      <Animated.View
+        style={[s.sheet, { transform: [{ translateY: slideAnim }] }]}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* HEADER */}
+        <View style={s.header}>
           <TouchableOpacity
-            style={styles.backBtn}
+            style={s.backBtn}
             onPress={handleClose}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <View style={styles.inputWrapper}>
+          <View style={s.inputWrap}>
             <Ionicons
               name="search-outline"
-              size={18}
+              size={17}
               color={colors.textSecondary}
-              style={styles.searchIcon}
             />
             <TextInput
               ref={inputRef}
-              style={styles.input}
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search tours, destinations..."
+              style={s.input}
+              placeholder="Search destinations, tours, pickup points..."
               placeholderTextColor={colors.textDisabled}
+              value={query}
+              onChangeText={handleQueryChange}
               returnKeyType="search"
-              onSubmitEditing={handleSubmit}
-              autoCorrect={false}
+              onSubmitEditing={() => query.trim() && saveHistory(query.trim())}
               autoCapitalize="none"
-              selectionColor={colors.primary}
-              underlineColorAndroid="transparent"
+              autoCorrect={false}
             />
             {query.length > 0 && (
               <TouchableOpacity
-                style={styles.clearBtn}
-                onPress={() => setQuery("")}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => {
+                  setQuery("");
+                  setPlaces([]);
+                  setTours([]);
+                  setPickupPoints([]);
+                  setOperators([]);
+                }}
+                hitSlop={8}
               >
                 <Ionicons
                   name="close-circle"
-                  size={18}
+                  size={17}
                   color={colors.textSecondary}
                 />
               </TouchableOpacity>
             )}
           </View>
+
+          <TouchableOpacity
+            style={[s.voiceBtn, isListening && s.voiceBtnActive]}
+            onPress={toggleVoice}
+            activeOpacity={0.75}
+          >
+            {isListening && (
+              <Animated.View
+                style={[s.voicePulse, { transform: [{ scale: pulseAnim }] }]}
+              />
+            )}
+            <Ionicons
+              name={isListening ? "mic" : "mic-outline"}
+              size={19}
+              color={isListening ? "#EF4444" : colors.textSecondary}
+            />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.headerDivider} />
-
-        {/* Body */}
+        {/* FILTER CHIPS */}
         <ScrollView
-          style={styles.body}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.filterScroll}
+          contentContainerStyle={s.filterRow}
+        >
+          {FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f.key}
+              style={[s.chip, activeFilter === f.key && s.chipActive]}
+              onPress={() => setActiveFilter(f.key)}
+              activeOpacity={0.75}
+            >
+              <Text
+                style={[s.chipTxt, activeFilter === f.key && s.chipTxtActive]}
+              >
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* CONTENT */}
+        <ScrollView
+          style={s.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.bodyContent}
+          contentContainerStyle={{ paddingBottom: 40 }}
         >
-          {/* ── Home state: recent + popular ── */}
-          {showHome && (
+          {/* ── HOME STATE ───────────────────────────────────────────────── */}
+          {!hasQuery && (
             <>
-              {/* Recent Searches */}
+              {/* Near Me */}
+              <TouchableOpacity
+                style={s.nearMeCard}
+                onPress={handleNearMe}
+                activeOpacity={0.8}
+              >
+                <View style={s.nearMeIcon}>
+                  {locLoading ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Ionicons
+                      name="navigate"
+                      size={20}
+                      color={colors.primary}
+                    />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.nearMeTitle}>Near Me</Text>
+                  <Text style={s.nearMeSub}>
+                    Find tours near your current location
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.textDisabled}
+                />
+              </TouchableOpacity>
+
+              {/* Recent */}
               {recentSearches.length > 0 && (
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Recent Searches</Text>
+                <View>
+                  <View style={s.secHead}>
+                    <View style={s.secLeft}>
+                      <Ionicons
+                        name="time-outline"
+                        size={14}
+                        color={colors.textSecondary}
+                      />
+                      <Text style={s.secTitle}>Recent Searches</Text>
+                    </View>
                     <TouchableOpacity onPress={clearAllRecent}>
-                      <Text style={styles.clearAllText}>Clear All</Text>
+                      <Text style={s.clearAll}>Clear All</Text>
                     </TouchableOpacity>
                   </View>
-
-                  {recentSearches.map((item, idx) => {
-                    const term =
-                      typeof item === "string" ? item : item.query || "";
-                    return (
-                      <View key={item._id || idx} style={styles.recentRow}>
-                        <TouchableOpacity
-                          style={styles.recentLeft}
-                          onPress={() => handleSelectRecent(item)}
-                          activeOpacity={0.7}
-                        >
-                          <Ionicons
-                            name="time-outline"
-                            size={16}
-                            color={colors.textSecondary}
-                            style={styles.recentIcon}
-                          />
-                          <Text style={styles.recentText} numberOfLines={1}>
-                            {term}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => removeRecentSearch(item, idx)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <Ionicons
-                            name="trash-outline"
-                            size={16}
-                            color={colors.textDisabled}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-
-              {/* Popular Destinations */}
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Popular Destinations</Text>
-                </View>
-                <View style={styles.destinationGrid}>
-                  {popularDestinations.map((dest) => (
+                  {recentSearches.map((item) => (
                     <TouchableOpacity
-                      key={dest}
-                      style={styles.destChip}
-                      onPress={() => handleSelectDestination(dest)}
-                      activeOpacity={0.75}
+                      key={item._id || item.query}
+                      style={s.recentRow}
+                      onPress={() => {
+                        setQuery(item.query);
+                        doSearch(item.query);
+                      }}
+                      activeOpacity={0.7}
                     >
-                      <Ionicons
-                        name="location-outline"
-                        size={13}
-                        color={colors.primary}
-                        style={styles.destIcon}
-                      />
-                      <Text style={styles.destText}>{dest}</Text>
+                      <View style={s.recentDot}>
+                        <Ionicons
+                          name="search-outline"
+                          size={14}
+                          color={colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={s.recentTxt} numberOfLines={1}>
+                        {item.query}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => deleteRecent(item)}
+                        hitSlop={12}
+                      >
+                        <Ionicons
+                          name="close"
+                          size={14}
+                          color={colors.textDisabled}
+                        />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
                 </View>
-              </View>
+              )}
+
+              {/* Trending */}
+              {trending.length > 0 && (
+                <View>
+                  <View style={s.secHead}>
+                    <View style={s.secLeft}>
+                      <Text style={{ fontSize: 13 }}>🔥</Text>
+                      <Text style={s.secTitle}>Trending Destinations</Text>
+                    </View>
+                  </View>
+                  <View style={s.trendGrid}>
+                    {trending.map((dest, i) => (
+                      <TouchableOpacity
+                        key={`${dest}-${i}`}
+                        style={s.trendChip}
+                        onPress={() => {
+                          setQuery(dest);
+                          doSearch(dest);
+                        }}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={s.trendTxt}>{dest}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
             </>
           )}
 
-          {/* ── Search results state ── */}
-          {showResults && (
-            <View style={styles.section}>
-              {isSearching ? (
-                <View style={styles.loadingBox}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.loadingText}>Searching...</Text>
-                </View>
-              ) : searchResults.length > 0 ? (
-                <>
-                  <Text style={styles.resultsCount}>
-                    {searchResults.length}{" "}
-                    {searchResults.length === 1 ? "result" : "results"} found
-                  </Text>
-                  {searchResults.map((item) => (
-                    <View key={item._id || item.title}>
-                      {renderTourCard({ item })}
-                    </View>
-                  ))}
-                </>
-              ) : (
-                <View style={styles.emptyBox}>
-                  <View style={styles.emptyIconWrap}>
-                    <Ionicons
-                      name="search-outline"
-                      size={36}
-                      color={colors.borderStrong}
+          {/* ── LOADING ──────────────────────────────────────────────────── */}
+          {hasQuery && loading && (
+            <View>
+              {[...Array(6)].map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </View>
+          )}
+
+          {/* ── NO RESULTS ───────────────────────────────────────────────── */}
+          {noResults && (
+            <View style={s.empty}>
+              <Text style={{ fontSize: 48 }}>🔍</Text>
+              <Text style={s.emptyTitle}>No results for "{query}"</Text>
+              <Text style={s.emptySub}>
+                Try a different destination, tour name, or pickup point
+              </Text>
+            </View>
+          )}
+
+          {/* ── RESULTS ──────────────────────────────────────────────────── */}
+          {hasQuery && !loading && totalResults > 0 && (
+            <>
+              {showPlaces && (
+                <View>
+                  <SectionHeader
+                    icon="location-outline"
+                    color="#3B82F6"
+                    label="Places"
+                    count={places.length}
+                  />
+                  {places.map((p) => (
+                    <ResultRow
+                      key={p.id}
+                      type="place"
+                      title={p.name}
+                      subtitle={p.address}
+                      highlight={query.trim()}
+                      onPress={() => selectItem(p.name)}
                     />
-                  </View>
-                  <Text style={styles.emptyTitle}>No results found</Text>
-                  <Text style={styles.emptySubtitle}>
-                    Try a different keyword or browse popular destinations
-                  </Text>
+                  ))}
                 </View>
               )}
-            </View>
+
+              {showTours && (
+                <View>
+                  <SectionHeader
+                    icon="bus-outline"
+                    color={colors.primary}
+                    label="Tours"
+                    count={tours.length}
+                  />
+                  {tours.map((t) => (
+                    <ResultRow
+                      key={t._id}
+                      type="tour"
+                      title={t.title}
+                      subtitle={[
+                        t.source && `From ${t.source}`,
+                        t.destination && `→ ${t.destination}`,
+                        t.price &&
+                          `₹${Number(t.price).toLocaleString("en-IN")}`,
+                      ]
+                        .filter(Boolean)
+                        .join("  •  ")}
+                      highlight={query.trim()}
+                      onPress={() => goTour(t)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {showPickups && (
+                <View>
+                  <SectionHeader
+                    icon="location-sharp"
+                    color="#16A34A"
+                    label="Pickup Points"
+                    count={pickupPoints.length}
+                  />
+                  {pickupPoints.map((pp, i) => (
+                    <ResultRow
+                      key={`${pp.name}-${i}`}
+                      type="pickup"
+                      title={pp.name}
+                      subtitle={pp.address || pp.fromTour || ""}
+                      highlight={query.trim()}
+                      onPress={() => selectItem(pp.name)}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {showOps && (
+                <View>
+                  <SectionHeader
+                    icon="business-outline"
+                    color="#7C3AED"
+                    label="Operators"
+                    count={operators.length}
+                  />
+                  {operators.map((op) => (
+                    <ResultRow
+                      key={String(op._id || op.name)}
+                      type="operator"
+                      title={op.name}
+                      subtitle="Tour operator"
+                      highlight={query.trim()}
+                      onPress={() => selectItem(op.name)}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       </Animated.View>
@@ -540,233 +876,223 @@ export default function SearchModal({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 24 : 0,
+// ── Styles ────────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  sheet: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.bg,
+    paddingTop: Platform.OS === "ios" ? 54 : 36,
   },
 
-  // ── Header ──
+  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.pill,
-    marginRight: 4,
-  },
-  inputWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 4,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.bodyMedium,
-    fontSize: 16,
-    color: colors.textPrimary,
-    paddingVertical: Platform.OS === "ios" ? 10 : 8,
-    includeFontPadding: false,
-  },
-  clearBtn: {
-    marginLeft: 6,
-    padding: 2,
-  },
-  headerDivider: {
-    height: 1.5,
-    backgroundColor: colors.borderSubtle,
-    marginHorizontal: 16,
-    marginBottom: 4,
-  },
-
-  // ── Body ──
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    paddingBottom: 40,
-  },
-
-  // ── Section ──
-  section: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.textSecondary,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  clearAllText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: colors.primary,
-  },
-
-  // ── Recent Searches ──
-  recentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 11,
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSubtle,
   },
-  recentLeft: {
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+  },
+  inputWrap: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 12,
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+    paddingHorizontal: 14,
+    height: 44,
   },
-  recentIcon: {
-    marginRight: 10,
-  },
-  recentText: {
+  input: {
+    flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.textPrimary,
-    flex: 1,
+    height: 44,
+    padding: 0,
   },
-
-  // ── Popular Destinations ──
-  destinationGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -4,
-  },
-  destChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "48%",
-    margin: "1%",
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF4EC",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: "#FDECE7",
-  },
-  destIcon: {
-    marginRight: 5,
-  },
-  destText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: colors.secondary,
-    flexShrink: 1,
-  },
-
-  // ── Search Results ──
-  resultsCount: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 10,
-  },
-  resultCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 13,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    marginBottom: 10,
-    ...shadow.soft,
-  },
-  resultIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: "#FDECE7",
+  voiceBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
   },
-  resultInfo: {
-    flex: 1,
-    marginRight: 8,
+  voiceBtnActive: { borderColor: "#EF4444", backgroundColor: "#FEF2F2" },
+  voicePulse: {
+    position: "absolute",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(239,68,68,0.18)",
   },
-  resultTitle: {
+
+  // Filter chips
+  filterScroll: { maxHeight: 50 },
+  filterRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 8,
+    flexDirection: "row",
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+  },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipTxt: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  chipTxtActive: { color: "#fff", fontFamily: fonts.bodySemiBold },
+
+  // Content
+  scroll: { flex: 1 },
+
+  // Near Me
+  nearMeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.surface,
+    margin: 14,
+    borderRadius: radius.xl,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+    ...shadow.soft,
+  },
+  nearMeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nearMeTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
     color: colors.textPrimary,
-    marginBottom: 2,
   },
-  resultMeta: {
+  nearMeSub: {
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.textSecondary,
-  },
-  resultPrice: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.primary,
+    marginTop: 1,
   },
 
-  // ── Loading ──
-  loadingBox: {
+  // Section headers
+  secHead: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 24,
-    justifyContent: "center",
-    gap: 10,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 6,
   },
-  loadingText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
+  secLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
+  secTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 12,
     color: colors.textSecondary,
-    marginLeft: 10,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  clearAll: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
+
+  // Recent rows
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+  },
+  recentDot: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  recentTxt: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    color: colors.textPrimary,
   },
 
-  // ── Empty ──
-  emptyBox: {
-    alignItems: "center",
-    paddingTop: 48,
-    paddingBottom: 24,
+  // Trending
+  trendGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 12,
+    gap: 8,
+    marginTop: 4,
   },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.borderSubtle,
+  trendChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+  },
+  trendTxt: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+
+  // Empty
+  empty: {
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
+    paddingTop: 60,
+    paddingHorizontal: 32,
+    gap: 10,
   },
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 17,
     color: colors.textPrimary,
-    marginBottom: 6,
+    textAlign: "center",
   },
-  emptySubtitle: {
+  emptySub: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 20,
-    maxWidth: 260,
   },
 });

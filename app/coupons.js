@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
   Clipboard,
 } from "react-native";
+import Toast from "../components/Toast";
+import { useToast } from "../lib/hooks/useToast";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import { colors, fonts, radius, shadow } from "../lib/theme";
 export default function CouponsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [code, setCode] = useState("");
   const [validating, setValidating] = useState(false);
   const [result, setResult] = useState(null);
@@ -52,7 +54,7 @@ export default function CouponsScreen() {
 
   const copyCode = (c) => {
     Clipboard.setString(c);
-    Alert.alert("Copied!", "Coupon code copied to clipboard");
+    showToast("Coupon code copied to clipboard!", "success");
   };
 
   const fmtExpiry = (d) => {
@@ -196,6 +198,7 @@ export default function CouponsScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
         </TouchableOpacity>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

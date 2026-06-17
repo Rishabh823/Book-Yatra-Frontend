@@ -6,6 +6,9 @@
     "**/.expo/**",
     "**/dist/**"
   ],
+  // Prevent Gradle and Java extensions from auto-detecting build folders inside node_modules
+  "gradle.autoDetect": "off",
+  "java.import.gradle.enabled": false,
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.jdt.ls.vmargs": "-Xmx2G",
   "android.sdk.path": "/Users/rishabh/Library/Android/sdk",

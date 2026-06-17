@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   Animated,
   Vibration,
   Linking,
@@ -18,6 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { api } from "../../lib/api";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 
 const SOS_TYPES = [
   { key: "medical", label: "Medical", icon: "medical" },
@@ -31,6 +32,7 @@ export default function SOSScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { tourId } = useLocalSearchParams();
+  const { toast, showToast, hideToast } = useToast();
   const [selectedType, setSelectedType] = useState("other");
   const [message, setMessage] = useState("");
   const [holding, setHolding] = useState(false);
@@ -59,7 +61,7 @@ export default function SOSScreen() {
       Vibration.vibrate([200, 100, 200, 100, 200]);
       router.replace("/sos/active?sosId=" + res.data._id);
     } catch (err) {
-      Alert.alert("Error", "Failed to send SOS. Please call 112 directly.");
+      showToast("Failed to send SOS. Please call 112 directly.", "error");
     }
     setSubmitting(false);
   }, [selectedType, message, tourId, router]);
@@ -210,6 +212,7 @@ export default function SOSScreen() {
           ))}
         </View>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

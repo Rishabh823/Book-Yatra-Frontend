@@ -8,10 +8,11 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Share,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -94,6 +95,7 @@ export default function PassengersScreen() {
   const { tourId: paramTourId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
   const [selectedTourId, setSelectedTourId] = useState(paramTourId || null);
   const [selectedTourTitle, setSelectedTourTitle] = useState("");
   const [passengers, setPassengers] = useState([]);
@@ -126,7 +128,7 @@ export default function PassengersScreen() {
         prev.map((p) => (String(p._id) === String(bookingId) ? { ...p, isCheckedIn: true } : p)),
       );
     } catch {
-      Alert.alert("Error", "Check-in failed");
+      showToast("Check-in failed", "error");
     }
   };
 
@@ -145,7 +147,7 @@ export default function PassengersScreen() {
   const checkedCount = passengers.filter((p) => p.isCheckedIn).length;
 
   const exportCSV = async () => {
-    if (!passengers.length) return Alert.alert("No Data", "No passengers to export.");
+    if (!passengers.length) { showToast("No passengers to export", "info"); return; }
     const header = "Seat,Name,Phone,Status";
     const rows = passengers.map(p =>
       [p.seatNumber || "—", p.userId?.name || "Guest", p.userId?.phone || "", p.isCheckedIn ? "Checked In" : "Pending"].join(",")
@@ -298,6 +300,7 @@ export default function PassengersScreen() {
           }
         />
       )}
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }

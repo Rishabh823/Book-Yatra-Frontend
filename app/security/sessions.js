@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  RefreshControl, Alert,
+  RefreshControl,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { securityApi } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import Toast from '../../components/Toast';
+import { useToast } from '../../lib/hooks/useToast';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const PLATFORM_ICON = (p) => {
   const pl = (p || '').toLowerCase();
@@ -22,10 +25,14 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-dig
 export default function SessionsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
 
   const [sessions,   setSessions]   = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
+  const [pendingRevoke, setPendingRevoke] = useState(null); // { id, name }
+  const [showSignOutAllConfirm, setShowSignOutAllConfirm] = useState(false);
 
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -40,28 +47,35 @@ export default function SessionsScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const handleRevoke = useCallback((id, name) => {
-    Alert.alert('Revoke Session', `Sign out of "${name}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: async () => {
-        try {
-          await securityApi.revokeSession(id);
-          setSessions(prev => prev.filter(s => s._id !== id));
-        } catch (e) { Alert.alert('Error', e.message); }
-      }},
-    ]);
+    setPendingRevoke({ id, name });
+    setShowRevokeConfirm(true);
   }, []);
 
+  const handleRevokeConfirmed = useCallback(async () => {
+    setShowRevokeConfirm(false);
+    if (!pendingRevoke) return;
+    try {
+      await securityApi.revokeSession(pendingRevoke.id);
+      setSessions(prev => prev.filter(s => s._id !== pendingRevoke.id));
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+    setPendingRevoke(null);
+  }, [pendingRevoke, showToast]);
+
   const handleRevokeAll = useCallback(() => {
-    Alert.alert('Sign Out All', 'Sign out of all other devices? Your current session will remain active.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out All', style: 'destructive', onPress: async () => {
-        try {
-          await securityApi.revokeAllSessions();
-          await load();
-        } catch (e) { Alert.alert('Error', e.message); }
-      }},
-    ]);
-  }, [load]);
+    setShowSignOutAllConfirm(true);
+  }, []);
+
+  const handleRevokeAllConfirmed = useCallback(async () => {
+    setShowSignOutAllConfirm(false);
+    try {
+      await securityApi.revokeAllSessions();
+      await load();
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }, [load, showToast]);
 
   const otherSessions = sessions.filter(s => !s.isCurrent);
 
@@ -131,6 +145,27 @@ export default function SessionsScreen() {
           <Text style={styles.infoText}>Sessions are created when you log in on a new device. Revoking a session will immediately sign out that device.</Text>
         </View>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showRevokeConfirm}
+        title="Revoke Session"
+        message={pendingRevoke ? `Sign out of "${pendingRevoke.name}"?` : ''}
+        confirmText="Sign Out"
+        onConfirm={handleRevokeConfirmed}
+        onCancel={() => { setShowRevokeConfirm(false); setPendingRevoke(null); }}
+        onDismiss={() => { setShowRevokeConfirm(false); setPendingRevoke(null); }}
+        destructive={true}
+      />
+      <ConfirmModal
+        visible={showSignOutAllConfirm}
+        title="Sign Out All"
+        message="Sign out of all other devices? Your current session will remain active."
+        confirmText="Sign Out All"
+        onConfirm={handleRevokeAllConfirmed}
+        onCancel={() => setShowSignOutAllConfirm(false)}
+        onDismiss={() => setShowSignOutAllConfirm(false)}
+        destructive={true}
+      />
     </View>
   );
 }

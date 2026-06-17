@@ -34,6 +34,7 @@ import {
 import { useLang } from "../../lib/LanguageContext";
 import { resolveImageUrl } from "../../lib/utils";
 import { useTheme, useColors } from "../../lib/ThemeContext";
+import SearchModal from "../../components/SearchModal";
 
 const { width } = Dimensions.get("window");
 const BANNERS = [
@@ -270,6 +271,7 @@ export default function Home() {
   const [tourTypeFilter, setTourTypeFilter] = useState("All");
   const [searchResults, setSearchResults] = useState(null); // null = not searched yet
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const scrollRef = useRef(null);
   const toursYRef = useRef(0);
 
@@ -921,220 +923,35 @@ export default function Home() {
           </View>
         </View>
 
-        {/* ── Tour Search Section ──────────────────────────────────────────── */}
-        <View style={styles.searchCard}>
-          {/* Tour Type Chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipRow}
-          >
-            {TOUR_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type}
-                activeOpacity={0.8}
-                onPress={() => setTourTypeFilter(type)}
-                style={[
-                  styles.chip,
-                  tourTypeFilter === type
-                    ? styles.chipActive
-                    : styles.chipInactive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    tourTypeFilter === type
-                      ? styles.chipTextActive
-                      : styles.chipTextInactive,
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* From input */}
-          <View style={styles.searchInputRow}>
-            <View style={styles.searchInputIconWrap}>
-              <Ionicons name="bus-outline" size={18} color="#D95D39" />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="From city"
-              placeholderTextColor="#9CA3AF"
-              value={searchFrom}
-              onChangeText={setSearchFrom}
-            />
+        {/* ── Search Bar ── opens SearchModal ─────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.searchCard}
+          activeOpacity={0.85}
+          onPress={() => setShowSearchModal(true)}
+        >
+          <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+          <Text style={{ fontFamily: fonts.body, fontSize: 14, color: "#9CA3AF", flex: 1 }}>
+            Search tours, destinations...
+          </Text>
+          <View style={{ backgroundColor: "#FEE9E3", borderRadius: 8, padding: 6 }}>
+            <Ionicons name="options-outline" size={16} color="#D95D39" />
           </View>
+        </TouchableOpacity>
 
-          {/* Swap icon divider */}
-          <View style={styles.swapRow}>
-            <View style={styles.swapDivider} />
-            <TouchableOpacity
-              style={styles.swapIconWrap}
-              onPress={() => { const tmp = searchFrom; setSearchFrom(searchTo); setSearchTo(tmp); }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="swap-vertical-outline" size={18} color="#D95D39" />
-            </TouchableOpacity>
-            <View style={styles.swapDivider} />
-          </View>
-
-          {/* To input */}
-          <View style={styles.searchInputRow}>
-            <View style={styles.searchInputIconWrap}>
-              <Ionicons name="location-outline" size={18} color="#5C1615" />
-            </View>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="To city / destination"
-              placeholderTextColor="#9CA3AF"
-              value={searchTo}
-              onChangeText={setSearchTo}
-            />
-          </View>
-
-          {/* Date row */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.dateRow}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <View style={styles.searchInputIconWrap}>
-              <Ionicons name="calendar-outline" size={18} color="#D95D39" />
-            </View>
-            <Text style={styles.dateText}>{formatSearchDate(searchDate)}</Text>
-            <View style={{ flexDirection: "row", gap: 6, marginLeft: "auto" }}>
-              <TouchableOpacity
-                style={[
-                  styles.quickDateBtn,
-                  searchDate.toDateString() === new Date().toDateString() && styles.quickDateBtnActive,
-                ]}
-                onPress={() => { const d = new Date(); setSearchDate(d); }}
-              >
-                <Text style={[
-                  styles.quickDateTxt,
-                  searchDate.toDateString() === new Date().toDateString() && styles.quickDateTxtActive,
-                ]}>Today</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.quickDateBtn,
-                  (() => { const t = new Date(); t.setDate(t.getDate() + 1); return searchDate.toDateString() === t.toDateString(); })() && styles.quickDateBtnActive,
-                ]}
-                onPress={() => { const d = new Date(); d.setDate(d.getDate() + 1); setSearchDate(d); }}
-              >
-                <Text style={[
-                  styles.quickDateTxt,
-                  (() => { const t = new Date(); t.setDate(t.getDate() + 1); return searchDate.toDateString() === t.toDateString(); })() && styles.quickDateTxtActive,
-                ]}>Tomorrow</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-
-          {/* DateTimePicker */}
-          {showDatePicker && (
-            <DateTimePicker
-              value={searchDate}
-              mode="date"
-              minimumDate={new Date()}
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(Platform.OS === "ios");
-                if (selectedDate) setSearchDate(selectedDate);
-              }}
-            />
-          )}
-
-          {/* Search Button */}
-          <TouchableOpacity
-            style={styles.searchBtn}
-            activeOpacity={0.88}
-            onPress={handleSearch}
-          >
-            <Ionicons name="search-outline" size={18} color="#fff" />
-            <Text style={styles.searchBtnText}>Search Tours</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ── Search Results (shown after search) ─────────────────────────── */}
-        {searchResults !== null && (
-          <View
-            style={styles.section}
-            onLayout={(e) => { toursYRef.current = e.nativeEvent.layout.y; }}
-          >
-            <View style={styles.sectionHead}>
-              <View>
-                <Text style={styles.h2}>Search Results</Text>
-                <Text style={styles.h2Sub}>
-                  {searchResults.length === 0
-                    ? "No tours matched — try different filters"
-                    : `${searchResults.length} tour${searchResults.length > 1 ? "s" : ""} found`}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setSearchResults(null)}>
-                <Text style={styles.link}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-            {searchResults.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 24 }}
-              >
-                {searchResults.map((tour, i) => (
-                  <TouchableOpacity
-                    key={tour._id || tour.id || i}
-                    activeOpacity={0.9}
-                    style={styles.tourCard}
-                    onPress={() => router.push(`/tour/${tour._id || tour.id}`)}
-                  >
-                    <Image
-                      source={{ uri: resolveImageUrl(tour.coverPhotoUrl) }}
-                      style={styles.tourImg}
-                    />
-                    <LinearGradient
-                      colors={["transparent", "rgba(0,0,0,0.7)"]}
-                      style={styles.tourGrad}
-                    />
-                    <View style={styles.tourBadge}>
-                      <Text style={styles.tourBadgeText}>
-                        {formatDate(tour.startDate, tour.endDate)}
-                      </Text>
-                    </View>
-                    <View style={styles.tourCardContent}>
-                      <Text style={styles.tourTitle} numberOfLines={1}>
-                        {tour.title}
-                      </Text>
-                      <View style={styles.tourRow}>
-                        <Ionicons name="location" size={12} color="#FFE9C0" />
-                        <Text style={styles.tourMeta} numberOfLines={1}>
-                          {tour.source} → {tour.destination}
-                        </Text>
-                      </View>
-                      <View style={styles.tourFooter}>
-                        <Text style={styles.tourPrice}>
-                          {formatPrice(tour)}
-                        </Text>
-                        <View style={styles.bookPill}>
-                          <Text style={styles.bookPillText}>{t.bookNow}</Text>
-                          <Ionicons name="arrow-forward" size={12} color="#fff" />
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.empty}>
-                <Ionicons name="search-outline" size={32} color={colors.textDisabled} />
-                <Text style={styles.emptyText}>No tours found for your search</Text>
-              </View>
-            )}
-          </View>
-        )}
+        {/* SearchModal */}
+        <SearchModal
+          visible={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          onSearch={(q) => {
+            setShowSearchModal(false);
+            router.push(`/(tabs)/tours?q=${encodeURIComponent(q)}`);
+          }}
+          onSelectResult={(tour) => {
+            setShowSearchModal(false);
+            router.push(`/tour/${tour._id || tour.id}`);
+          }}
+          tours={[...upcoming, ...trendingTours, ...topRatedTours]}
+        />
 
         {/* Hero Banner */}
         <Animated.View style={[styles.banner, { opacity: fade }]}>
@@ -1706,7 +1523,7 @@ export default function Home() {
                 <View style={styles.loginCtaIcon}>
                   <Ionicons name="bus" size={32} color={colors.primary} />
                 </View>
-                <Text style={styles.loginCtaTitle}>Discover Sacred Yatras</Text>
+                <Text style={styles.loginCtaTitle}>Discover Tours</Text>
                 <Text style={styles.loginCtaSub}>
                   Sign in to view upcoming tours, check availability and book
                   your seat.
@@ -2707,16 +2524,20 @@ const makeStyles = (colors) => StyleSheet.create({
   // ── Search card ────────────────────────────────────────────────────────────
   searchCard: {
     marginHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    elevation: 4,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 8,
-    padding: 16,
-    gap: 12,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   chipRow: {
     paddingBottom: 4,

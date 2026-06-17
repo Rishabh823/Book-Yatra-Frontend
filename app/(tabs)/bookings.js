@@ -135,7 +135,9 @@ export default function Bookings() {
         {/* Clean white header */}
         <View style={s.headerClean}>
           <Text style={s.headerTitle}>My Bookings</Text>
-          <Text style={s.headerSub}>Your sacred journeys, all in one place</Text>
+          <Text style={s.headerSub}>
+            Your sacred journeys, all in one place
+          </Text>
         </View>
         <View style={s.gateBody}>
           <View style={s.gateIconWrap}>
@@ -143,7 +145,7 @@ export default function Bookings() {
           </View>
           <Text style={s.gateTitle}>See your bookings</Text>
           <Text style={s.gateSub}>
-            Login to view all your yatra bookings and travel history.
+            Login to view all your tour bookings and travel history.
           </Text>
           <TouchableOpacity
             style={s.loginBtn}
@@ -294,7 +296,7 @@ export default function Bookings() {
               </View>
               <Text style={s.emptyTitle}>No Bookings Yet</Text>
               <Text style={s.emptySub}>
-                Your yatra journey begins with a single booking.
+                Your journey begins with a single booking.
               </Text>
               <TouchableOpacity
                 style={s.cta}
@@ -302,7 +304,7 @@ export default function Bookings() {
                 testID="empty-explore-btn"
               >
                 <Ionicons name="search" size={16} color="#fff" />
-                <Text style={s.ctaText}>Explore Yatras</Text>
+                <Text style={s.ctaText}>Explore Tours</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -354,9 +356,10 @@ function BookingCard({ item, router, isVolunteer }) {
   const tourName = isVolunteer
     ? item.tourId?.title || item.tourTitle || ""
     : null;
-  const displayTitle = isVolunteer && passengerName
-    ? passengerName
-    : item.tourTitle || item.tour?.title || "Yatra Booking";
+  const displayTitle =
+    isVolunteer && passengerName
+      ? passengerName
+      : item.tourTitle || item.tour?.title || "Yatra Booking";
 
   return (
     <TouchableOpacity
@@ -379,13 +382,22 @@ function BookingCard({ item, router, isVolunteer }) {
               {displayTitle}
             </Text>
             {isVolunteer && tourName ? (
-              <Text style={s.cardSubTitle} numberOfLines={1}>{tourName}</Text>
+              <Text style={s.cardSubTitle} numberOfLines={1}>
+                {tourName}
+              </Text>
             ) : null}
             <Text style={s.bookingIdTxt}>#{bookId}</Text>
           </View>
-          <View style={[s.statusBadge, { backgroundColor: cfg.bg, borderColor: cfg.color + "44" }]}>
+          <View
+            style={[
+              s.statusBadge,
+              { backgroundColor: cfg.bg, borderColor: cfg.color + "44" },
+            ]}
+          >
             <Ionicons name={cfg.icon} size={11} color={cfg.color} />
-            <Text style={[s.statusBadgeTxt, { color: cfg.color }]}>{cfg.label}</Text>
+            <Text style={[s.statusBadgeTxt, { color: cfg.color }]}>
+              {cfg.label}
+            </Text>
           </View>
         </View>
 
@@ -394,7 +406,9 @@ function BookingCard({ item, router, isVolunteer }) {
           <View style={s.routeBar}>
             <View style={s.routeEndpoint}>
               <Text style={s.routeEndpointLabel}>FROM</Text>
-              <Text style={s.routeEndpointCity} numberOfLines={1}>{source || "—"}</Text>
+              <Text style={s.routeEndpointCity} numberOfLines={1}>
+                {source || "—"}
+              </Text>
             </View>
             <View style={s.routeArrowWrap}>
               <View style={s.routeArrowLine} />
@@ -403,7 +417,12 @@ function BookingCard({ item, router, isVolunteer }) {
             </View>
             <View style={[s.routeEndpoint, { alignItems: "flex-end" }]}>
               <Text style={s.routeEndpointLabel}>TO</Text>
-              <Text style={[s.routeEndpointCity, { color: colors.primary }]} numberOfLines={1}>{dest || "—"}</Text>
+              <Text
+                style={[s.routeEndpointCity, { color: colors.primary }]}
+                numberOfLines={1}
+              >
+                {dest || "—"}
+              </Text>
             </View>
           </View>
         )}
@@ -418,13 +437,23 @@ function BookingCard({ item, router, isVolunteer }) {
             <View style={{ flexDirection: "row", gap: 6 }}>
               {date ? (
                 <View style={s.infoChip}>
-                  <Ionicons name="calendar-outline" size={11} color={colors.textSecondary} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={11}
+                    color={colors.textSecondary}
+                  />
                   <Text style={s.infoChipTxt}>{date}</Text>
                 </View>
               ) : null}
               <View style={s.infoChip}>
-                <Ionicons name="people-outline" size={11} color={colors.textSecondary} />
-                <Text style={s.infoChipTxt}>{seats} seat{seats > 1 ? "s" : ""}</Text>
+                <Ionicons
+                  name="people-outline"
+                  size={11}
+                  color={colors.textSecondary}
+                />
+                <Text style={s.infoChipTxt}>
+                  {seats} seat{seats > 1 ? "s" : ""}
+                </Text>
               </View>
             </View>
             {/* Amount */}
@@ -487,7 +516,11 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     minWidth: 56,
   },
-  countBadgeNum: { fontFamily: fonts.heading, fontSize: 24, color: colors.primary },
+  countBadgeNum: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.primary,
+  },
   countBadgeLabel: {
     fontFamily: fonts.bodyMedium,
     fontSize: 10,

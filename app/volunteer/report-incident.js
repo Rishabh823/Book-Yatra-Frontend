@@ -6,10 +6,12 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import Toast from "../../components/Toast";
+import { useToast } from "../../lib/hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -38,6 +40,8 @@ export default function ReportIncidentScreen() {
   const { tourId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast, showToast, hideToast } = useToast();
+  const [showReportConfirm, setShowReportConfirm] = useState(false);
   const [type, setType] = useState("");
   const [severity, setSeverity] = useState("medium");
   const [title, setTitle] = useState("");
@@ -45,38 +49,31 @@ export default function ReportIncidentScreen() {
   const [location, setLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = async () => {
-    if (!type) return Alert.alert("Error", "Please select incident type");
-    if (!title.trim()) return Alert.alert("Error", "Please enter a title");
-    if (!description.trim())
-      return Alert.alert("Error", "Please describe the incident");
-    Alert.alert("Report Incident", "Submit this incident report?", [
-      { text: "Cancel" },
-      {
-        text: "Submit",
-        onPress: async () => {
-          setSubmitting(true);
-          try {
-            await api.post("/incidents", {
-              type,
-              severity,
-              title: title.trim(),
-              description: description.trim(),
-              location: location.trim() || undefined,
-              tourId: tourId || undefined,
-            });
-            Alert.alert(
-              "Reported!",
-              "Incident has been reported and relevant personnel notified.",
-              [{ text: "OK", onPress: () => router.back() }],
-            );
-          } catch {
-            Alert.alert("Error", "Failed to submit report");
-          }
-          setSubmitting(false);
-        },
-      },
-    ]);
+  const handleSubmitReport = async () => {
+    setShowReportConfirm(false);
+    setSubmitting(true);
+    try {
+      await api.post("/incidents", {
+        type,
+        severity,
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim() || undefined,
+        tourId: tourId || undefined,
+      });
+      showToast("Incident has been reported and relevant personnel notified.", "success");
+      router.back();
+    } catch {
+      showToast("Failed to submit report", "error");
+    }
+    setSubmitting(false);
+  };
+
+  const submit = () => {
+    if (!type) { showToast("Please select incident type", "error"); return; }
+    if (!title.trim()) { showToast("Please enter a title", "error"); return; }
+    if (!description.trim()) { showToast("Please describe the incident", "error"); return; }
+    setShowReportConfirm(true);
   };
 
   return (
@@ -205,6 +202,18 @@ export default function ReportIncidentScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <ConfirmModal
+        visible={showReportConfirm}
+        title="Report Incident"
+        message="Submit this incident report?"
+        confirmText="Submit"
+        cancelText="Cancel"
+        onConfirm={handleSubmitReport}
+        onCancel={() => setShowReportConfirm(false)}
+        onDismiss={() => setShowReportConfirm(false)}
+        destructive={false}
+      />
     </View>
   );
 }

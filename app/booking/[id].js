@@ -11,6 +11,7 @@ import {
   Image,
   Platform,
 } from "react-native";
+import ConfirmModal from "../../components/ConfirmModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -254,31 +255,21 @@ export default function BookingDetail() {
     }
   };
 
-  const handleCancel = () => {
-    Alert.alert(
-      "Cancel Booking",
-      "Are you sure? Cancellation is subject to the operator's refund policy.",
-      [
-        { text: "Keep Booking", style: "cancel" },
-        {
-          text: "Cancel Booking",
-          style: "destructive",
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              await api.post(`/bookings/${id}/cancel`);
-              showToast("Booking cancelled successfully.", "success");
-              const res = await bookingsApi.byId(id);
-              setBooking(res?.data || res);
-            } catch (e) {
-              showToast(e.message || "Failed to cancel booking.", "error");
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-    );
+  const handleCancel = () => setShowCancelConfirm(true);
+
+  const confirmCancel = async () => {
+    setShowCancelConfirm(false);
+    setCancelling(true);
+    try {
+      await api.post(`/bookings/${id}/cancel`);
+      showToast("Booking cancelled successfully.", "success");
+      const res = await bookingsApi.byId(id);
+      setBooking(res?.data || res);
+    } catch (e) {
+      showToast(e.message || "Failed to cancel booking.", "error");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   if (loading) {

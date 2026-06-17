@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Platform,
 } from "react-native";
+import Toast from "../components/Toast";
+import { useToast } from "../lib/hooks/useToast";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -78,6 +79,7 @@ const STEP_SUCCESS = 2;
 export default function DonatePage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { toast, showToast, hideToast } = useToast();
 
   const [step, setStep] = useState(STEP_CATEGORY);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -108,11 +110,11 @@ export default function DonatePage() {
 
   const handleDonate = async () => {
     if (finalAmount < 1) {
-      Alert.alert("Enter Amount", "Please select or enter a valid amount.");
+      showToast("Please select or enter a valid amount.", "error");
       return;
     }
     if (!donorName.trim()) {
-      Alert.alert("Name Required", "Please enter your name.");
+      showToast("Please enter your name.", "error");
       return;
     }
     setSubmitting(true);
@@ -141,7 +143,7 @@ export default function DonatePage() {
         setStep(STEP_SUCCESS);
       }
     } catch (e) {
-      Alert.alert("Error", e.message || "Could not initiate payment. Try again.");
+      showToast(e.message || "Could not initiate payment. Try again.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -165,10 +167,7 @@ export default function DonatePage() {
       setCompletedDonation({ amount: finalAmount, type: selectedCategory });
       setStep(STEP_SUCCESS);
     } catch {
-      Alert.alert(
-        "Payment Received",
-        "Payment was received but confirmation failed. Our team will verify and contact you.",
-      );
+      showToast("Payment received! Our team will verify and contact you shortly.", "info");
     } finally {
       setSubmitting(false);
     }
@@ -310,6 +309,7 @@ export default function DonatePage() {
         onSuccess={onPaymentSuccess}
         onClose={() => setCheckout(null)}
       />
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
 
       <LinearGradient
         colors={category?.gradient || ["#D95D39", "#B94929"]}
