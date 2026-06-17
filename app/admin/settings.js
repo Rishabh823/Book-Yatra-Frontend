@@ -188,7 +188,7 @@ export default function AdminSettings() {
               style={s.iconInputField}
               value={cfg.contactEmail}
               onChangeText={v => set('contactEmail', v)}
-              placeholder="e.g. support@bookyatra.com"
+              placeholder="e.g. support@tripkart.com"
               placeholderTextColor={colors.textDisabled}
               keyboardType="email-address"
               autoCapitalize="none"

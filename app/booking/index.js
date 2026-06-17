@@ -574,7 +574,7 @@ export default function Booking() {
           orderId: order.orderId,
           amount: order.amount ?? total * 100,
           currency: order.currency || "INR",
-          name: "Book Yatra",
+          name: "TripKart",
           description: `${tour?.title || "Yatra"} · ${numberOfSeats} seat(s)`,
           prefill: { name: form.name, email: form.email, contact: form.phone },
         });
@@ -642,7 +642,7 @@ export default function Booking() {
           >
             <Ionicons name="arrow-back" size={20} color={colors.secondary} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Book Yatra</Text>
+          <Text style={s.headerTitle}>TripKart</Text>
           <View style={{ width: 40 }} />
         </View>
 

@@ -132,7 +132,7 @@ export default function DonatePage() {
           orderId: order.orderId,
           amount: order.amount ?? finalAmount * 100,
           currency: order.currency || "INR",
-          name: "Book Yatra — Seva Daan",
+          name: "TripKart — Seva Daan",
           description: `${category?.label || "Donation"} · ₹${finalAmount}`,
           prefill: { name: donorName, email: donorEmail, contact: donorPhone },
         });

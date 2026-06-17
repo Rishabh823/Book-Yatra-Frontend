@@ -208,7 +208,7 @@ export default function BookingDetail() {
           orderId: order.orderId,
           amount: order.amount ?? finalAmount * 100,
           currency: order.currency || "INR",
-          name: "Book Yatra",
+          name: "TripKart",
           description: booking.tourTitle || "Yatra",
           prefill: {
             name: booking.name,

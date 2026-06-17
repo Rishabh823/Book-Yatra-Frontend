@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Book Yatra",
-    "slug": "book-yatra-mobile",
+    "name": "TripKart",
+    "slug": "tripkart-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "bookyatra",
+    "scheme": "tripkart",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "icon": "./assets/app-icon.png",
@@ -21,7 +21,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Book Yatra needs camera access to scan QR codes and capture photos."
+          "cameraPermission": "TripKart needs camera access to scan QR codes and capture photos."
         }
       ],
       [
@@ -36,8 +36,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Book Yatra needs access to your photos to upload images.",
-          "cameraPermission": "Book Yatra needs camera access to take photos."
+          "photosPermission": "TripKart needs access to your photos to upload images.",
+          "cameraPermission": "TripKart needs camera access to take photos."
         }
       ],
       "expo-local-authentication"
@@ -49,7 +49,7 @@
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/favicon.svg",
-      "name": "Book Yatra",
+      "name": "TripKart",
       "shortName": "BK",
       "description": "Sacred pilgrimage booking platform",
       "themeColor": "#5C1615",
@@ -64,7 +64,7 @@
       }
     },
     "android": {
-      "package": "com.rishabh8233.bookyatramobile",
+      "package": "com.rishabh8233.tripkart",
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-icon.png",
         "backgroundColor": "#3D0A0A"
@@ -84,7 +84,7 @@
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.rishabh8233.bookyatramobile",
+      "bundleIdentifier": "com.rishabh8233.tripkart",
       "supportsTablet": true
     }
   }

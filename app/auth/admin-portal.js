@@ -62,7 +62,7 @@ export default function AdminPortalLogin() {
                 <Ionicons name="mail-outline" size={17} color="rgba(255,255,255,0.4)" />
                 <TextInput
                   style={s.input}
-                  placeholder="admin@bookyatra.com"
+                  placeholder="admin@tripkart.com"
                   placeholderTextColor="rgba(255,255,255,0.2)"
                   autoCapitalize="none"
                   keyboardType="email-address"

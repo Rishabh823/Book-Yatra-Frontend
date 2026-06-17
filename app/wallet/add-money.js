@@ -39,7 +39,7 @@ export default function AddMoneyScreen() {
           orderId: order.orderId,
           amount: order.amount,
           currency: order.currency || "INR",
-          name: "Book Yatra Wallet",
+          name: "TripKart Wallet",
           description: `Wallet recharge — ₹${parsed}`,
         });
       } else {

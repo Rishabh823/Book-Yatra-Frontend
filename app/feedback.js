@@ -249,7 +249,7 @@ export default function Feedback() {
             <TextInput
               testID="fb-message"
               style={s.textarea}
-              placeholder="Share your experience with Book Yatra..."
+              placeholder="Share your experience with TripKart..."
               placeholderTextColor={colors.textDisabled}
               multiline
               numberOfLines={5}

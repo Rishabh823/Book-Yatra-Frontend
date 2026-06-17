@@ -1,0 +1,25 @@
+{
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/android/app/build/**",
+    "**/android/build/**",
+    "**/.expo/**",
+    "**/dist/**"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.jdt.ls.vmargs": "-Xmx2G",
+  "android.sdk.path": "/Users/rishabh/Library/Android/sdk",
+  "gradle.nestedProjects": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.expo": true,
+    "**/dist": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.expo": true,
+    "**/dist": true,
+    "**/android/build": true,
+    "**/android/app/build": true
+  }
+}

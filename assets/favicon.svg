@@ -1,44 +1,265 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#7B1E1A;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#3D0A0A;stop-opacity:1"/>
+    <!-- Main background: deep brown-orange brand gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C2D12"/>
+      <stop offset="45%" stop-color="#9A3412"/>
+      <stop offset="100%" stop-color="#EA580C"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#F5D78A;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#C49A28;stop-opacity:1"/>
+
+    <!-- Bus body gradient -->
+    <linearGradient id="busBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FFE8D6"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+
+    <!-- Bus roof gradient -->
+    <linearGradient id="busRoof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FDBA74"/>
+    </linearGradient>
+
+    <!-- Window gradient -->
+    <linearGradient id="winGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#BAE6FD"/>
+      <stop offset="100%" stop-color="#7DD3FC"/>
+    </linearGradient>
+
+    <!-- Road gradient -->
+    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#431407"/>
+      <stop offset="100%" stop-color="#3D1605"/>
+    </linearGradient>
+
+    <!-- Pin gradient -->
+    <linearGradient id="pinGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FDBA74"/>
+    </linearGradient>
+
+    <!-- Shine overlay -->
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Wheel gradient -->
+    <radialGradient id="wheelGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#1C0A00"/>
+    </radialGradient>
+
+    <!-- Headlight glow -->
+    <radialGradient id="headlight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF7ED" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#FDBA74" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Speed streak gradient -->
+    <linearGradient id="streakGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#EA580C" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#EA580C" stop-opacity="0.35"/>
+    </linearGradient>
+
+    <filter id="busShadow" x="-15%" y="-15%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#3D1605" flood-opacity="0.55"/>
     </filter>
+
+    <filter id="pinShadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <clipPath id="roundRect">
+      <rect width="1024" height="1020" rx="230" ry="230"/>
+    </clipPath>
   </defs>
 
-  <!-- Background rounded rectangle -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <g clip-path="url(#roundRect)">
 
-  <!-- Subtle inner glow overlay -->
-  <rect width="512" height="512" rx="96" fill="none" stroke="#A0391A" stroke-width="2" opacity="0.5"/>
+    <!-- ── BACKGROUND ── -->
+    <rect width="1024" height="1024" fill="url(#bgGrad)"/>
 
-  <!-- Decorative gold ring -->
-  <circle cx="256" cy="256" r="220" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.4"/>
-  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#gold)" stroke-width="1" opacity="0.2"/>
+    <!-- subtle radial center warmth -->
+    <radialGradient id="cg" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#C2410C" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7C2D12" stop-opacity="0"/>
+    </radialGradient>
+    <rect width="1024" height="1024" fill="url(#cg)"/>
 
-  <!-- Top decorative dot accent -->
-  <circle cx="256" cy="70" r="6" fill="url(#gold)" opacity="0.7"/>
-  <circle cx="256" cy="442" r="6" fill="url(#gold)" opacity="0.7"/>
-  <circle cx="70" cy="256" r="6" fill="url(#gold)" opacity="0.7"/>
-  <circle cx="442" cy="256" r="6" fill="url(#gold)" opacity="0.7"/>
+    <!-- ── ROAD ── -->
+    <rect x="0" y="680" width="1024" height="160" fill="url(#roadGrad)" rx="0"/>
+    <!-- Road center dashed line -->
+    <rect x="0" y="754" width="1024" height="10" fill="#7C2D12" opacity="0.5"/>
+    <rect x="60"  y="754" width="110" height="10" fill="#EA580C" opacity="0.35" rx="5"/>
+    <rect x="250" y="754" width="110" height="10" fill="#EA580C" opacity="0.35" rx="5"/>
+    <rect x="440" y="754" width="110" height="10" fill="#EA580C" opacity="0.35" rx="5"/>
+    <rect x="630" y="754" width="110" height="10" fill="#EA580C" opacity="0.35" rx="5"/>
+    <rect x="820" y="754" width="110" height="10" fill="#EA580C" opacity="0.35" rx="5"/>
 
-  <!-- Om symbol subtle (optional decorative) -->
-  <text x="256" y="158" font-family="serif" font-size="44" fill="url(#gold)" text-anchor="middle" opacity="0.5">ॐ</text>
+    <!-- ── SPEED STREAKS (behind bus) ── -->
+    <rect x="0" y="560" width="320" height="12" rx="6" fill="url(#streakGrad)" opacity="0.7"/>
+    <rect x="0" y="590" width="260" height="8"  rx="4" fill="url(#streakGrad)" opacity="0.5"/>
+    <rect x="0" y="618" width="200" height="6"  rx="3" fill="url(#streakGrad)" opacity="0.35"/>
+    <rect x="0" y="535" width="180" height="6"  rx="3" fill="url(#streakGrad)" opacity="0.3"/>
 
-  <!-- BK main text -->
-  <text x="256" y="320" font-family="Georgia, Times New Roman, serif" font-size="220" font-weight="bold" fill="url(#gold)" text-anchor="middle" dominant-baseline="auto" letter-spacing="-8" filter="url(#glow)">BK</text>
+    <!-- ── DUST PARTICLES ── -->
+    <circle cx="295" cy="672" r="7"  fill="#FDBA74" opacity="0.18"/>
+    <circle cx="260" cy="660" r="5"  fill="#FDBA74" opacity="0.14"/>
+    <circle cx="310" cy="650" r="4"  fill="#FDBA74" opacity="0.12"/>
 
-  <!-- Thin divider line -->
-  <rect x="156" y="340" width="200" height="2" rx="1" fill="url(#gold)" opacity="0.6"/>
+    <!-- ══════════════════════════════
+         BUS BODY (perspective slight angle)
+    ══════════════════════════════ -->
+    <g filter="url(#busShadow)">
 
-  <!-- BOOK YATRA subtitle -->
-  <text x="256" y="392" font-family="Georgia, serif" font-size="36" fill="#FFE9C0" text-anchor="middle" letter-spacing="6" opacity="0.9">BOOK YATRA</text>
+      <!-- Main body rectangle -->
+      <rect x="300" y="440" width="590" height="240" rx="24" fill="url(#busBody)"/>
+
+      <!-- Roof strip (orange brand color) -->
+      <rect x="300" y="440" width="590" height="52" rx="24" fill="#EA580C"/>
+      <rect x="300" y="468" width="590" height="24" fill="#EA580C"/>
+
+      <!-- FRONT FACE of bus -->
+      <rect x="860" y="440" width="80" height="240" rx="0" fill="#FDBA74"/>
+      <rect x="882" y="440" width="58" height="240" rx="0" fill="#FED7AA"/>
+      <!-- Front right rounded corner -->
+      <path d="M860 440 Q940 440 940 500 L940 680 Q940 680 860 680Z" fill="#FED7AA"/>
+
+      <!-- FRONT WINDSHIELD -->
+      <rect x="868" y="468" width="68" height="100" rx="10" fill="url(#winGrad)" opacity="0.95"/>
+      <!-- Windshield glare -->
+      <path d="M874 474 L898 474 L884 520Z" fill="white" opacity="0.3"/>
+
+      <!-- SIDE WINDOWS — 4 windows -->
+      <rect x="340" y="470" width="88" height="70" rx="10" fill="url(#winGrad)" opacity="0.92"/>
+      <rect x="454" y="470" width="88" height="70" rx="10" fill="url(#winGrad)" opacity="0.92"/>
+      <rect x="568" y="470" width="88" height="70" rx="10" fill="url(#winGrad)" opacity="0.92"/>
+      <rect x="682" y="470" width="88" height="70" rx="10" fill="url(#winGrad)" opacity="0.92"/>
+      <!-- Window top reflection -->
+      <rect x="340" y="470" width="88" height="18" rx="10" fill="white" opacity="0.25"/>
+      <rect x="454" y="470" width="88" height="18" rx="10" fill="white" opacity="0.25"/>
+      <rect x="568" y="470" width="88" height="18" rx="10" fill="white" opacity="0.25"/>
+      <rect x="682" y="470" width="88" height="18" rx="10" fill="white" opacity="0.25"/>
+
+      <!-- BUS DOOR -->
+      <rect x="800" y="570" width="58" height="108" rx="6" fill="#FDDCB5" stroke="#EA580C" stroke-width="3"/>
+      <!-- Door handle -->
+      <rect x="808" y="616" width="14" height="28" rx="7" fill="#EA580C"/>
+
+      <!-- BUS BRAND STRIPE on body -->
+      <rect x="300" y="570" width="560" height="5" fill="#EA580C" opacity="0.18"/>
+
+      <!-- HEADLIGHT front -->
+      <ellipse cx="926" cy="618" rx="18" ry="12" fill="url(#headlight)" opacity="0.9"/>
+      <ellipse cx="926" cy="618" rx="10" ry="6" fill="white"/>
+
+      <!-- FRONT BUMPER -->
+      <rect x="858" y="656" width="82" height="22" rx="6" fill="#C2410C"/>
+
+      <!-- REAR light -->
+      <rect x="300" y="618" width="12" height="40" rx="4" fill="#EF4444"/>
+
+      <!-- BOTTOM SKIRT / BODY BASE -->
+      <rect x="300" y="660" width="640" height="20" rx="0" fill="#C2410C" opacity="0.7"/>
+
+      <!-- WHEELS -->
+      <!-- Rear wheel -->
+      <circle cx="420" cy="688" r="58" fill="url(#wheelGrad)"/>
+      <circle cx="420" cy="688" r="38" fill="#2C0A00"/>
+      <circle cx="420" cy="688" r="22" fill="#3D1605"/>
+      <!-- Wheel rim spokes -->
+      <line x1="420" y1="650" x2="420" y2="726" stroke="#78350F" stroke-width="5"/>
+      <line x1="382" y1="688" x2="458" y2="688" stroke="#78350F" stroke-width="5"/>
+      <line x1="393" y1="661" x2="447" y2="715" stroke="#78350F" stroke-width="4"/>
+      <line x1="447" y1="661" x2="393" y2="715" stroke="#78350F" stroke-width="4"/>
+      <circle cx="420" cy="688" r="8" fill="#EA580C"/>
+
+      <!-- Front wheel -->
+      <circle cx="820" cy="688" r="58" fill="url(#wheelGrad)"/>
+      <circle cx="820" cy="688" r="38" fill="#2C0A00"/>
+      <circle cx="820" cy="688" r="22" fill="#3D1605"/>
+      <line x1="820" y1="650" x2="820" y2="726" stroke="#78350F" stroke-width="5"/>
+      <line x1="782" y1="688" x2="858" y2="688" stroke="#78350F" stroke-width="5"/>
+      <line x1="793" y1="661" x2="847" y2="715" stroke="#78350F" stroke-width="4"/>
+      <line x1="847" y1="661" x2="793" y2="715" stroke="#78350F" stroke-width="4"/>
+      <circle cx="820" cy="688" r="8" fill="#EA580C"/>
+
+    </g>
+
+    <!-- ── MAP PIN (destination above bus) ── -->
+    <g filter="url(#pinShadow)" transform="translate(700, 160)">
+      <!-- Glow -->
+      <circle cx="0" cy="-30" r="70" fill="#EA580C" opacity="0.15"/>
+      <!-- Pin shape -->
+      <path d="M0 -90 C-46 -90 -84 -52 -84 -6 C-84 38 0 110 0 110 C0 110 84 38 84 -6 C84 -52 46 -90 0 -90Z"
+        fill="#FFF7ED"/>
+      <path d="M0 -90 C-46 -90 -84 -52 -84 -6 C-84 38 0 110 0 110 C0 110 84 38 84 -6 C84 -52 46 -90 0 -90Z"
+        fill="none" stroke="#EA580C" stroke-width="6"/>
+      <!-- Inner bus icon in pin -->
+      <!-- tiny bus silhouette -->
+      <rect x="-30" y="-32" width="60" height="30" rx="6" fill="#EA580C"/>
+      <rect x="-26" y="-44" width="52" height="16" rx="4" fill="#C2410C"/>
+      <circle cx="-14" cy="4" r="9" fill="#7C2D12"/>
+      <circle cx="14" cy="4" r="9" fill="#7C2D12"/>
+      <rect x="-22" y="-30" width="16" height="14" rx="3" fill="#BAE6FD"/>
+      <rect x="6"  y="-30" width="16" height="14" rx="3" fill="#BAE6FD"/>
+    </g>
+
+    <!-- ── DASHED ROUTE PATH ── -->
+    <path d="M 160 695 Q 300 390 700 280"
+      fill="none"
+      stroke="rgba(255,255,255,0.22)"
+      stroke-width="5"
+      stroke-dasharray="20 14"
+      stroke-linecap="round"/>
+
+    <!-- Origin dot -->
+    <circle cx="160" cy="695" r="14" fill="#FFF7ED"/>
+    <circle cx="160" cy="695" r="24" fill="none" stroke="#FFF7ED" stroke-width="3" opacity="0.35"/>
+
+    <!-- ── WORDMARK ── -->
+    <!-- "Trip" in white -->
+    <text x="150" y="870"
+      font-family="'Arial Black','Arial',sans-serif"
+      font-size="128"
+      font-weight="900"
+      letter-spacing="-2"
+      fill="#FFFFFF">Trip</text>
+    <!-- "Kart" — K in orange accent, rest white -->
+    <text x="468" y="870"
+      font-family="'Arial Black','Arial',sans-serif"
+      font-size="128"
+      font-weight="900"
+      letter-spacing="-2"
+      fill="#FFFFFF">Kart</text>
+    <!-- K accent overlay -->
+    <text x="468" y="870"
+      font-family="'Arial Black','Arial',sans-serif"
+      font-size="128"
+      font-weight="900"
+      fill="#FDBA74">K</text>
+
+    <!-- ── TAGLINE ── -->
+    <text x="512" y="940"
+      text-anchor="middle"
+      font-family="'Arial',sans-serif"
+      font-size="36"
+      font-weight="500"
+      letter-spacing="8"
+      fill="rgba(255,247,237,0.55)">YOUR BUS · YOUR TRIP</text>
+
+    <!-- ── SHINE ── -->
+    <rect width="1024" height="1024" rx="230" ry="230" fill="url(#shine)"/>
+
+    <!-- ── BORDER RING ── -->
+    <rect x="3" y="3" width="1018" height="1018" rx="228" ry="228"
+      fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="3"/>
+
+  </g>
 </svg>

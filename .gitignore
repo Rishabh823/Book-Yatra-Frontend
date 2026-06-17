@@ -1,3 +1,62 @@
-/node_modules
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Expo ──────────────────────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# ── Native build outputs ───────────────────────────────────────────────────────
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.gradle/
+android/local.properties
+
+# Keep gradle wrapper (needed to build)
+!android/gradle/wrapper/gradle-wrapper.jar
+!android/gradlew
+!android/gradlew.bat
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+*.keystore
+!debug.keystore
+google-services.json
+GoogleService-Info.plist
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# ── Package manager lock files (keep one, ignore the other) ───────────────────
 package-lock.json
 yarn.lock
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+
+# ── Editor ────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Metro bundler cache ───────────────────────────────────────────────────────
+.metro-cache/
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+coverage/

@@ -101,7 +101,7 @@ export default function AppLockScreen() {
 
   const tryBiometric = useCallback(async () => {
     try {
-      const result = await authenticate("Unlock Book Yatra");
+      const result = await authenticate("Unlock TripKart");
       if (result.success) {
         setError("");
         unlock();
@@ -199,7 +199,7 @@ export default function AppLockScreen() {
             color={colors.primary}
           />
         </View>
-        <Text style={styles.appName}>Book Yatra</Text>
+        <Text style={styles.appName}>TripKart</Text>
         <Text style={styles.sub}>
           {bioOnly
             ? Platform.OS === "ios"

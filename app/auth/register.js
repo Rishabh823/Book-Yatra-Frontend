@@ -148,7 +148,7 @@ export default function Register() {
       const loginRes = isManager
         ? await authApi.loginManager(payload.email, payload.password)
         : await authApi.login(payload.email, payload.password);
-      showToast('Welcome to Book Yatra!', 'success');
+      showToast('Welcome to TripKart!', 'success');
 
       // Small delay so toast is visible, then navigate
       setTimeout(() => {

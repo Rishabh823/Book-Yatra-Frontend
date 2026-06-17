@@ -815,11 +815,11 @@ export default function Home() {
             </Text>
             <Text style={styles.greetSub}>
               {userRole === "volunteer"
-                ? "Volunteer Portal · Book Yatra"
+                ? "Volunteer Portal · TripKart"
                 : userRole === "super_admin"
-                  ? "Super Admin · Book Yatra"
+                  ? "Super Admin · TripKart"
                   : userRole === "admin" || userRole === "manager"
-                    ? "Admin Panel · Book Yatra"
+                    ? "Admin Panel · TripKart"
                     : t.appName}
             </Text>
           </View>

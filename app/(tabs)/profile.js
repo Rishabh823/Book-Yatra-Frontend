@@ -139,7 +139,7 @@ const getUserMenu = (t) => [
   {
     icon: "information-circle-outline",
     label: "About",
-    sub: "About Book Yatra",
+    sub: "About TripKart",
     action: "about",
     color: "#5C1615",
   },
@@ -561,7 +561,7 @@ export default function Profile() {
                 <Text style={s.email}>
                   {isGuest
                     ? "Guest User · Temporary Session"
-                    : user?.email || user?.phone || "Book Yatra devotee"}
+                    : user?.email || user?.phone || "TripKart devotee"}
                 </Text>
                 <View style={s.badges}>
                   <View
@@ -797,7 +797,7 @@ export default function Profile() {
             )}
 
             <Text style={s.footer}>{t.mantra}</Text>
-            <Text style={s.version}>v1.0.0 · Book Yatra</Text>
+            <Text style={s.version}>v1.0.0 · TripKart</Text>
           </View>
         )}
       </ScrollView>

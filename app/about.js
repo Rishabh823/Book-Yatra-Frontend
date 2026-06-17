@@ -90,7 +90,7 @@ const CONTACT = [
 
 const TEAM = [
   { initial: 'SS', name: 'Seva Samiti', role: 'Spiritual Leadership', color: '#5C1615' },
-  { initial: 'BY', name: 'Book Yatra', role: 'Technology & Operations', color: '#0284C7' },
+  { initial: 'TK', name: 'TripKart', role: 'Technology & Operations', color: '#0284C7' },
   { initial: 'CI', name: 'Cipher Infratech', role: 'Development Partner', color: '#7C3AED' },
 ];
 
@@ -117,7 +117,7 @@ export default function About() {
           <View style={s.omCircle}>
             <Text style={s.omText}>ॐ</Text>
           </View>
-          <Text style={s.heroTitle}>Book Yatra</Text>
+          <Text style={s.heroTitle}>TripKart</Text>
           <Text style={s.heroSubtitle}>Shyam Sawariya Parivar</Text>
           <Text style={s.heroBadge}>· PANDAV NAGAR, NEW DELHI ·</Text>
           <View style={s.heroTagRow}>
@@ -185,7 +185,7 @@ export default function About() {
             <View style={s.sectionLine} />
           </View>
           <LinearGradient colors={['#0F0A0A', '#1E1410']} style={s.appCard}>
-            <Text style={s.appCardTitle}>Book Yatra App</Text>
+            <Text style={s.appCardTitle}>TripKart App</Text>
             <Text style={s.appCardSub}>A complete digital ecosystem for the Shyam Sawariya Parivar community</Text>
             <View style={s.appFeatures}>
               {[
@@ -255,7 +255,7 @@ export default function About() {
         {/* Footer */}
         <View style={s.footer}>
           <Text style={s.footerMantra}>जय श्री श्याम 🙏</Text>
-          <Text style={s.footerCopy}>© 2024 Shyam Sawariya Parivar · Book Yatra</Text>
+          <Text style={s.footerCopy}>© 2024 Shyam Sawariya Parivar · TripKart</Text>
           <Text style={s.footerDev}>Powered by Cipher Infratech</Text>
         </View>
       </ScrollView>

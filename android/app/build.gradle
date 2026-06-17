@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.rishabh8233.bookyatramobile'
+    namespace 'com.rishabh8233.tripkart'
     defaultConfig {
-        applicationId 'com.rishabh8233.bookyatramobile'
+        applicationId 'com.rishabh8233.tripkart'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
