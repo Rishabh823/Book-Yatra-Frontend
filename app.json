@@ -60,7 +60,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "e68c5a74-98fb-490c-acaf-408352457a61"
+        "projectId": "9d65c70a-cf6c-4ad2-bae9-8c95a7e25980"
       }
     },
     "android": {
@@ -80,12 +80,14 @@
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "ios": {
       "bundleIdentifier": "com.rishabh8233.tripkart",
       "supportsTablet": true
-    }
+    },
+    "owner": "rishabh8233"
   }
 }
