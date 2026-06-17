@@ -442,11 +442,6 @@ export default function VolunteerManagementScreen() {
             onPress={() => setTab(t.k)}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name={t.icon}
-              size={13}
-              color={tab === t.k ? "white" : colors.textSecondary}
-            />
             <Text style={[s.segmentText, tab === t.k && s.segmentTextActive]}>
               {t.label}
             </Text>
@@ -1171,13 +1166,13 @@ const s = StyleSheet.create({
     color: "#1F2937",
   },
 
-  // Segmented tabs
+  // Segmented tabs — compact chip style
   segmentWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 6,
     backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
@@ -1185,29 +1180,31 @@ const s = StyleSheet.create({
   segment: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     backgroundColor: "#F3F4F6",
-    height: 34,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  segmentActive: { backgroundColor: colors.primary },
+  segmentActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   segmentText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
+    textAlign: "center",
   },
   segmentTextActive: { color: "white" },
   segmentBadge: {
-    backgroundColor: "rgba(0,0,0,0.1)",
-    borderRadius: 10,
-    paddingHorizontal: 6,
+    backgroundColor: "rgba(0,0,0,0.12)",
+    borderRadius: 8,
+    paddingHorizontal: 5,
     paddingVertical: 1,
-    minWidth: 18,
+    minWidth: 16,
     alignItems: "center",
   },
-  segmentBadgeActive: { backgroundColor: "rgba(255,255,255,0.25)" },
+  segmentBadgeActive: { backgroundColor: "rgba(255,255,255,0.3)" },
   segmentBadgeTxt: {
     fontFamily: fonts.bodyBold,
     fontSize: 10,

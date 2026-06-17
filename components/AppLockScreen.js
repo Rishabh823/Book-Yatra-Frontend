@@ -62,19 +62,42 @@ export default function AppLockScreen() {
     Vibration.vibrate(350);
     shakeAnim.setValue(0);
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 8,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: -8,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [shakeAnim]);
 
-  const triggerError = useCallback((msg) => {
-    setPin("");
-    setError(msg);
-    triggerShake();
-  }, [triggerShake]);
+  const triggerError = useCallback(
+    (msg) => {
+      setPin("");
+      setError(msg);
+      triggerShake();
+    },
+    [triggerShake],
+  );
 
   const tryBiometric = useCallback(async () => {
     try {
@@ -90,51 +113,57 @@ export default function AppLockScreen() {
     if (bioAvail && !loading) tryBiometric();
   }, [bioAvail, loading]);
 
-  const handleKey = useCallback(async (key) => {
-    if (lockedUntil && new Date(lockedUntil) > new Date()) {
-      const secs = Math.ceil((new Date(lockedUntil) - Date.now()) / 1000);
-      setError(`Locked. Try again in ${secs}s`);
-      return;
-    }
-    if (key === "⌫") {
-      setPin((p) => p.slice(0, -1));
-      setError("");
-      return;
-    }
-    if (key === "") return;
-
-    const next = pin + key;
-    setPin(next);
-
-    if (next.length === pinLen) {
-      const result = await pinStorage.verifyPin(next);
-      setPin("");
-      if (result.valid) {
-        setError("");
-        unlock();
-      } else if (result.reason === "no_pin") {
-        setPinMissing(true);
-        setError("PIN data not found. Please reset in Settings.");
-      } else if (result.reason === "locked") {
-        setLockedUntil(result.lockedUntil);
-        triggerError("Too many attempts. Locked for 15 min.");
-      } else {
-        const left = result.attemptsLeft ?? 0;
-        triggerError(
-          left > 0
-            ? `Wrong PIN — ${left} attempt${left === 1 ? "" : "s"} left`
-            : "Wrong PIN. Too many attempts.",
-        );
+  const handleKey = useCallback(
+    async (key) => {
+      if (lockedUntil && new Date(lockedUntil) > new Date()) {
+        const secs = Math.ceil((new Date(lockedUntil) - Date.now()) / 1000);
+        setError(`Locked. Try again in ${secs}s`);
+        return;
       }
-    }
-  }, [pin, pinLen, lockedUntil, unlock, triggerError]);
+      if (key === "⌫") {
+        setPin((p) => p.slice(0, -1));
+        setError("");
+        return;
+      }
+      if (key === "") return;
+
+      const next = pin + key;
+      setPin(next);
+
+      if (next.length === pinLen) {
+        const result = await pinStorage.verifyPin(next);
+        setPin("");
+        if (result.valid) {
+          setError("");
+          unlock();
+        } else if (result.reason === "no_pin") {
+          setPinMissing(true);
+          setError("PIN data not found. Please reset in Settings.");
+        } else if (result.reason === "locked") {
+          setLockedUntil(result.lockedUntil);
+          triggerError("Too many attempts. Locked for 15 min.");
+        } else {
+          const left = result.attemptsLeft ?? 0;
+          triggerError(
+            left > 0
+              ? `Wrong PIN — ${left} attempt${left === 1 ? "" : "s"} left`
+              : "Wrong PIN. Too many attempts.",
+          );
+        }
+      }
+    },
+    [pin, pinLen, lockedUntil, unlock, triggerError],
+  );
 
   const bioOnly = bioAvail && !hasPinSet && !pinEnabled;
 
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
-        <LinearGradient colors={["#0D0507", "#2D1010"]} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={["#0D0507", "#2D1010"]}
+          style={StyleSheet.absoluteFill}
+        />
       </View>
     );
   }
@@ -143,7 +172,11 @@ export default function AppLockScreen() {
     <Animated.View
       style={[
         styles.root,
-        { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, opacity: fadeAnim },
+        {
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 24,
+          opacity: fadeAnim,
+        },
       ]}
     >
       <LinearGradient
@@ -199,10 +232,7 @@ export default function AppLockScreen() {
         <View style={styles.pinWrap}>
           {/* Dots */}
           <Animated.View
-            style={[
-              styles.dotsRow,
-              { transform: [{ translateX: shakeAnim }] },
-            ]}
+            style={[styles.dotsRow, { transform: [{ translateX: shakeAnim }] }]}
           >
             {Array.from({ length: pinLen }).map((_, i) => (
               <View
@@ -253,7 +283,9 @@ export default function AppLockScreen() {
               activeOpacity={0.7}
             >
               <Ionicons
-                name={Platform.OS === "ios" ? "scan-circle-outline" : "finger-print"}
+                name={
+                  Platform.OS === "ios" ? "scan-circle-outline" : "finger-print"
+                }
                 size={22}
                 color="rgba(255,255,255,0.65)"
               />

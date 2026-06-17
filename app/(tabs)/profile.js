@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
 import { auth as authApi } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { useTheme } from "../../lib/ThemeContext";
@@ -29,7 +29,7 @@ const getUserMenu = (t) => [
     label: t.editProfile,
     sub: "Manage personal info",
     action: "profile",
-    color: colors.primary,
+    color: "#D95D39",
   },
   {
     icon: "bus-outline",
@@ -141,7 +141,7 @@ const getUserMenu = (t) => [
     label: "About",
     sub: "About Book Yatra",
     action: "about",
-    color: colors.secondary,
+    color: "#5C1615",
   },
 ];
 
@@ -150,7 +150,7 @@ const SUPER_ADMIN_GRID = [
   { icon: "business",          label: "Operators",     action: "super-operators",     color: "#7C3AED", bg: "#F5F3FF" },
   { icon: "people",            label: "Users",         action: "super-users",         color: "#0284C7", bg: "#EFF6FF" },
   { icon: "bus",               label: "Tours",         action: "super-tours",         color: "#16A34A", bg: "#F0FDF4" },
-  { icon: "ticket",            label: "Bookings",      action: "super-bookings",      color: colors.primary, bg: "#FDECE7" },
+  { icon: "ticket",            label: "Bookings",      action: "super-bookings",      color: "#D95D39", bg: "#FDECE7" },
   { icon: "shield-checkmark",  label: "Roles",         action: "super-roles",         color: "#D97706", bg: "#FFFBEB" },
   { icon: "cash-outline",      label: "Finance",       action: "super-finance",       color: "#16A34A", bg: "#F0FDF4" },
   { icon: "arrow-up-circle",   label: "Withdrawals",   action: "super-withdrawals",   color: "#7C3AED", bg: "#F5F3FF" },
@@ -165,14 +165,14 @@ const ADMIN_GRID = [
     icon: "grid",
     label: "Dashboard",
     action: "admin-dashboard",
-    color: colors.secondary,
+    color: "#5C1615",
     bg: "#FEF2F2",
   },
   {
     icon: "ticket",
     label: "Bookings",
     action: "admin-bookings",
-    color: colors.primary,
+    color: "#D95D39",
     bg: "#FDECE7",
   },
   {
@@ -358,9 +358,11 @@ export default function Profile() {
   const router = useRouter();
   const { lang, t, toggle: toggleLang } = useLang();
   const { theme, isDark } = useTheme();
+  const colors = theme;
   const { width } = useWindowDimensions();
   const gridCols = width >= 500 ? 4 : 3;
   const gridCardW = (width - 48 - 12 * (gridCols - 1)) / gridCols;
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const [user, setUser] = useState(null);
   const [authed, setAuthed] = useState(false);
@@ -811,6 +813,8 @@ export default function Profile() {
 
 function MenuItem({ item, onPress }) {
   const { theme } = useTheme();
+  const colors = theme;
+  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <TouchableOpacity
       activeOpacity={0.75}
@@ -849,7 +853,7 @@ function MenuItem({ item, onPress }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // Hero
   heroWrap: { paddingHorizontal: 16, paddingTop: 8 },
   hero: {

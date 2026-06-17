@@ -16,7 +16,8 @@ const { width: SCREEN_W } = Dimensions.get("window");
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import {
   tours as toursApi,
   auth as authApi,
@@ -44,6 +45,9 @@ export default function Tours() {
   const [advFilters, setAdvFilters] = useState(DEFAULT_FILTERS);
   const [assignedTours, setAssignedTours] = useState([]);
   const [volunteerLoading, setVolunteerLoading] = useState(false);
+
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const { isFav, toggle: toggleFav } = useFavorites();
 
@@ -725,7 +729,7 @@ export default function Tours() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // New gradient header
   header: {
     paddingTop: 8,

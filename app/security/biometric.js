@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBiometric } from "../../lib/hooks/useBiometric";
 import { securityApi } from "../../lib/api";
-import { secureStorage } from "../../lib/security/secureStorage";
+import { pinStorage } from "../../lib/security/secureStorage";
 import { useAppLock } from "../../lib/security/appLockContext";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 
@@ -32,12 +32,12 @@ export default function BiometricScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, settings] = await Promise.all([
+        const [s, localEnabled] = await Promise.all([
           checkSupport(),
-          securityApi.getSettings(),
+          pinStorage.getBiometricEnabled(),
         ]);
         setSupport(s);
-        setEnabled(settings.biometricEnabled);
+        setEnabled(localEnabled);
       } catch {}
       setLoading(false);
     })();
@@ -67,8 +67,7 @@ export default function BiometricScreen() {
           await securityApi.enableBiometric({
             biometricType: support.biometricType,
           });
-          // Save locally so the app lock context can detect biometric mode
-          await secureStorage.set('biometric_enabled', { enabled: true, type: support.biometricType });
+          await pinStorage.setBiometricEnabled(true, support.biometricType);
           await loadSettings();
           setEnabled(true);
           Alert.alert(
@@ -86,7 +85,8 @@ export default function BiometricScreen() {
                 style: "destructive",
                 onPress: async () => {
                   await securityApi.disableBiometric();
-                  await secureStorage.remove('biometric_enabled');
+                  // Explicitly set to false (not just remove) for reliability
+                  await pinStorage.setBiometricEnabled(false);
                   await loadSettings();
                   setEnabled(false);
                 },

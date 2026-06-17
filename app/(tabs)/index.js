@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, spacing, shadow } from "../../lib/theme";
+import { fonts, radius, spacing, shadow } from "../../lib/theme";
 import {
   tours as toursApi,
   feedback as feedbackApi,
@@ -30,7 +30,7 @@ import {
 } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { resolveImageUrl } from "../../lib/utils";
-import { useTheme } from "../../lib/ThemeContext";
+import { useTheme, useColors } from "../../lib/ThemeContext";
 
 const { width } = Dimensions.get("window");
 const BANNERS = [
@@ -45,12 +45,13 @@ const BANNERS = [
 
 // ─── Reusable Section Header ──────────────────────────────────────────────────
 function SectionHeader({ title, subtitle, onSeeAll }) {
+  const colors = useColors();
   return (
     <View style={sectionHeaderStyles.container}>
       <View style={{ flex: 1 }}>
-        <Text style={sectionHeaderStyles.title}>{title}</Text>
+        <Text style={[sectionHeaderStyles.title, { color: colors.secondary }]}>{title}</Text>
         {subtitle ? (
-          <Text style={sectionHeaderStyles.subtitle}>{subtitle}</Text>
+          <Text style={[sectionHeaderStyles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
         ) : null}
       </View>
       {onSeeAll ? (
@@ -58,7 +59,7 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
           onPress={onSeeAll}
           style={sectionHeaderStyles.seeAllBtn}
         >
-          <Text style={sectionHeaderStyles.seeAllText}>See All</Text>
+          <Text style={[sectionHeaderStyles.seeAllText, { color: colors.primary }]}>See All</Text>
           <Ionicons name="arrow-forward" size={13} color={colors.primary} />
         </TouchableOpacity>
       ) : null}
@@ -76,13 +77,13 @@ const sectionHeaderStyles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.secondary,
+    color: "#5C1615",
     letterSpacing: -0.3,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
     marginTop: 2,
   },
   seeAllBtn: {
@@ -94,12 +95,13 @@ const sectionHeaderStyles = StyleSheet.create({
   seeAllText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: colors.primary,
+    color: "#D95D39",
   },
 });
 
 // ─── Shimmer placeholder ──────────────────────────────────────────────────────
 function ShimmerCard({ width: w, height: h, borderRadius: br = radius.xl }) {
+  const colors = useColors();
   const shimmer = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.loop(
@@ -188,8 +190,9 @@ function fallbackTopRated(all) {
     .slice(0, 6);
 }
 function fallbackOffers(all) {
+  const now = new Date();
   return all
-    .filter((t) => t.discountPercent > 0 || t.originalPrice > 0)
+    .filter((t) => (t.discountPercent > 0 || t.originalPrice > 0) && (!t.startDate || new Date(t.startDate) >= now))
     .slice(0, 6);
 }
 
@@ -215,6 +218,8 @@ export default function Home() {
   const router = useRouter();
   const { lang, t, toggle } = useLang();
   const { theme } = useTheme();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [slide, setSlide] = useState(0);
   const [upcoming, setUpcoming] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -429,7 +434,8 @@ export default function Home() {
     setOffersLoading(true);
     try {
       const res = await toursApi.specialOffers();
-      const data = extractArray(res);
+      const now = new Date();
+      const data = extractArray(res).filter(t => !t.startDate || new Date(t.startDate) >= now);
       setSpecialOffers(data.length > 0 ? data : fallbackOffers(allTours));
     } catch {
       setSpecialOffers(fallbackOffers(allTours));
@@ -841,9 +847,6 @@ export default function Home() {
                 )}
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.langBtn} onPress={toggle}>
-              <Text style={styles.langText}>{lang}</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -1637,7 +1640,7 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   announcementBanner: {
     flexDirection: "row",
     alignItems: "flex-start",

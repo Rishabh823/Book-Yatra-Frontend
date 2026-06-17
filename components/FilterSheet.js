@@ -163,24 +163,46 @@ export default function FilterSheet({
                 <DateInput
                   label="From"
                   value={local.dateFrom}
-                  onChange={(v) => setLocal((prev) => ({ ...prev, dateFrom: v, dateTo: prev.dateTo && v && prev.dateTo < v ? "" : prev.dateTo }))}
+                  onChange={(v) =>
+                    setLocal((prev) => ({
+                      ...prev,
+                      dateFrom: v,
+                      dateTo:
+                        prev.dateTo && v && prev.dateTo < v ? "" : prev.dateTo,
+                    }))
+                  }
                 />
               </View>
-              <Ionicons name="arrow-forward" size={14} color={colors.textDisabled} style={{ marginBottom: 8 }} />
+              <Ionicons
+                name="arrow-forward"
+                size={14}
+                color={colors.textDisabled}
+                style={{ marginBottom: 8 }}
+              />
               <View style={{ flex: 1 }}>
                 <DateInput
                   label="To"
                   value={local.dateTo}
                   onChange={(v) => setLocal((prev) => ({ ...prev, dateTo: v }))}
-                  minDate={local.dateFrom ? new Date(local.dateFrom + "T12:00:00") : undefined}
+                  minDate={
+                    local.dateFrom
+                      ? new Date(local.dateFrom + "T12:00:00")
+                      : undefined
+                  }
                 />
               </View>
               {(local.dateFrom || local.dateTo) && (
                 <TouchableOpacity
-                  onPress={() => setLocal((prev) => ({ ...prev, dateFrom: "", dateTo: "" }))}
+                  onPress={() =>
+                    setLocal((prev) => ({ ...prev, dateFrom: "", dateTo: "" }))
+                  }
                   style={{ padding: 4, marginBottom: 8 }}
                 >
-                  <Ionicons name="close-circle" size={22} color={colors.textSecondary} />
+                  <Ionicons
+                    name="close-circle"
+                    size={22}
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
               )}
             </View>
