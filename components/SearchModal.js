@@ -17,12 +17,13 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { fonts, colors, radius, shadow } from "../lib/theme";
+import { tours as toursApi, search as searchApi } from "../lib/api";
 
 const STORAGE_KEY = "tripkart_recent_searches";
 const MAX_RECENT = 15;
 const DEBOUNCE_DELAY = 300;
 
-const POPULAR_DESTINATIONS = [
+const POPULAR_DESTINATIONS_FALLBACK = [
   "Kedarnath",
   "Varanasi",
   "Haridwar",
@@ -43,20 +44,6 @@ function debounce(fn, delay) {
   };
 }
 
-function filterTours(tours, query) {
-  if (!query || !query.trim()) return [];
-  const q = query.trim().toLowerCase();
-  return (tours || []).filter((tour) => {
-    return (
-      tour.title?.toLowerCase().includes(q) ||
-      tour.destination?.toLowerCase().includes(q) ||
-      tour.fromCity?.toLowerCase().includes(q) ||
-      tour.toCity?.toLowerCase().includes(q) ||
-      tour.category?.toLowerCase().includes(q)
-    );
-  });
-}
-
 export default function SearchModal({
   visible,
   onClose,
@@ -68,68 +55,157 @@ export default function SearchModal({
   const [recentSearches, setRecentSearches] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [popularDestinations, setPopularDestinations] = useState(
+    POPULAR_DESTINATIONS_FALLBACK
+  );
 
   const inputRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
-  // Load recent searches from AsyncStorage
+  // ── History helpers ────────────────────────────────────────────────────────
+
+  // Load history: try API first, fall back to AsyncStorage
   const loadRecentSearches = async () => {
+    try {
+      const res = await searchApi.getHistory();
+      // Backend returns array of objects with _id and query fields
+      const items = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : [];
+      setRecentSearches(items);
+      return;
+    } catch (_) {}
+    // AsyncStorage fallback (not logged in or network error)
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setRecentSearches(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        // Normalise: stored items may be plain strings from old code
+        setRecentSearches(parsed);
       }
     } catch (_) {}
   };
 
-  const saveRecentSearches = async (searches) => {
+  // Save to AsyncStorage as a fallback string list
+  const saveLocalHistory = async (searches) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(searches));
+      const strings = searches.map((s) =>
+        typeof s === "string" ? s : s.query || ""
+      );
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(strings));
     } catch (_) {}
   };
 
-  const addRecentSearch = useCallback(
-    async (term) => {
-      const trimmed = term.trim();
-      if (!trimmed) return;
+  // Add a search term to history
+  const addRecentSearch = useCallback(async (term) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    // Try API first
+    try {
+      await searchApi.saveHistory(trimmed);
+      // Reload from backend so IDs are fresh
+      await loadRecentSearches();
+      return;
+    } catch (_) {}
+    // AsyncStorage fallback
+    setRecentSearches((prev) => {
       const updated = [
         trimmed,
-        ...recentSearches.filter(
-          (s) => s.toLowerCase() !== trimmed.toLowerCase()
-        ),
+        ...prev.filter((s) => {
+          const str = typeof s === "string" ? s : s.query || "";
+          return str.toLowerCase() !== trimmed.toLowerCase();
+        }),
       ].slice(0, MAX_RECENT);
-      setRecentSearches(updated);
-      await saveRecentSearches(updated);
-    },
-    [recentSearches]
-  );
+      saveLocalHistory(updated);
+      return updated;
+    });
+  }, []);
 
-  const removeRecentSearch = async (index) => {
-    const updated = recentSearches.filter((_, i) => i !== index);
-    setRecentSearches(updated);
-    await saveRecentSearches(updated);
+  // Delete one history item
+  const removeRecentSearch = async (item, idx) => {
+    // item can be an object (from API) or a plain string (from AsyncStorage)
+    if (item && typeof item === "object" && item._id) {
+      try {
+        await searchApi.deleteHistory(item._id);
+        setRecentSearches((prev) => prev.filter((_, i) => i !== idx));
+        return;
+      } catch (_) {}
+    }
+    // AsyncStorage fallback
+    setRecentSearches((prev) => {
+      const updated = prev.filter((_, i) => i !== idx);
+      saveLocalHistory(updated);
+      return updated;
+    });
   };
 
+  // Clear all history
   const clearAllRecent = async () => {
+    try {
+      await searchApi.clearHistory();
+    } catch (_) {}
+    // Always clear locally too
     setRecentSearches([]);
-    await saveRecentSearches([]);
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
   };
 
-  // Debounced search
+  // ── Popular destinations ───────────────────────────────────────────────────
+
+  const loadPopularDestinations = async () => {
+    try {
+      const res = await searchApi.getPopular();
+      const items = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : null;
+      if (items && items.length > 0) {
+        // Backend may return strings or objects with a `name` field
+        setPopularDestinations(
+          items.map((d) => (typeof d === "string" ? d : d.name || d.query || d))
+        );
+      }
+    } catch (_) {
+      // Silently fall back to static list
+    }
+  };
+
+  // ── Search via API ─────────────────────────────────────────────────────────
+
   const performSearch = useCallback(
-    debounce((q) => {
-      setIsSearching(true);
-      const results = filterTours(tours, q);
-      // Simulate brief async feel
-      setTimeout(() => {
-        setSearchResults(results);
+    debounce(async (q) => {
+      const trimmed = q.trim();
+      if (!trimmed) {
+        setSearchResults([]);
         setIsSearching(false);
-      }, 150);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const res = await toursApi.search({ q: trimmed });
+        const results = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.tours)
+          ? res.tours
+          : [];
+        setSearchResults(results);
+      } catch (_) {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
     }, DEBOUNCE_DELAY),
-    [tours]
+    []
   );
 
+  // Trigger search whenever query changes
   useEffect(() => {
     if (query.trim().length > 0) {
       setIsSearching(true);
@@ -140,10 +216,12 @@ export default function SearchModal({
     }
   }, [query]);
 
-  // Modal open/close animations
+  // ── Modal open/close animations ────────────────────────────────────────────
+
   useEffect(() => {
     if (visible) {
       loadRecentSearches();
+      loadPopularDestinations();
       setQuery("");
       setSearchResults([]);
       setIsSearching(false);
@@ -179,6 +257,8 @@ export default function SearchModal({
     }
   }, [visible]);
 
+  // ── Event handlers ─────────────────────────────────────────────────────────
+
   const handleClose = () => {
     Keyboard.dismiss();
     Animated.parallel([
@@ -211,7 +291,8 @@ export default function SearchModal({
     handleClose();
   };
 
-  const handleSelectRecent = (term) => {
+  const handleSelectRecent = (item) => {
+    const term = typeof item === "string" ? item : item.query || "";
     setQuery(term);
     inputRef.current?.focus();
   };
@@ -221,6 +302,8 @@ export default function SearchModal({
     setQuery(dest);
     inputRef.current?.focus();
   };
+
+  // ── Derived display state ──────────────────────────────────────────────────
 
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -234,6 +317,8 @@ export default function SearchModal({
     if (!price) return "";
     return `₹${Number(price).toLocaleString("en-IN")}`;
   };
+
+  // ── Render helpers ─────────────────────────────────────────────────────────
 
   const renderTourCard = ({ item }) => (
     <TouchableOpacity
@@ -259,6 +344,8 @@ export default function SearchModal({
       ) : null}
     </TouchableOpacity>
   );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <Modal
@@ -347,35 +434,39 @@ export default function SearchModal({
                     </TouchableOpacity>
                   </View>
 
-                  {recentSearches.map((term, idx) => (
-                    <View key={idx} style={styles.recentRow}>
-                      <TouchableOpacity
-                        style={styles.recentLeft}
-                        onPress={() => handleSelectRecent(term)}
-                        activeOpacity={0.7}
-                      >
-                        <Ionicons
-                          name="time-outline"
-                          size={16}
-                          color={colors.textSecondary}
-                          style={styles.recentIcon}
-                        />
-                        <Text style={styles.recentText} numberOfLines={1}>
-                          {term}
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => removeRecentSearch(idx)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={16}
-                          color={colors.textDisabled}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                  {recentSearches.map((item, idx) => {
+                    const term =
+                      typeof item === "string" ? item : item.query || "";
+                    return (
+                      <View key={item._id || idx} style={styles.recentRow}>
+                        <TouchableOpacity
+                          style={styles.recentLeft}
+                          onPress={() => handleSelectRecent(item)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons
+                            name="time-outline"
+                            size={16}
+                            color={colors.textSecondary}
+                            style={styles.recentIcon}
+                          />
+                          <Text style={styles.recentText} numberOfLines={1}>
+                            {term}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => removeRecentSearch(item, idx)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons
+                            name="trash-outline"
+                            size={16}
+                            color={colors.textDisabled}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
 
@@ -385,7 +476,7 @@ export default function SearchModal({
                   <Text style={styles.sectionTitle}>Popular Destinations</Text>
                 </View>
                 <View style={styles.destinationGrid}>
-                  {POPULAR_DESTINATIONS.map((dest) => (
+                  {popularDestinations.map((dest) => (
                     <TouchableOpacity
                       key={dest}
                       style={styles.destChip}
