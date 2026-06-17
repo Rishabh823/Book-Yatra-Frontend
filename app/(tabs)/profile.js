@@ -473,7 +473,7 @@ export default function Profile() {
           <TouchableOpacity style={s.langToggle} onPress={toggleLang}>
             <Text style={s.langToggleTxt}>{lang}</Text>
           </TouchableOpacity>
-          <Text style={s.heroOm}>ॐ</Text>
+          <Ionicons name="person-circle-outline" size={52} color="rgba(255,233,192,0.9)" style={{ marginBottom: 6 }} />
           <Text style={s.gateHeroTitle}>My Profile</Text>
           <Text style={s.gateHeroSub}>
             Your sacred journey, all in one place
@@ -967,12 +967,6 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingBottom: 32,
     alignItems: "center",
     paddingHorizontal: 20,
-  },
-  heroOm: {
-    fontSize: 28,
-    color: "#FFE9C0",
-    fontFamily: fonts.heading,
-    marginBottom: 4,
   },
   gateHeroTitle: {
     fontFamily: fonts.heading,

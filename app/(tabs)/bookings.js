@@ -137,7 +137,7 @@ export default function Bookings() {
           colors={[colors.secondary, "#3D0D0C"]}
           style={s.heroGate}
         >
-          <Text style={s.heroOm}>ॐ</Text>
+          <Ionicons name="ticket-outline" size={44} color="rgba(255,233,192,0.9)" style={{ marginBottom: 6 }} />
           <Text style={s.heroTitle}>My Bookings</Text>
           <Text style={s.heroSub}>Your sacred journeys, all in one place</Text>
         </LinearGradient>
@@ -506,12 +506,6 @@ function BookingCard({ item, router, isVolunteer }) {
 const s = StyleSheet.create({
   hero: { paddingTop: 14, paddingHorizontal: 20, paddingBottom: 18 },
   heroContent: { flexDirection: "row", alignItems: "center" },
-  heroOm: {
-    fontSize: 28,
-    color: "#FFE9C0",
-    fontFamily: fonts.heading,
-    marginBottom: 4,
-  },
   heroTitle: {
     fontFamily: fonts.heading,
     fontSize: 26,
