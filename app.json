@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/app-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#3D0A0A"
+      "backgroundColor": "#7C2D12"
     },
     "plugins": [
       "expo-router",

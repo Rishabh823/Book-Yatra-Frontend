@@ -1,5 +1,11 @@
 import { Stack } from "expo-router";
-import { useEffect, useRef, Fragment } from "react";
+import { useEffect, useRef, Fragment, useState } from "react";
+import AnimatedSplash from "../components/AnimatedSplash";
+import * as SplashScreen from "expo-splash-screen";
+
+// Keep native splash visible during RN init, then hide it immediately
+// so only our animated splash is ever seen.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 import {
   useFonts,
   Philosopher_400Regular,
@@ -10,6 +16,12 @@ import {
   Manrope_500Medium,
   Manrope_700Bold,
 } from "@expo-google-fonts/manrope";
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from "@expo-google-fonts/plus-jakarta-sans";
 import { Cinzel_600SemiBold } from "@expo-google-fonts/cinzel";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -234,33 +246,35 @@ export default function RootLayout() {
     Manrope_400Regular,
     Manrope_500Medium,
     Manrope_700Bold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
     Cinzel_600SemiBold,
   });
+  const [splashDone, setSplashDone] = useState(false);
 
-  if (!fontsLoaded) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.bg,
-        }}
-      >
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
-    );
-  }
+  // Hide native splash immediately — our animated splash takes over
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   return (
-    <LanguageProvider>
-      <ThemeProvider>
-        <SafeAreaProvider>
-          <AppLockProvider>
-            <AppNavigator />
-          </AppLockProvider>
-        </SafeAreaProvider>
-      </ThemeProvider>
-    </LanguageProvider>
+    <>
+      {fontsLoaded && (
+        <LanguageProvider>
+          <ThemeProvider>
+            <SafeAreaProvider>
+              <AppLockProvider>
+                <AppNavigator />
+              </AppLockProvider>
+            </SafeAreaProvider>
+          </ThemeProvider>
+        </LanguageProvider>
+      )}
+      {!splashDone && (
+        <AnimatedSplash onFinish={() => setSplashDone(true)} />
+      )}
+    </>
   );
 }

@@ -24,6 +24,7 @@ import {
   volunteerApi,
 } from "../../lib/api";
 import SmartSearchBar from "../../components/SmartSearchBar";
+import SearchModal from "../../components/SearchModal";
 import FilterSheet, { DEFAULT_FILTERS } from "../../components/FilterSheet";
 import { useFavorites } from "../../lib/hooks/useFavorites";
 import { TourCardSkeleton } from "../../components/SkeletonCard";
@@ -42,6 +43,7 @@ export default function Tours() {
   const [role, setRole] = useState("user");
   const [userJoinedOps, setUserJoinedOps] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [advFilters, setAdvFilters] = useState(DEFAULT_FILTERS);
   const [assignedTours, setAssignedTours] = useState([]);
   const [volunteerLoading, setVolunteerLoading] = useState(false);
@@ -279,8 +281,8 @@ export default function Tours() {
       style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top"]}
     >
-      {/* Gradient header */}
-      <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.header}>
+      {/* Clean white header */}
+      <View style={s.header}>
         <View style={s.headerTop}>
           <View>
             <Text style={s.title}>Yatras</Text>
@@ -288,22 +290,29 @@ export default function Tours() {
           </View>
           {activeFilterCount > 0 && (
             <View style={s.filterCountBadge}>
-              <Text style={s.filterCountTxt}>{activeFilterCount} Filters</Text>
+              <Text style={s.filterCountTxt}>{activeFilterCount} active</Text>
             </View>
           )}
         </View>
         {/* Search bar inside header */}
         <View style={s.searchRow}>
-          <View style={s.searchBarWrap}>
-            <SmartSearchBar
-              value={q}
-              onChangeText={setQ}
-              onSubmit={(text) => setQ(text)}
-              onClear={() => setQ("")}
-              placeholder="Search destination, tour..."
-              style={s.searchBarInner}
-            />
-          </View>
+          <TouchableOpacity
+            style={s.searchBarWrap}
+            activeOpacity={0.85}
+            onPress={() => setShowSearchModal(true)}
+          >
+            <View style={s.searchBarInner}>
+              <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: q ? "#111827" : "#9CA3AF", flex: 1 }} numberOfLines={1}>
+                {q || "Search destination, tour..."}
+              </Text>
+              {q ? (
+                <TouchableOpacity onPress={() => setQ("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[s.filterBtn, activeFilterCount > 0 && s.filterBtnActive]}
             onPress={() => setShowFilters(true)}
@@ -311,18 +320,60 @@ export default function Tours() {
             <Ionicons
               name="options-outline"
               size={20}
-              color={activeFilterCount > 0 ? "white" : "rgba(255,255,255,0.8)"}
+              color={activeFilterCount > 0 ? "#fff" : colors.textSecondary}
             />
             {activeFilterCount > 0 && <View style={s.filterDot} />}
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+        {/* Type filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.typeRow}
+          contentContainerStyle={{ gap: 8, paddingRight: 4 }}
+        >
+          {[
+            { key: "all", label: "All Yatras" },
+            { key: "pilgrimage", label: "Pilgrimage" },
+            { key: "heritage", label: "Heritage" },
+            { key: "spiritual", label: "Spiritual" },
+            { key: "adventure", label: "Adventure" },
+            { key: "cultural", label: "Cultural" },
+          ].map(({ key, label }) => (
+            <TouchableOpacity
+              key={key}
+              style={[s.typeChip, typeFilter === key && s.typeChipActive]}
+              onPress={() => setTypeFilter(key)}
+            >
+              <Text
+                style={[s.typeText, typeFilter === key && s.typeTextActive]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <FilterSheet
         visible={showFilters}
         filters={advFilters}
         onApply={(f) => setAdvFilters(f)}
         onClose={() => setShowFilters(false)}
+      />
+
+      <SearchModal
+        visible={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        tours={all}
+        onSelectResult={(tour) => {
+          setShowSearchModal(false);
+          router.push(`/tour/${tour._id}`);
+        }}
+        onSearch={(query) => {
+          setQ(query);
+          setShowSearchModal(false);
+        }}
       />
 
       {/* Operator filter — shown when user follows multiple operators OR super_admin */}
@@ -639,7 +690,7 @@ export default function Tours() {
                     </View>
                     {item.tourType && item.tourType !== "other" && (
                       <View style={[s.badge, s.typeBadge]}>
-                        <Text style={[s.badgeText, { color: colors.primary }]}>
+                        <Text style={[s.badgeText, { color: colors.primary, fontFamily: fonts.bodyBold }]}>
                           {item.tourType.charAt(0).toUpperCase() +
                             item.tourType.slice(1)}
                         </Text>
@@ -658,9 +709,9 @@ export default function Tours() {
                     >
                       <Ionicons
                         name={isFav(item._id) ? "heart" : "heart-outline"}
-                        size={17}
+                        size={18}
                         color={
-                          isFav(item._id) ? "#EF4444" : "rgba(255,255,255,0.9)"
+                          isFav(item._id) ? "#EF4444" : colors.textSecondary
                         }
                       />
                     </TouchableOpacity>
@@ -730,58 +781,71 @@ export default function Tours() {
 }
 
 const makeStyles = (colors) => StyleSheet.create({
-  // New gradient header
+  // Clean white header
   header: {
     paddingTop: 8,
-    paddingBottom: 16,
+    paddingBottom: 4,
     paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
     zIndex: 100,
   },
   headerTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   title: {
     fontFamily: fonts.heading,
-    fontSize: 28,
-    color: "#FFFFFF",
-    letterSpacing: -0.5,
+    fontSize: 26,
+    color: colors.textPrimary,
+    letterSpacing: -0.3,
   },
   sub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "rgba(255,255,255,0.65)",
-    marginTop: 2,
+    color: colors.textSecondary,
+    marginTop: 1,
   },
   filterCountBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FEE9E3",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.primary + "40",
   },
-  filterCountTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: "#fff" },
+  filterCountTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     zIndex: 200,
+    marginBottom: 10,
   },
   searchBarWrap: {
     flex: 1,
     zIndex: 200,
   },
   searchBarInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
+    paddingHorizontal: 14,
+    height: 46,
   },
   filterBtn: {
     width: 46,
     height: 46,
     borderRadius: radius.lg,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
+    borderColor: colors.borderSubtle,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -792,8 +856,8 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   filterDot: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 7,
+    right: 7,
     width: 7,
     height: 7,
     borderRadius: 4,
@@ -803,12 +867,16 @@ const makeStyles = (colors) => StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.92)",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   seatBadge: {
     position: "absolute",
@@ -817,10 +885,14 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(22,163,74,0.85)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: "rgba(22,163,74,0.9)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: radius.pill,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   seatBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
 
@@ -853,23 +925,15 @@ const makeStyles = (colors) => StyleSheet.create({
   opChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
 
   typeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    gap: 6,
+    marginBottom: 10,
   },
   typeChip: {
-    flexDirection: "row",
-    alignItems: "center",
     alignSelf: "flex-start",
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
     borderColor: colors.borderSubtle,
   },
   typeChipActive: {
@@ -878,20 +942,24 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   typeText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.textSecondary,
   },
-  typeTextActive: { color: "#fff" },
+  typeTextActive: { color: "#fff", fontFamily: fonts.bodySemiBold },
 
   // Modern tour card
   card: {
-    borderRadius: radius.xxl,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: colors.surface,
-    ...shadow.card,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.09,
+    shadowRadius: 10,
+    elevation: 4,
   },
   cardImgWrap: {
-    height: 190,
+    height: 200,
     position: "relative",
   },
   img: { width: "100%", height: "100%" },
@@ -906,12 +974,18 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    backgroundColor: "rgba(255,255,255,0.97)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: radius.pill,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
   },
-  typeBadge: { backgroundColor: "rgba(255,255,255,0.92)" },
+  typeBadge: {
+    backgroundColor: "#FEE9E3",
+  },
   badgeText: {
     fontFamily: fonts.bodyBold,
     fontSize: 10,
@@ -920,17 +994,19 @@ const makeStyles = (colors) => StyleSheet.create({
   // Card info section (white/surface)
   cardInfo: {
     padding: 14,
-    gap: 4,
+    paddingBottom: 16,
+    gap: 5,
   },
   cardTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 16,
     color: colors.textPrimary,
-    marginBottom: 2,
+    marginBottom: 3,
+    letterSpacing: -0.2,
   },
   routeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   routeTxt: {
-    fontFamily: fonts.body,
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
     color: colors.textSecondary,
     flex: 1,
@@ -939,29 +1015,34 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: colors.borderSubtle,
   },
   priceLabel: {
-    fontFamily: fonts.accent,
-    fontSize: 9,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 10,
     color: colors.textSecondary,
-    letterSpacing: 1.5,
-    marginBottom: 2,
+    letterSpacing: 0.3,
+    marginBottom: 1,
   },
-  price: { color: colors.primary, fontFamily: fonts.bodyBold, fontSize: 18 },
+  price: { color: colors.primary, fontFamily: fonts.bodyBold, fontSize: 20 },
   pill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
     backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: radius.pill,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 12 },
+  pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 13 },
   empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
   emptyText: {
     fontFamily: fonts.bodyMedium,
@@ -973,59 +1054,69 @@ const makeStyles = (colors) => StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 36,
     gap: 0,
     marginBottom: 60,
+    backgroundColor: colors.bg,
   },
   guestIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.primaryLight,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#FEE9E3",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: colors.primary + "30",
   },
   guestTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.secondary,
+    fontSize: 26,
+    color: colors.textPrimary,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 10,
+    letterSpacing: -0.3,
   },
   guestSub: {
     fontFamily: fonts.body,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 28,
+    lineHeight: 22,
+    marginBottom: 32,
   },
   guestLoginBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     width: "100%",
-    height: 52,
+    height: 54,
     backgroundColor: colors.primary,
     borderRadius: radius.pill,
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: 14,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  guestLoginTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 15 },
+  guestLoginTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 16 },
   guestRegBtn: {
     width: "100%",
-    height: 52,
+    height: 54,
     borderRadius: radius.pill,
     borderWidth: 1.5,
-    borderColor: colors.secondary,
+    borderColor: colors.borderSubtle,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.surface,
   },
   guestRegTxt: {
-    color: colors.secondary,
+    color: colors.textPrimary,
     fontFamily: fonts.bodyBold,
-    fontSize: 15,
+    fontSize: 16,
   },
 
   // Volunteer assigned tour cards

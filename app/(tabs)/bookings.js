@@ -10,7 +10,6 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
@@ -133,14 +132,11 @@ export default function Bookings() {
         style={{ flex: 1, backgroundColor: theme.bg }}
         edges={["top"]}
       >
-        <LinearGradient
-          colors={[colors.secondary, "#3D0D0C"]}
-          style={s.heroGate}
-        >
-          <Ionicons name="ticket-outline" size={44} color="rgba(255,233,192,0.9)" style={{ marginBottom: 6 }} />
-          <Text style={s.heroTitle}>My Bookings</Text>
-          <Text style={s.heroSub}>Your sacred journeys, all in one place</Text>
-        </LinearGradient>
+        {/* Clean white header */}
+        <View style={s.headerClean}>
+          <Text style={s.headerTitle}>My Bookings</Text>
+          <Text style={s.headerSub}>Your sacred journeys, all in one place</Text>
+        </View>
         <View style={s.gateBody}>
           <View style={s.gateIconWrap}>
             <Ionicons name="ticket-outline" size={36} color={colors.primary} />
@@ -167,51 +163,52 @@ export default function Bookings() {
       style={{ flex: 1, backgroundColor: theme.bg }}
       edges={["top"]}
     >
-      {/* Hero header */}
-      <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.hero}>
-        <View style={s.heroContent}>
+      {/* Clean white header */}
+      <View style={s.headerClean}>
+        <View style={s.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={s.heroTitle}>
+            <Text style={s.headerTitle}>
               {isVolunteer ? "Passenger Bookings" : "My Bookings"}
             </Text>
-            <Text style={s.heroSub}>
+            <Text style={s.headerSub}>
               {isVolunteer
                 ? "Passengers on your assigned tours"
                 : "Your sacred journey records"}
             </Text>
           </View>
-          <View style={s.heroBadge}>
-            <Text style={s.heroBadgeTxt}>{displayItems.length}</Text>
-            <Text style={s.heroBadgeLabel}>Total</Text>
+          <View style={s.countBadge}>
+            <Text style={s.countBadgeNum}>{displayItems.length}</Text>
+            <Text style={s.countBadgeLabel}>Total</Text>
           </View>
         </View>
 
-        {/* Stats strip */}
+        {/* Stats chips */}
         {displayItems.length > 0 && (
-          <View style={s.statsStrip}>
+          <View style={s.statsRow}>
             <StatPill
               icon="checkmark-circle"
               label="Confirmed"
               value={confirmedCount}
-              color="#4ADE80"
+              color="#16A34A"
+              bg="#F0FDF4"
             />
-            <View style={s.statsDiv} />
             <StatPill
               icon="time"
               label="Pending"
               value={pendingCount}
-              color="#FCD34D"
+              color="#D97706"
+              bg="#FFFBEB"
             />
-            <View style={s.statsDiv} />
             <StatPill
               icon="ticket"
               label="All"
               value={displayItems.length}
-              color="#fff"
+              color={colors.primary}
+              bg={colors.primaryLight}
             />
           </View>
         )}
-      </LinearGradient>
+      </View>
 
       {/* Tour filter chips for volunteers */}
       {isVolunteer && volTours.length > 1 && (
@@ -288,16 +285,13 @@ export default function Bookings() {
           }
           ListEmptyComponent={() => (
             <View style={s.empty}>
-              <LinearGradient
-                colors={["#FFF4EC", colors.primaryLight]}
-                style={s.emptyIconBg}
-              >
+              <View style={s.emptyIconBg}>
                 <Ionicons
                   name="ticket-outline"
                   size={40}
                   color={colors.primary}
                 />
-              </LinearGradient>
+              </View>
               <Text style={s.emptyTitle}>No Bookings Yet</Text>
               <Text style={s.emptySub}>
                 Your yatra journey begins with a single booking.
@@ -325,12 +319,12 @@ export default function Bookings() {
   );
 }
 
-function StatPill({ icon, label, value, color }) {
+function StatPill({ icon, label, value, color, bg }) {
   return (
-    <View style={s.statPill}>
-      <Ionicons name={icon} size={14} color={color} />
+    <View style={[s.statPill, bg ? { backgroundColor: bg } : null]}>
+      <Ionicons name={icon} size={13} color={color} />
       <Text style={[s.statValue, { color }]}>{value}</Text>
-      <Text style={s.statLabel}>{label}</Text>
+      <Text style={[s.statLabel, { color }]}>{label}</Text>
     </View>
   );
 }
@@ -360,6 +354,9 @@ function BookingCard({ item, router, isVolunteer }) {
   const tourName = isVolunteer
     ? item.tourId?.title || item.tourTitle || ""
     : null;
+  const displayTitle = isVolunteer && passengerName
+    ? passengerName
+    : item.tourTitle || item.tour?.title || "Yatra Booking";
 
   return (
     <TouchableOpacity
@@ -368,134 +365,86 @@ function BookingCard({ item, router, isVolunteer }) {
       onPress={() => router.push(`/booking/${item._id || item.id}`)}
       testID={`booking-${item._id || item.id}`}
     >
-      {/* Ticket header strip */}
-      <View style={[s.cardStrip, { backgroundColor: cfg.bg }]}>
-        <View style={s.cardStripLeft}>
-          <View style={[s.statusIcon, { backgroundColor: cfg.color + "22" }]}>
-            <Ionicons name={cfg.icon} size={16} color={cfg.color} />
-          </View>
-          <View>
-            <Text style={[s.statusLabel, { color: cfg.color }]}>
-              {cfg.label}
-            </Text>
-            <Text style={[s.bookingId, { color: theme.textSecondary }]}>
-              #{bookId}
-            </Text>
-          </View>
-        </View>
-        <View style={[s.statusBadge, { backgroundColor: cfg.color }]}>
-          <Text style={s.statusBadgeTxt}>{cfg.label.toUpperCase()}</Text>
-        </View>
-      </View>
+      {/* Colored left border strip */}
+      <View style={[s.cardLeftBorder, { backgroundColor: cfg.color }]} />
 
-      {/* Tour title / Passenger name */}
-      <View style={s.cardBody}>
-        {isVolunteer && passengerName ? (
-          <>
-            <Text
-              style={[s.tourTitle, { color: theme.secondary }]}
-              numberOfLines={1}
-            >
-              {passengerName}
+      <View style={s.cardInner}>
+        {/* Card header: bus icon + title + status badge */}
+        <View style={s.cardHeader}>
+          <View style={[s.busIconWrap, { backgroundColor: cfg.bg }]}>
+            <Ionicons name="bus-outline" size={20} color={cfg.color} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={s.cardTitle} numberOfLines={1}>
+              {displayTitle}
             </Text>
-            {tourName ? (
-              <Text
-                style={{
-                  fontFamily: fonts.bodyMedium,
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                  marginBottom: 6,
-                }}
-                numberOfLines={1}
-              >
-                {tourName}
-              </Text>
+            {isVolunteer && tourName ? (
+              <Text style={s.cardSubTitle} numberOfLines={1}>{tourName}</Text>
             ) : null}
-          </>
-        ) : (
-          <Text
-            style={[s.tourTitle, { color: theme.secondary }]}
-            numberOfLines={1}
-          >
-            {item.tourTitle || item.tour?.title || "Yatra Booking"}
-          </Text>
-        )}
+            <Text style={s.bookingIdTxt}>#{bookId}</Text>
+          </View>
+          <View style={[s.statusBadge, { backgroundColor: cfg.bg, borderColor: cfg.color + "44" }]}>
+            <Ionicons name={cfg.icon} size={11} color={cfg.color} />
+            <Text style={[s.statusBadgeTxt, { color: cfg.color }]}>{cfg.label}</Text>
+          </View>
+        </View>
 
-        {/* Route */}
+        {/* Route: FROM → TO prominently */}
         {(source || dest) && (
-          <View style={s.routeRow}>
-            <View
-              style={[s.routeChip, { backgroundColor: theme.borderSubtle }]}
-            >
-              <Text
-                style={[s.routeChipTxt, { color: theme.textSecondary }]}
-                numberOfLines={1}
-              >
-                {source || "—"}
-              </Text>
+          <View style={s.routeBar}>
+            <View style={s.routeEndpoint}>
+              <Text style={s.routeEndpointLabel}>FROM</Text>
+              <Text style={s.routeEndpointCity} numberOfLines={1}>{source || "—"}</Text>
             </View>
-            <Ionicons
-              name="arrow-forward"
-              size={12}
-              color={colors.textDisabled}
-            />
-            <View
-              style={[s.routeChip, { backgroundColor: colors.primaryLight }]}
-            >
-              <Text
-                style={[s.routeChipTxt, { color: colors.primary }]}
-                numberOfLines={1}
-              >
-                {dest || "—"}
-              </Text>
+            <View style={s.routeArrowWrap}>
+              <View style={s.routeArrowLine} />
+              <Ionicons name="bus" size={16} color={colors.primary} />
+              <View style={s.routeArrowLine} />
+            </View>
+            <View style={[s.routeEndpoint, { alignItems: "flex-end" }]}>
+              <Text style={s.routeEndpointLabel}>TO</Text>
+              <Text style={[s.routeEndpointCity, { color: colors.primary }]} numberOfLines={1}>{dest || "—"}</Text>
             </View>
           </View>
         )}
 
-        {/* Details row */}
-        <View style={s.detailsRow}>
-          {date ? (
-            <View style={s.detailChip}>
-              <Ionicons
-                name="calendar-outline"
-                size={12}
-                color={colors.primary}
-              />
-              <Text style={s.detailChipTxt}>{date}</Text>
+        {/* Divider */}
+        <View style={[s.divider, { borderColor: colors.borderSubtle }]} />
+
+        {/* Footer: info chips + amount + view details */}
+        <View style={s.cardFooter}>
+          <View style={{ gap: 6 }}>
+            {/* Date + Seats chips */}
+            <View style={{ flexDirection: "row", gap: 6 }}>
+              {date ? (
+                <View style={s.infoChip}>
+                  <Ionicons name="calendar-outline" size={11} color={colors.textSecondary} />
+                  <Text style={s.infoChipTxt}>{date}</Text>
+                </View>
+              ) : null}
+              <View style={s.infoChip}>
+                <Ionicons name="people-outline" size={11} color={colors.textSecondary} />
+                <Text style={s.infoChipTxt}>{seats} seat{seats > 1 ? "s" : ""}</Text>
+              </View>
             </View>
-          ) : null}
-          <View style={s.detailChip}>
-            <Ionicons name="people-outline" size={12} color={colors.primary} />
-            <Text style={s.detailChipTxt}>
-              {seats} seat{seats > 1 ? "s" : ""}
-            </Text>
+            {/* Amount */}
+            <Text style={s.amountTxt}>{amount ? `₹${amount}` : "—"}</Text>
           </View>
-        </View>
-      </View>
 
-      {/* Ticket tear line */}
-      <View style={s.tearWrap}>
-        <View style={[s.tearCircleL, { backgroundColor: theme.bg }]} />
-        <View style={[s.tearLine, { borderColor: theme.borderSubtle }]} />
-        <View style={[s.tearCircleR, { backgroundColor: theme.bg }]} />
-      </View>
-
-      {/* Card footer */}
-      <View style={s.cardFooter}>
-        <View>
-          <Text style={s.priceLabel}>Amount</Text>
-          <Text style={s.price}>{amount ? `₹${amount}` : "—"}</Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-          {!isVolunteer && status === "pending" && (
-            <View style={s.payPendingBadge}>
-              <Ionicons name="time-outline" size={11} color="#D97706" />
-              <Text style={s.payPendingTxt}>Payment Pending</Text>
-            </View>
-          )}
-          <View style={s.viewBtn}>
-            <Text style={s.viewBtnTxt}>View</Text>
-            <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+          <View style={{ alignItems: "flex-end", gap: 6 }}>
+            {!isVolunteer && status === "pending" && (
+              <View style={s.payPendingBadge}>
+                <Ionicons name="time-outline" size={11} color="#D97706" />
+                <Text style={s.payPendingTxt}>Payment Pending</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={s.viewBtn}
+              onPress={() => router.push(`/booking/${item._id || item.id}`)}
+            >
+              <Text style={s.viewBtnTxt}>View Details</Text>
+              <Ionicons name="arrow-forward" size={13} color="#fff" />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -504,62 +453,70 @@ function BookingCard({ item, router, isVolunteer }) {
 }
 
 const s = StyleSheet.create({
-  hero: { paddingTop: 14, paddingHorizontal: 20, paddingBottom: 18 },
-  heroContent: { flexDirection: "row", alignItems: "center" },
-  heroTitle: {
+  // ── Clean white header (replaces dark gradient hero) ──────────────────────
+  headerClean: {
+    backgroundColor: colors.surface,
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+    ...shadow.soft,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerTitle: {
     fontFamily: fonts.heading,
     fontSize: 26,
-    color: "#fff",
+    color: colors.secondary,
     letterSpacing: -0.3,
   },
-  heroSub: {
+  headerSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#FFE9C0",
+    color: colors.textSecondary,
     marginTop: 2,
   },
-  heroBadge: {
+  countBadge: {
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.primaryLight,
     borderRadius: radius.lg,
-    padding: 12,
-    minWidth: 60,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minWidth: 56,
   },
-  heroBadgeTxt: { fontFamily: fonts.heading, fontSize: 28, color: "#fff" },
-  heroBadgeLabel: {
-    fontFamily: fonts.accent,
-    fontSize: 9,
-    color: "#FFE9C0",
-    letterSpacing: 1.5,
-    marginTop: 2,
+  countBadgeNum: { fontFamily: fonts.heading, fontSize: 24, color: colors.primary },
+  countBadgeLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 10,
+    color: colors.primary,
+    marginTop: 1,
   },
 
-  statsStrip: {
+  // Stats chips row
+  statsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 14,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: radius.xl,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    gap: 8,
+    marginTop: 12,
   },
   statPill: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    justifyContent: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primaryLight,
   },
-  statValue: { fontFamily: fonts.bodyBold, fontSize: 15 },
+  statValue: { fontFamily: fonts.bodyBold, fontSize: 13 },
   statLabel: {
-    fontFamily: fonts.accent,
-    fontSize: 9,
-    color: "rgba(255,255,255,0.6)",
-    letterSpacing: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
   },
-  statsDiv: { width: 1, height: 24, backgroundColor: "rgba(255,255,255,0.15)" },
 
-  heroGate: { paddingTop: 40, paddingBottom: 32, alignItems: "center" },
+  // Auth gate body (below clean header)
   gateBody: {
     flex: 1,
     alignItems: "center",
@@ -616,6 +573,7 @@ const s = StyleSheet.create({
     borderRadius: 48,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.primaryLight,
   },
   emptyTitle: {
     fontFamily: fonts.heading,
@@ -642,151 +600,142 @@ const s = StyleSheet.create({
   },
   ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
 
-  // Card
+  // ── Booking Card ───────────────────────────────────────────────────────────
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.xxl,
+    borderRadius: radius.xl,
     overflow: "hidden",
+    flexDirection: "row",
     ...shadow.card,
   },
-  cardStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  cardLeftBorder: {
+    width: 4,
+    borderTopLeftRadius: radius.xl,
+    borderBottomLeftRadius: radius.xl,
   },
-  cardStripLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  statusIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  cardInner: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 14,
+  },
+
+  // Card header
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  busIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  statusLabel: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  bookingId: {
-    fontFamily: fonts.accent,
-    fontSize: 10,
+  cardTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 15,
+    color: colors.secondary,
+  },
+  cardSubTitle: {
+    fontFamily: fonts.body,
+    fontSize: 11,
     color: colors.textSecondary,
-    letterSpacing: 1.5,
     marginTop: 1,
   },
+  bookingIdTxt: {
+    fontFamily: fonts.accent,
+    fontSize: 9,
+    color: colors.textDisabled,
+    letterSpacing: 1.5,
+    marginTop: 2,
+  },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: radius.pill,
+    borderWidth: 1,
+    marginLeft: 6,
   },
   statusBadgeTxt: {
     fontFamily: fonts.bodyBold,
-    fontSize: 9,
-    color: "#fff",
-    letterSpacing: 1,
+    fontSize: 10,
+    letterSpacing: 0.3,
   },
 
-  cardBody: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  tourTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.secondary,
-    marginBottom: 10,
-  },
-  routeRow: {
+  // Route bar
+  routeBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 10,
-  },
-  routeChip: {
-    flex: 1,
-    backgroundColor: colors.borderSubtle,
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  routeChipTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: "center",
-  },
-
-  detailsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingBottom: 4,
-  },
-  detailChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  detailChipTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.primary,
-  },
-
-  tearWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 10,
-    paddingHorizontal: 0,
-  },
-  tearCircleL: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
     backgroundColor: colors.bg,
-    marginLeft: -7,
+    borderRadius: radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
   },
-  tearCircleR: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.bg,
-    marginRight: -7,
-  },
-  tearLine: {
-    flex: 1,
-    borderBottomWidth: 1.5,
-    borderColor: colors.borderSubtle,
-    borderStyle: "dashed",
-  },
-
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-  },
-  priceLabel: {
+  routeEndpoint: { flex: 1 },
+  routeEndpointLabel: {
     fontFamily: fonts.accent,
-    fontSize: 9,
-    color: colors.textSecondary,
-    letterSpacing: 2,
+    fontSize: 8,
+    color: colors.textDisabled,
+    letterSpacing: 1.5,
     marginBottom: 2,
   },
-  price: { fontFamily: fonts.heading, fontSize: 22, color: colors.primary },
-  viewBtn: {
+  routeEndpointCity: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: colors.secondary,
+  },
+  routeArrowWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.primaryLight,
+    gap: 4,
+    marginHorizontal: 8,
+  },
+  routeArrowLine: {
+    flex: 1,
+    width: 18,
+    height: 1,
+    backgroundColor: colors.borderStrong,
+  },
+
+  // Divider
+  divider: {
+    borderBottomWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.borderSubtle,
+    marginBottom: 12,
+  },
+
+  // Footer
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  infoChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  viewBtnTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12,
+  infoChipTxt: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  amountTxt: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
     color: colors.primary,
+    marginTop: 2,
   },
   payPendingBadge: {
     flexDirection: "row",
@@ -800,7 +749,22 @@ const s = StyleSheet.create({
     borderColor: "#FDE68A",
   },
   payPendingTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#D97706" },
+  viewBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+  },
+  viewBtnTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 12,
+    color: "#fff",
+  },
 
+  // Tour filter chips (volunteer)
   tourChip: {
     paddingHorizontal: 12,
     paddingVertical: 5,

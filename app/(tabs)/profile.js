@@ -14,7 +14,6 @@ import {
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -459,31 +458,26 @@ export default function Profile() {
   const roleStyle = ROLE_COLORS[user?.role || "user"];
   const initial = (user?.name || "?").charAt(0).toUpperCase();
 
-  // ── Not-logged-in gate (same style as Bookings tab) ─────────────────────
+  // ── Not-logged-in gate ───────────────────────────────────────────────────
   if (!loading && !authed) {
     return (
       <SafeAreaView
         style={{ flex: 1, backgroundColor: theme.bg }}
         edges={["top"]}
       >
-        <LinearGradient
-          colors={[colors.secondary, "#3D0D0C"]}
-          style={s.heroGate}
-        >
+        {/* Clean top bar with language toggle */}
+        <View style={s.gateTopBar}>
+          <Text style={s.gateTopTitle}>Profile</Text>
           <TouchableOpacity style={s.langToggle} onPress={toggleLang}>
             <Text style={s.langToggleTxt}>{lang}</Text>
           </TouchableOpacity>
-          <Ionicons name="person-circle-outline" size={52} color="rgba(255,233,192,0.9)" style={{ marginBottom: 6 }} />
-          <Text style={s.gateHeroTitle}>My Profile</Text>
-          <Text style={s.gateHeroSub}>
-            Your sacred journey, all in one place
-          </Text>
-        </LinearGradient>
+        </View>
+
         <View style={s.gateBody}>
           <View style={s.gateIconWrap}>
-            <Ionicons name="person-outline" size={36} color={colors.primary} />
+            <Ionicons name="person-outline" size={40} color={colors.primary} />
           </View>
-          <Text style={s.gateTitle}>Login to continue</Text>
+          <Text style={s.gateTitle}>Sign in to TripKart</Text>
           <Text style={s.gateSub}>
             Sign in to manage bookings, track yatras, and access your seva
             history.
@@ -516,28 +510,23 @@ export default function Profile() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero */}
+        {/* Hero — clean white profile header */}
         <View style={s.heroWrap}>
-          <LinearGradient
-            colors={[colors.secondary, "#3D0D0C"]}
-            style={s.hero}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={s.heroDecor1} />
-            <View style={s.heroDecor2} />
+          <View style={s.hero}>
+            {/* Top bar: lang toggle */}
             <TouchableOpacity style={s.langToggle} onPress={toggleLang}>
               <Text style={s.langToggleTxt}>{lang}</Text>
             </TouchableOpacity>
 
             {loading ? (
               <ActivityIndicator
-                color="#FFE9C0"
+                color={colors.primary}
                 size="large"
                 style={{ marginVertical: 24 }}
               />
             ) : (
               <>
+                {/* Avatar */}
                 <TouchableOpacity
                   style={s.avatarWrap}
                   onPress={() => router.push("/edit-profile")}
@@ -557,40 +546,43 @@ export default function Profile() {
                     <Ionicons name="camera" size={12} color="#fff" />
                   </View>
                 </TouchableOpacity>
+
+                {/* Name */}
                 <Text style={s.name}>{user?.name || "—"}</Text>
-                <Text style={s.email}>
-                  {isGuest
-                    ? "Guest User · Temporary Session"
-                    : user?.email || user?.phone || "TripKart devotee"}
-                </Text>
-                <View style={s.badges}>
-                  <View
-                    style={[
-                      s.badge,
-                      isAdmin && s.badgeAdmin,
-                      isSuperAdmin && s.badgeSA,
-                    ]}
+
+                {/* Role badge */}
+                <View
+                  style={[
+                    s.badge,
+                    isAdmin && s.badgeAdmin,
+                    isSuperAdmin && s.badgeSA,
+                  ]}
+                >
+                  <Ionicons
+                    name={roleStyle.icon}
+                    size={12}
+                    color={isSuperAdmin ? "#B45309" : colors.primary}
+                  />
+                  <Text
+                    style={[s.badgeTxt, isSuperAdmin && s.badgeTxtSA]}
                   >
-                    <Ionicons
-                      name={roleStyle.icon}
-                      size={12}
-                      color={isSuperAdmin ? "#FFD700" : "#FFE9C0"}
-                    />
-                    <Text
-                      style={[s.badgeTxt, isSuperAdmin && { color: "#FFD700" }]}
-                    >
-                      {(user?.role || "user").charAt(0).toUpperCase() +
-                        (user?.role || "user").slice(1).replace("_", " ")}
-                    </Text>
-                  </View>
-                  <View style={s.badge}>
-                    <Ionicons name="star" size={12} color="#FFE9C0" />
-                    <Text style={s.badgeTxt}>Devotee</Text>
-                  </View>
+                    {(user?.role || "user").charAt(0).toUpperCase() +
+                      (user?.role || "user").slice(1).replace("_", " ")}
+                  </Text>
+                </View>
+
+                {/* Compact info row */}
+                <View style={s.infoRow}>
+                  <Ionicons name="mail-outline" size={13} color={colors.textSecondary} />
+                  <Text style={s.infoTxt} numberOfLines={1}>
+                    {isGuest
+                      ? "Guest · Temporary Session"
+                      : user?.email || user?.phone || "TripKart devotee"}
+                  </Text>
                 </View>
               </>
             )}
-          </LinearGradient>
+          </View>
         </View>
 
         {/* ── Super Admin Grid ─────────────────────────── */}
@@ -854,31 +846,16 @@ function MenuItem({ item, onPress }) {
 }
 
 const makeStyles = (colors) => StyleSheet.create({
-  // Hero
-  heroWrap: { paddingHorizontal: 16, paddingTop: 8 },
+  // Hero — clean white profile header
+  heroWrap: { paddingHorizontal: 16, paddingTop: 12 },
   hero: {
     borderRadius: radius.xxl,
-    padding: 28,
+    paddingTop: 48,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
     alignItems: "center",
-    overflow: "hidden",
-  },
-  heroDecor1: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    top: -60,
-    right: -50,
-  },
-  heroDecor2: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    bottom: -30,
-    left: -30,
+    backgroundColor: colors.surface,
+    ...shadow.card,
   },
   langToggle: {
     position: "absolute",
@@ -886,24 +863,24 @@ const makeStyles = (colors) => StyleSheet.create({
     right: 14,
     paddingHorizontal: 12,
     paddingVertical: 5,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: colors.primaryLight || "#FDECE7",
     borderRadius: radius.pill,
     zIndex: 10,
   },
   langToggleTxt: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: "#fff",
+    color: colors.primary,
     letterSpacing: 1,
   },
 
-  avatarWrap: { position: "relative", marginBottom: 4 },
+  avatarWrap: { position: "relative", marginBottom: 12 },
   avatarImg: {
     width: 88,
     height: 88,
     borderRadius: 44,
     borderWidth: 3,
-    borderColor: "#FFE9C0",
+    borderColor: colors.primary,
   },
   avatar: {
     width: 88,
@@ -913,7 +890,7 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
-    borderColor: "#FFE9C0",
+    borderColor: colors.primary + "40",
   },
   avatarTxt: { color: "#fff", fontFamily: fonts.heading, fontSize: 38 },
   avatarEdit: {
@@ -931,54 +908,57 @@ const makeStyles = (colors) => StyleSheet.create({
   },
 
   name: {
-    color: "#fff",
+    color: colors.textPrimary,
     fontFamily: fonts.heading,
-    fontSize: 24,
-    marginTop: 14,
+    fontSize: 22,
+    marginBottom: 8,
   },
-  email: {
-    color: "#FFE9C0",
-    fontFamily: fonts.body,
-    fontSize: 13,
-    marginTop: 4,
-  },
-  badges: { flexDirection: "row", gap: 8, marginTop: 14 },
   badge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.primaryLight || "#FDECE7",
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: "rgba(255,233,192,0.25)",
+    borderColor: colors.primary + "30",
+    marginBottom: 10,
   },
   badgeAdmin: {
-    backgroundColor: "rgba(255,165,0,0.2)",
+    backgroundColor: "#FFF7ED",
     borderColor: "#D97706",
   },
-  badgeSA: { backgroundColor: "rgba(30,10,10,0.9)", borderColor: "#FFD700" },
-  badgeTxt: { color: "#FFE9C0", fontFamily: fonts.bodyMedium, fontSize: 11 },
+  badgeSA: { backgroundColor: "#FFFBEB", borderColor: "#B45309" },
+  badgeTxt: { color: colors.primary, fontFamily: fonts.bodyMedium, fontSize: 11 },
+  badgeTxtSA: { color: "#B45309" },
 
-  // Not-logged-in gate styles (matches Bookings tab gate)
-  heroGate: {
-    paddingTop: 40,
-    paddingBottom: 32,
+  infoRow: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
+    gap: 6,
+    marginTop: 2,
   },
-  gateHeroTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 26,
-    color: "#fff",
-    letterSpacing: -0.3,
-  },
-  gateHeroSub: {
+  infoTxt: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#FFE9C0",
-    marginTop: 4,
+    color: colors.textSecondary,
+    maxWidth: 220,
+  },
+
+  // Not-logged-in gate styles
+  gateTopBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  gateTopTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.textPrimary,
   },
   gateBody: {
     flex: 1,
@@ -986,7 +966,7 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 36,
     gap: 10,
-    paddingTop: 60,
+    paddingTop: 40,
   },
   gateIconWrap: {
     width: 80,
