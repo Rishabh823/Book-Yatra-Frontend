@@ -3,10 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts } from "../../../lib/theme";
 import { settlementApi } from "../../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
@@ -90,7 +89,7 @@ export default function SuperFinanceScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Revenue hero */}
-        <LinearGradient colors={["#1E3A5F", "#0F2540"]} style={s.hero}>
+        <View style={s.hero}>
           <Text style={s.heroLabel}>Total Platform Revenue</Text>
           <Text style={s.heroAmt}>{fmtCurrency(stats.totalRevenue)}</Text>
           <View style={s.heroRow}>
@@ -109,7 +108,7 @@ export default function SuperFinanceScreen() {
               <Text style={s.heroStatLabel}>Paid Bookings</Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Metrics grid */}
         <View style={s.metricsGrid}>
@@ -197,30 +196,67 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, ...shadow.soft },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   badge: { position: "absolute", top: 4, right: 4, backgroundColor: colors.error, width: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   badgeTxt: { color: "#fff", fontSize: 9, fontFamily: fonts.bodyBold },
-  hero: { borderRadius: radius.xxl, padding: 24, gap: 12 },
-  heroLabel: { color: "rgba(200,220,255,0.7)", fontFamily: fonts.accent, fontSize: 10, letterSpacing: 2, textTransform: "uppercase" },
-  heroAmt: { color: "#fff", fontFamily: fonts.heading, fontSize: 36 },
+  hero: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 24,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  heroLabel: {
+    color: "#9CA3AF",
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  heroAmt: { color: colors.textPrimary, fontFamily: fonts.heading, fontSize: 36 },
   heroRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
   heroStat: { flex: 1, alignItems: "center", gap: 2 },
-  heroStatVal: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
-  heroStatLabel: { color: "rgba(200,220,255,0.6)", fontFamily: fonts.body, fontSize: 10 },
-  heroDivider: { width: 1, height: 30, backgroundColor: "rgba(200,220,255,0.2)" },
+  heroStatVal: { color: colors.textPrimary, fontFamily: fonts.bodyBold, fontSize: 14 },
+  heroStatLabel: { color: colors.textSecondary, fontFamily: fonts.body, fontSize: 10 },
+  heroDivider: { width: 1, height: 30, backgroundColor: "#E5E7EB" },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  metricCard: { flex: 1, minWidth: "44%", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 6, ...shadow.soft },
+  metricCard: {
+    flex: 1,
+    minWidth: "44%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 14,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   metricIcon: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   metricValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
   metricLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   metricSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },
-  pendingBanner: { backgroundColor: "#FFFBEB", borderRadius: radius.xl, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#FDE68A" },
+  pendingBanner: { backgroundColor: "#FFFBEB", borderRadius: 20, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#FDE68A" },
   pendingIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   pendingTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#92400E" },
   pendingSub: { fontFamily: fonts.body, fontSize: 12, color: "#78350F", marginTop: 2 },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 4, ...shadow.soft },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   opRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   opAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   opAvatarTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.primary },

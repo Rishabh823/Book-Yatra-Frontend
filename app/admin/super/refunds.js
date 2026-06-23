@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const FILTERS = [
@@ -240,14 +240,14 @@ export default function SuperRefunds() {
 
 const s = StyleSheet.create({
   filterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  chip:        { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
+  chip:        { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   chipActive:  { backgroundColor: colors.primary, borderColor: colors.primary },
   chipTxt:     { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
   chipTxtActive: { color: '#fff' },
 
   list: { paddingHorizontal: 16, paddingBottom: 40 },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, marginBottom: 12, ...shadow.soft },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   cardHead: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
   tourName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   bookingId: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 },
@@ -259,17 +259,17 @@ const s = StyleSheet.create({
   infoDot: { color: colors.textDisabled, fontSize: 14 },
 
   amountRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  amountChip: { flex: 1, backgroundColor: '#F8F7F4', borderRadius: radius.lg, padding: 10 },
+  amountChip: { flex: 1, backgroundColor: '#F8F7F4', borderRadius: 16, padding: 10 },
   amountLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginBottom: 2 },
   amountVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
 
-  reasonBox: { flexDirection: 'row', gap: 6, backgroundColor: '#FFF7F0', borderRadius: radius.md, padding: 10, marginBottom: 8, alignItems: 'flex-start' },
+  reasonBox: { flexDirection: 'row', gap: 6, backgroundColor: '#FFF7F0', borderRadius: 12, padding: 10, marginBottom: 8, alignItems: 'flex-start' },
   reasonTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, flex: 1 },
   dateTxt: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginBottom: 12 },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: radius.lg, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' },
-  rejectBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: radius.lg, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' },
+  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' },
+  rejectBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' },
   actionTxt: { fontFamily: fonts.bodyMedium, fontSize: 14 },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 40 },
@@ -280,14 +280,14 @@ const s = StyleSheet.create({
   modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
   modalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.textPrimary },
-  modalInfo: { backgroundColor: colors.bg, borderRadius: radius.lg, padding: 14, marginBottom: 16 },
+  modalInfo: { backgroundColor: colors.bg, borderRadius: 16, padding: 14, marginBottom: 16 },
   modalTour: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, marginBottom: 4 },
   modalAmount: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary },
   modalFieldLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 8 },
-  modalInput: { backgroundColor: colors.bg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 15, color: colors.textPrimary, marginBottom: 20 },
+  modalInput: { backgroundColor: colors.bg, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 15, color: colors.textPrimary, marginBottom: 20 },
   modalBtns: { flexDirection: 'row', gap: 12 },
-  modalCancelBtn: { flex: 1, height: 52, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.borderSubtle, alignItems: 'center', justifyContent: 'center' },
+  modalCancelBtn: { flex: 1, height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: colors.borderSubtle, alignItems: 'center', justifyContent: 'center' },
   modalCancelTxt: { fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textSecondary },
-  modalConfirmBtn: { flex: 1, height: 52, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  modalConfirmBtn: { flex: 1, height: 52, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   modalConfirmTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: '#fff' },
 });

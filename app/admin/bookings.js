@@ -7,7 +7,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { AdminShell } from "../../lib/AdminScreen";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { colors, fonts, radius } from "../../lib/theme";
 import { admin as adminApi } from "../../lib/api";
 import { fmtDate, fmtCurrency } from "../../lib/utils";
 
@@ -225,27 +225,27 @@ function StripStat({ label, value, color }) {
 }
 
 const s = StyleSheet.create({
-  statsStrip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
+  statsStrip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
   stripDiv:   { width: 1, backgroundColor: colors.borderSubtle, height: 24, marginHorizontal: 6 },
-  exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: radius.lg },
+  exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: 16 },
   exportTxt:  { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   stripVal:   { fontFamily: fonts.heading, fontSize: 18 },
   stripLbl:   { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
 
-  searchBar:  { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle },
+  searchBar:  { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  chip:       { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 8, alignSelf: "flex-start" },
+  chip:       { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 8, alignSelf: "flex-start" },
   chipActive: { backgroundColor: colors.primary + "18", borderColor: colors.primary },
   chipTxt:    { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, textTransform: "capitalize" },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:      { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, ...shadow.soft },
+  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   cardTop:   { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
-  idBadge:   { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.primary + "14", alignItems: "center", justifyContent: "center" },
+  idBadge:   { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + "14", alignItems: "center", justifyContent: "center" },
   idTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
   tourName:  { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
   passengerName: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  sBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  sBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   sBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: "capitalize" },
   payRow:    { flexDirection: "row", alignItems: "center", gap: 3 },
   payTxt:    { fontFamily: fonts.body, fontSize: 10 },
@@ -256,7 +256,7 @@ const s = StyleSheet.create({
 
   cardFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderSubtle },
   amount:     { fontFamily: fonts.heading, fontSize: 20, color: colors.primary },
-  viewBtn:    { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primaryLight || "#FFEEE8", borderRadius: radius.pill },
+  viewBtn:    { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primaryLight || "#FFEEE8", borderRadius: 999 },
   viewBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
 
   empty:    { alignItems: "center", paddingTop: 60, gap: 10 },

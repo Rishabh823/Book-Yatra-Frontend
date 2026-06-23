@@ -14,9 +14,8 @@ import { useToast } from "../lib/hooks/useToast";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../lib/api";
-import { colors, fonts, radius, shadow } from "../lib/theme";
+import { fonts } from "../lib/theme";
 
 export default function CouponsScreen() {
   const insets = useSafeAreaInsets();
@@ -71,13 +70,20 @@ export default function CouponsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={styles.header}>
+      {/* Flat white header */}
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color="#111827" />
         </TouchableOpacity>
         <Text style={styles.title}>Offers & Coupons</Text>
-        <View style={{ width: 36 }} />
-      </LinearGradient>
+        <View style={styles.headerRight}>
+          <Ionicons name="search-outline" size={20} color="#6B7280" />
+        </View>
+      </View>
+
+      {/* Gray band */}
+      <View style={styles.grayBand} />
+
       <ScrollView
         contentContainerStyle={{
           padding: 16,
@@ -86,15 +92,15 @@ export default function CouponsScreen() {
         }}
       >
         {/* Coupon checker */}
-        <View style={[styles.checkerCard, shadow.card]}>
-          <Text style={styles.sectionTitle}>Check Coupon</Text>
+        <View style={styles.checkerCard}>
+          <Text style={styles.checkerTitle}>Check Coupon</Text>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.codeInput}
               value={code}
               onChangeText={(t) => setCode(t.toUpperCase())}
               placeholder="Enter coupon code"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#9CA3AF"
               autoCapitalize="characters"
             />
             <TouchableOpacity
@@ -139,41 +145,59 @@ export default function CouponsScreen() {
 
         {/* Available coupons */}
         {coupons.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Available Coupons</Text>
+          <View style={{ gap: 10 }}>
+            <Text style={styles.sectionLabel}>Available Coupons</Text>
             {coupons.map((c) => {
               const expiry = fmtExpiry(c.validTill);
               const isExpiring = expiry.includes("day");
+              const barColor = c.color || "#D95D39";
               return (
                 <TouchableOpacity
                   key={c._id}
-                  style={[styles.couponCard, shadow.soft]}
+                  style={styles.couponCard}
                   onPress={() => copyCode(c.code)}
+                  activeOpacity={0.8}
                 >
-                  <LinearGradient
-                    colors={["#D95D39", "#5C1615"]}
-                    style={styles.couponLeft}
-                  >
-                    <Text style={styles.couponCode}>{c.code}</Text>
-                    <Text style={styles.couponTap}>Tap to copy</Text>
-                  </LinearGradient>
-                  <View style={styles.couponRight}>
+                  {/* Left colored bar */}
+                  <View style={[styles.couponBar, { backgroundColor: barColor }]} />
+
+                  {/* Card body */}
+                  <View style={styles.couponBody}>
+                    {/* Top row: code badge + copy button */}
+                    <View style={styles.couponTopRow}>
+                      <View style={styles.codeBadge}>
+                        <Text style={styles.codeText}>{c.code}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.copyBtn}
+                        onPress={() => copyCode(c.code)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.copyText}>Copy</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Value */}
                     <Text style={styles.couponValue}>
                       {c.type === "percentage"
                         ? c.value + "% OFF"
                         : "₹" + c.value + " OFF"}
                     </Text>
-                    <Text style={styles.couponMin}>
-                      Min ₹{c.minBookingAmount || 0}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.couponExpiry,
-                        isExpiring && { color: "#DC2626" },
-                      ]}
-                    >
-                      {expiry}
-                    </Text>
+
+                    {/* Bottom row: min amount + expiry */}
+                    <View style={styles.couponBottomRow}>
+                      <Text style={styles.couponMin}>
+                        Min ₹{c.minBookingAmount || 0}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.couponExpiry,
+                          isExpiring && { color: "#DC2626" },
+                        ]}
+                      >
+                        {expiry}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
@@ -183,11 +207,12 @@ export default function CouponsScreen() {
 
         {/* Earn more */}
         <TouchableOpacity
-          style={[styles.earnCard, shadow.soft]}
+          style={styles.earnCard}
           onPress={() => router.push("/rewards")}
+          activeOpacity={0.8}
         >
           <View style={styles.earnIcon}>
-            <Ionicons name="star-outline" size={24} color={colors.primary} />
+            <Ionicons name="star-outline" size={24} color="#D95D39" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.earnTitle}>Earn Reward Points</Text>
@@ -195,122 +220,202 @@ export default function CouponsScreen() {
               Get exclusive discounts by redeeming points
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          <Ionicons name="chevron-forward" size={18} color="#D95D39" />
         </TouchableOpacity>
       </ScrollView>
+
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+
+  /* Header */
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     flex: 1,
     fontFamily: "Philosopher_700Bold",
-    fontSize: 22,
-    color: "white",
+    fontSize: 18,
+    color: "#111827",
+    marginLeft: 10,
   },
-  checkerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: 16,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  inputRow: { flexDirection: "row", gap: 10 },
-  codeInput: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-    borderRadius: radius.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-    letterSpacing: 1,
-  },
-  applyBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingHorizontal: 20,
+  headerRight: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
-  applyBtnDisabled: { backgroundColor: "#E5E7EB" },
-  applyText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
+
+  /* Gray band */
+  grayBand: {
+    height: 10,
+    backgroundColor: "#F2F2F2",
+  },
+
+  /* Checker card */
+  checkerCard: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+  },
+  checkerTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: "#111827",
+  },
+  inputRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
+  codeInput: {
+    flex: 1,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 14,
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: "#111827",
+    letterSpacing: 1,
+  },
+  applyBtn: {
+    backgroundColor: "#D95D39",
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  applyBtnDisabled: {
+    backgroundColor: "#E5E7EB",
+  },
+  applyText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: "white",
+  },
   resultCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    borderRadius: radius.lg,
+    borderRadius: 12,
     padding: 12,
   },
-  resultText: { fontFamily: fonts.bodyMedium, fontSize: 14, flex: 1 },
+  resultText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 14,
+    flex: 1,
+  },
+
+  /* Section label */
+  sectionLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: "#111827",
+  },
+
+  /* Coupon cards */
   couponCard: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 10,
   },
-  couponLeft: {
-    width: 110,
+  couponBar: {
+    width: 4,
+    backgroundColor: "#D95D39",
+    borderRadius: 2,
+  },
+  couponBody: {
+    flex: 1,
     padding: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
+    gap: 6,
   },
-  couponCode: {
+  couponTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  codeBadge: {
+    backgroundColor: "#FEF3F0",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  codeText: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: "white",
+    color: "#D95D39",
     letterSpacing: 1,
   },
-  couponTap: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: "rgba(255,255,255,0.7)",
+  copyBtn: {
+    borderWidth: 1,
+    borderColor: "#D95D39",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  couponRight: { flex: 1, padding: 14, justifyContent: "center", gap: 4 },
+  copyText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: "#D95D39",
+  },
   couponValue: {
     fontFamily: fonts.bodyBold,
     fontSize: 20,
-    color: colors.primary,
+    color: "#D95D39",
+  },
+  couponBottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   couponMin: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
   couponExpiry: {
     fontFamily: fonts.bodyMedium,
     fontSize: 11,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
+
+  /* Earn card */
   earnCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -320,19 +425,19 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "#FEF3F0",
     alignItems: "center",
     justifyContent: "center",
   },
   earnTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   earnSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
     marginTop: 2,
   },
 });

@@ -7,7 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const TYPES = ['all', 'temple', 'pilgrimage', 'mountain', 'leisure', 'heritage', 'beach', 'other'];
@@ -155,13 +155,13 @@ export default function SuperTours() {
 }
 
 const s = StyleSheet.create({
-  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
+  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
+  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
   chipActive: { backgroundColor: colors.primary + '18', borderColor: colors.primary },
   chipTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  card:       { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden', ...shadow.soft },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: "#E5E7EB" },
   thumb:      { width: '100%', height: 130, resizeMode: 'cover' },
   thumbFallback: { width: '100%', height: 90, alignItems: 'center', justifyContent: 'center' },
   cardBody:   { padding: 12 },
@@ -171,7 +171,7 @@ const s = StyleSheet.create({
   row:        { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
   sub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, flex: 1 },
   foot:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },
-  typeBadge:  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  typeBadge:  { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   typeText:   { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
   price:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginLeft: 'auto' },
   seats:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },

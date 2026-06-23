@@ -10,6 +10,7 @@ import {
   StyleSheet,
   DeviceEventEmitter,
 } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../../lib/theme";
@@ -146,7 +147,6 @@ const ms = StyleSheet.create({
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const androidPaddingBottom = Math.max(insets.bottom, 4);
   const { theme } = useTheme();
 
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -173,24 +173,29 @@ export default function TabsLayout() {
     return <MaintenanceScreen />;
   }
 
+  const bottomPad = Math.max(insets.bottom, 8);
+  const tabHeight = 64 + bottomPad;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: true,
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textDisabled,
         tabBarLabelStyle: {
           fontFamily: fonts.bodyMedium,
           fontSize: 11,
-          marginTop: -2,
+          marginTop: 2,
+          marginBottom: 2,
         },
         tabBarStyle: {
           backgroundColor: theme.surface,
           borderTopColor: theme.borderSubtle,
-          borderTopWidth: 1,
-          height: Platform.OS === "ios" ? 88 : 56 + androidPaddingBottom,
-          paddingTop: 8,
-          paddingBottom: Platform.OS === "ios" ? 28 : androidPaddingBottom,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: tabHeight,
+          paddingTop: 10,
+          paddingBottom: bottomPad,
         },
       }}
     >

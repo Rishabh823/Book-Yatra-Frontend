@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { gallery as galleryApi, api } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -280,16 +280,16 @@ const GRID_W = 160;
 const s = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 14 },
   filterRow: { flexDirection: 'row', gap: 8 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
   filterTextActive: { color: '#fff' },
-  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.primary, borderRadius: radius.pill, ...shadow.card },
+  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.primary, borderRadius: 999 },
   uploadBtnText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
-  emptyBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: radius.pill },
+  emptyBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 999 },
   emptyBtnText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
 
-  gridItem: { flex: 1, borderRadius: radius.lg, overflow: 'hidden', ...shadow.soft, backgroundColor: colors.borderSubtle },
+  gridItem: { flex: 1, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: colors.borderSubtle },
   gridImg: { width: '100%', aspectRatio: 1 },
   videoPlaceholder: { backgroundColor: '#1E1B4B', alignItems: 'center', justifyContent: 'center' },
   gridOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 8, paddingVertical: 6 },
@@ -301,21 +301,21 @@ const s = StyleSheet.create({
   modalSheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   modalTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
-  modalLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8, marginTop: 14 },
-  inputWrap: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, height: 50, justifyContent: 'center' },
+  modalLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8, marginTop: 14 },
+  inputWrap: { backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, height: 50, justifyContent: 'center' },
   modalInput: { fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   typeRow: { flexDirection: 'row', gap: 12 },
-  typeChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  typeChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
   typeChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   typeChipText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
-  pickImageBtn: { height: 160, borderRadius: radius.xl, borderWidth: 2, borderColor: colors.primaryLight, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, overflow: 'hidden' },
+  pickImageBtn: { height: 160, borderRadius: 20, borderWidth: 2, borderColor: colors.primaryLight, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, overflow: 'hidden' },
   previewImg: { width: '100%', height: '100%' },
   pickImageText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary, marginTop: 8 },
   pickImageHint: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 4 },
   changePhotoLink: { alignItems: 'center', marginTop: 8 },
   changePhotoText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary },
-  uploadCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, marginTop: 24, marginBottom: 8, ...shadow.card },
+  uploadCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: 999, backgroundColor: colors.primary, marginTop: 24, marginBottom: 8 },
   uploadCtaText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
-  cancelBtn:  { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.bg },
+  cancelBtn:  { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.bg },
   cancelText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
 });

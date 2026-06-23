@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { feedback as feedbackApi } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 
@@ -153,7 +153,7 @@ export default function AdminFeedback() {
 
 const s = StyleSheet.create({
   // Rating hero
-  ratingHero:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, gap: 16, ...shadow.soft },
+  ratingHero:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 16, borderWidth: 1, borderColor: "#E5E7EB" },
   ratingLeft:  { alignItems: 'center', justifyContent: 'center', width: 80 },
   bigRating:   { fontFamily: fonts.heading, fontSize: 40, color: colors.textPrimary, letterSpacing: -1 },
   starsRow:    { flexDirection: 'row', gap: 2 },
@@ -166,20 +166,20 @@ const s = StyleSheet.create({
   barCount:    { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, width: 20, textAlign: 'right' },
 
   // Filter chips
-  chip:       { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 8, alignSelf: 'flex-start' },
+  chip:       { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 8, alignSelf: 'flex-start' },
   chipActive: { backgroundColor: colors.primary + '18', borderColor: colors.primary },
   chipTxt:    { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
   // Cards
-  card:       { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, ...shadow.soft },
+  card:       { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   cardTop:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   initials:   { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
   initialTxt: { fontFamily: fonts.heading, fontSize: 16, color: colors.secondary },
   name:       { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   meta:       { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   date:       { fontFamily: fonts.accent, fontSize: 9, color: colors.textDisabled, letterSpacing: 1 },
-  catBadge:   { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginBottom: 6 },
+  catBadge:   { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, marginBottom: 6 },
   catTxt:     { fontFamily: fonts.bodyBold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 },
   subject:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.secondary, marginBottom: 4 },
   message:    { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, lineHeight: 18 },

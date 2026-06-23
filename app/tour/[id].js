@@ -170,11 +170,15 @@ export default function TourDetails() {
 
   // ── Derived values ──────────────────────────────────────────────────────────
 
-  const itinerary = tour.itinerary || [
-    { day: "Day 1", desc: "Departure from origin · Evening prayers" },
-    { day: "Day 2", desc: "Arrive at destination · Darshan & Aarti" },
-    { day: "Day 3", desc: "Bhajan sandhya · Return journey" },
-  ];
+  const itinerary = Array.isArray(tour.itinerary) && tour.itinerary.length > 0
+    ? tour.itinerary
+    : tour.isExternal
+      ? [] // no fake placeholder for external tours
+      : [
+          { day: "Day 1", desc: "Departure from origin · Evening prayers" },
+          { day: "Day 2", desc: "Arrive at destination · Darshan & Aarti" },
+          { day: "Day 3", desc: "Bhajan sandhya · Return journey" },
+        ];
 
   const features = [
     { icon: "bus", label: tour.busType || "AC Bus" },
@@ -193,8 +197,10 @@ export default function TourDetails() {
 
   const duration = (() => {
     if (tour.duration) return tour.duration;
+    if (!tour.startDate || !tour.endDate) return "—";
     try {
       const diff = Math.abs(new Date(tour.endDate) - new Date(tour.startDate));
+      if (isNaN(diff)) return "—";
       const days = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
       return `${days}D`;
     } catch {
@@ -417,12 +423,20 @@ export default function TourDetails() {
 
           {/* Bottom info */}
           <View style={s.heroBottom}>
-            <View style={s.dateBadge}>
-              <Ionicons name="calendar" size={11} color="#FFE9C0" />
-              <Text style={s.dateBadgeTxt}>
-                {fmtDate(tour.startDate)} → {fmtDate(tour.endDate)}
-              </Text>
-            </View>
+            {!tour.isExternal && tour.startDate && tour.endDate && (
+              <View style={s.dateBadge}>
+                <Ionicons name="calendar" size={11} color="#FFE9C0" />
+                <Text style={s.dateBadgeTxt}>
+                  {fmtDate(tour.startDate)} → {fmtDate(tour.endDate)}
+                </Text>
+              </View>
+            )}
+            {tour.isExternal && (
+              <View style={s.externalBadge}>
+                <Ionicons name="globe-outline" size={11} color="#0284C7" />
+                <Text style={s.externalBadgeTxt}>Aggregated · Book on {tour.externalSource || 'Partner Site'}</Text>
+              </View>
+            )}
             <Text style={s.heroTitle} numberOfLines={2}>
               {tour.title}
             </Text>
@@ -439,15 +453,17 @@ export default function TourDetails() {
         <View style={s.statsCard}>
           <StatItem
             value={
-              availableSeats > 0
-                ? String(availableSeats)
-                : totalSeats > 0
-                  ? "Full"
-                  : "—"
+              tour.isExternal
+                ? "—"
+                : availableSeats > 0
+                  ? String(availableSeats)
+                  : totalSeats > 0
+                    ? "Full"
+                    : "—"
             }
             label="Available"
             icon="people"
-            accent={almostFull ? colors.warning : undefined}
+            accent={!tour.isExternal && almostFull ? colors.warning : undefined}
           />
           <View style={s.statDiv} />
           <StatItem value={duration} label="Duration" icon="time" />
@@ -461,7 +477,7 @@ export default function TourDetails() {
         </View>
 
         {/* ── Seat fill bar ────────────────────────────────────────────── */}
-        {totalSeats > 0 && (
+        {!tour.isExternal && totalSeats > 0 && (
           <View style={s.fillWrap}>
             <View style={s.fillLabelRow}>
               <Text style={s.fillLabel}>
@@ -500,7 +516,7 @@ export default function TourDetails() {
         </View>
 
         {/* ── Operator info ────────────────────────────────────────────── */}
-        {(tour.operatorId || tour.operator) && (
+        {!tour.isExternal && (tour.operatorId || tour.operator) && (
           <View style={s.section}>
             <SectionHead label="· Tour Operator ·" />
             <View style={s.operatorCard}>
@@ -535,23 +551,40 @@ export default function TourDetails() {
           </View>
         )}
 
-        {/* ── What's included ──────────────────────────────────────────── */}
-        <View style={s.section}>
-          <Text style={s.h3}>What's included</Text>
-          <View style={s.featureGrid}>
-            {features.map((f, i) => (
-              <View key={i} style={s.featCard}>
-                <View style={s.featIcon}>
-                  <Ionicons name={f.icon} size={18} color={colors.primary} />
+        {/* ── What's included — only for platform tours with real data ── */}
+        {!tour.isExternal && (
+          <View style={s.section}>
+            <Text style={s.h3}>What's included</Text>
+            <View style={s.featureGrid}>
+              {features.map((f, i) => (
+                <View key={i} style={s.featCard}>
+                  <View style={s.featIcon}>
+                    <Ionicons name={f.icon} size={18} color={colors.primary} />
+                  </View>
+                  <Text style={s.featLabel}>{f.label}</Text>
                 </View>
-                <Text style={s.featLabel}>{f.label}</Text>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* External tour info banner */}
+        {tour.isExternal && (
+          <View style={[s.section, { paddingTop: 16 }]}>
+            <View style={{ backgroundColor: "#EFF6FF", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "#BFDBFE", gap: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Ionicons name="information-circle" size={18} color="#0284C7" />
+                <Text style={{ fontFamily: fonts.bodyBold, fontSize: 13, color: "#1E40AF" }}>Aggregated Tour</Text>
+              </View>
+              <Text style={{ fontFamily: fonts.body, fontSize: 13, color: "#1E3A8A", lineHeight: 19 }}>
+                This tour is sourced from {tour.externalSource || "a partner site"}. Full itinerary, inclusions, and booking are managed by the partner. Tap "Book on {tour.externalSource || "Website"}" below to view complete details.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ── Itinerary ────────────────────────────────────────────────── */}
-        <View style={s.section}>
+        {itinerary.length > 0 && <View style={s.section}>
           <Text style={s.h3}>Itinerary</Text>
           <View style={{ marginTop: 16 }}>
             {itinerary.map((it, i) => (
@@ -571,7 +604,7 @@ export default function TourDetails() {
               </View>
             ))}
           </View>
-        </View>
+        </View>}
 
         {/* ── Photo Gallery ─────────────────────────────────────────────── */}
         {showGallery && (
@@ -602,8 +635,8 @@ export default function TourDetails() {
           </View>
         )}
 
-        {/* ── Bus & Crew ────────────────────────────────────────────────── */}
-        <View style={s.section}>
+        {/* ── Bus & Crew — platform tours only ─────────────────────────── */}
+        {!tour.isExternal && <View style={s.section}>
           <Text style={s.h3}>Bus &amp; Crew</Text>
           {hasBusInfo ? (
             <View style={{ marginTop: 14, gap: 12 }}>
@@ -692,10 +725,10 @@ export default function TourDetails() {
               </Text>
             </View>
           )}
-        </View>
+        </View>}
 
-        {/* ── Inclusions & Exclusions ───────────────────────────────────── */}
-        <View style={s.section}>
+        {/* ── Inclusions & Exclusions — platform tours only ─────────────── */}
+        {!tour.isExternal && <View style={s.section}>
           <Text style={s.h3}>Inclusions &amp; Exclusions</Text>
           <View style={s.inclExclRow}>
             {/* Included */}
@@ -726,10 +759,10 @@ export default function TourDetails() {
               ))}
             </View>
           </View>
-        </View>
+        </View>}
 
-        {/* ── Cancellation Policy ───────────────────────────────────────── */}
-        <View style={s.section}>
+        {/* ── Cancellation Policy — platform tours only ─────────────────── */}
+        {!tour.isExternal && <View style={s.section}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Ionicons name="shield-checkmark" size={20} color={colors.secondary} />
             <Text style={s.h3}>Cancellation Policy</Text>
@@ -775,7 +808,7 @@ export default function TourDetails() {
               );
             })}
           </View>
-        </View>
+        </View>}
 
         {/* ── Reviews & Ratings ─────────────────────────────────────────── */}
         <View style={s.section}>
@@ -1011,7 +1044,17 @@ export default function TourDetails() {
             >
               <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
             </TouchableOpacity>
-            {soldOut ? (
+            {tour.isExternal ? (
+              <TouchableOpacity
+                style={s.bookCta}
+                onPress={() => Linking.openURL(tour.externalBookingUrl)}
+                testID="book-external-btn"
+              >
+                <Ionicons name="open-outline" size={18} color="#fff" />
+                <Text style={s.bookCtaTxt}>Book on {tour.externalSource || 'Website'}</Text>
+                <Ionicons name="arrow-forward" size={16} color="#fff" />
+              </TouchableOpacity>
+            ) : soldOut ? (
               <View style={s.soldOutBtn}>
                 <Text style={s.soldOutTxt}>Sold Out</Text>
               </View>
@@ -1431,6 +1474,20 @@ const s = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 11,
   },
+  externalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(2,132,199,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(2,132,199,0.3)',
+  },
+  externalBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: '#93C5FD' },
   heroTitle: {
     color: "#fff",
     fontFamily: fonts.heading,

@@ -6,7 +6,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AdminShell, StatusBadge } from "../../../lib/AdminScreen";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { api } from "../../../lib/api";
 import { fmtDate, fmtCurrency } from "../../../lib/utils";
 
@@ -327,27 +327,27 @@ function Field({ label, icon, value, onChangeText, kb = "default" }) {
 }
 
 const s = StyleSheet.create({
-  statusCard:    { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 18, marginBottom: 20, ...shadow.soft },
+  statusCard:    { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
   statusCardId:  { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
   statusCardDate:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
 
   payRow:    { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
-  payChip:   { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.borderSubtle, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
+  payChip:   { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.borderSubtle, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   payChipTxt:{ fontFamily: fonts.bodyMedium, fontSize: 11 },
   payId:     { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 0.5, flex: 1 },
 
   actionRow:   { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 },
-  confirmBtn:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#16A34A", borderRadius: radius.pill },
+  confirmBtn:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#16A34A", borderRadius: 999 },
   confirmBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#fff" },
-  cashBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.primaryLight, borderRadius: radius.pill },
+  cashBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.primaryLight, borderRadius: 999 },
   cashBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
-  cancelBtn:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#FEE2E2", borderRadius: radius.pill },
+  cancelBtn:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#FEE2E2", borderRadius: 999 },
   cancelBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: "#DC2626" },
-  editBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.borderSubtle, borderRadius: radius.pill },
+  editBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.borderSubtle, borderRadius: 999 },
   editBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.secondary },
 
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 12, marginTop: 4 },
-  card:         { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 18, marginBottom: 20, ...shadow.soft },
+  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 12, marginTop: 4 },
+  card:         { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
 
   infoRow:   { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle, gap: 12 },
   infoIcon:  { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
@@ -355,8 +355,8 @@ const s = StyleSheet.create({
   infoValue: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, flex: 1, paddingTop: 6 },
 
   field:      { marginBottom: 14 },
-  fieldLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 },
-  inputWrap:  { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, height: 50, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle },
+  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 },
+  inputWrap:  { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, height: 50, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle },
   input:      { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, height: 50 },
 
   passengerItem:   { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
@@ -367,10 +367,10 @@ const s = StyleSheet.create({
   passengerMeta:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 
   statusRow:      { flexDirection: "row", gap: 8, marginBottom: 20 },
-  statusChip:     { flex: 1, height: 44, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
+  statusChip:     { flex: 1, height: 44, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
   statusChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   statusChipTxt:  { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
 
-  saveCta:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, borderRadius: radius.pill, backgroundColor: colors.primary, ...shadow.card, marginTop: 4 },
+  saveCta:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, borderRadius: 999, backgroundColor: colors.primary, marginTop: 4 },
   saveCtaTxt:  { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
 });

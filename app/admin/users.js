@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { api, auth as authApi } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -296,15 +296,15 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     marginHorizontal: 20, marginBottom: 14,
     paddingHorizontal: 14, height: 46,
-    backgroundColor: colors.surface, borderRadius: radius.pill,
+    backgroundColor: colors.surface, borderRadius: 999,
     borderWidth: 1, borderColor: colors.borderSubtle,
   },
   searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, height: 46 },
 
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.surface, borderRadius: radius.lg,
-    padding: 12, gap: 12, ...shadow.soft,
+    backgroundColor: colors.surface, borderRadius: 16,
+    padding: 12, gap: 12, borderWidth: 1, borderColor: "#E5E7EB",
   },
   cardBlocked: { opacity: 0.72, borderWidth: 1, borderColor: '#FCA5A5' },
 
@@ -325,7 +325,7 @@ const s = StyleSheet.create({
   blockedTagTxt: { fontFamily: fonts.bodyBold, fontSize: 9, color: '#DC2626' },
 
   actions: { alignItems: 'flex-end' },
-  roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   roleText: { fontFamily: fonts.bodyBold, fontSize: 11, textTransform: 'capitalize' },
 
   actionBtn: {

@@ -11,9 +11,8 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -103,7 +102,7 @@ export default function DocumentVaultScreen() {
     const type = DOC_TYPES[item.type] || DOC_TYPES.other;
     const expiry = getExpiryStatus(item.expiresAt);
     return (
-      <View style={[styles.docCard, shadow.soft]}>
+      <View style={styles.docCard}>
         <View style={[styles.docIcon, { backgroundColor: type.bg }]}>
           <Ionicons name={type.icon} size={22} color={type.color} />
         </View>
@@ -130,7 +129,7 @@ export default function DocumentVaultScreen() {
           onPress={() => handleDelete(item)}
           style={styles.deleteBtn}
         >
-          <Ionicons name="trash-outline" size={18} color={colors.error} />
+          <Ionicons name="trash-outline" size={18} color="#DC2626" />
         </TouchableOpacity>
       </View>
     );
@@ -138,26 +137,28 @@ export default function DocumentVaultScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color="#111827" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Document Vault</Text>
           <Text style={styles.subtitle}>
-            {docs.length} document{docs.length !== 1 ? "s" : ""} stored
+            {docs.length} doc{docs.length !== 1 ? "s" : ""} stored
           </Text>
         </View>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => router.push("/document-vault/add")}
         >
-          <Ionicons name="add" size={22} color="white" />
+          <Ionicons name="add" size={22} color="#374151" />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
+
+      <View style={styles.grayBand} />
 
       {loading ? (
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color="#D95D39" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={docs}
@@ -175,7 +176,8 @@ export default function DocumentVaultScreen() {
                 setRefreshing(true);
                 load();
               }}
-              tintColor={colors.primary} colors={[colors.primary]}
+              tintColor="#D95D39"
+              colors={["#D95D39"]}
             />
           }
           ListEmptyComponent={
@@ -184,7 +186,7 @@ export default function DocumentVaultScreen() {
                 <Ionicons
                   name="lock-closed-outline"
                   size={40}
-                  color={colors.textDisabled}
+                  color="#9CA3AF"
                 />
               </View>
               <Text style={styles.emptyTitle}>Your vault is empty</Text>
@@ -218,57 +220,69 @@ export default function DocumentVaultScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
     gap: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { fontFamily: "Philosopher_700Bold", fontSize: 22, color: "white" },
+  title: {
+    fontFamily: "Philosopher_700Bold",
+    fontSize: 20,
+    color: "#111827",
+  },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "rgba(255,255,255,0.7)",
+    color: "#6B7280",
   },
   addBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
+  },
+  grayBand: {
+    height: 10,
+    backgroundColor: "#F2F2F2",
   },
   docCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
     padding: 14,
   },
   docIcon: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   docHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
   docTitle: {
     fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
+    fontSize: 15,
+    color: "#111827",
     flex: 1,
   },
   verifiedBadge: {
@@ -278,13 +292,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#DCFCE7",
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   verifiedText: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#16A34A" },
   docType: {
     fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
+    fontSize: 13,
+    color: "#6B7280",
     textTransform: "capitalize",
   },
   docExpiry: { fontFamily: fonts.bodyMedium, fontSize: 11 },
@@ -308,12 +322,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textSecondary,
+    color: "#6B7280",
     textAlign: "center",
     paddingHorizontal: 32,
   },
@@ -321,10 +335,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: radius.lg,
+    backgroundColor: "#D95D39",
+    borderRadius: 12,
+    height: 52,
+    paddingHorizontal: 24,
   },
   addDocText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
 });

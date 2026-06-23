@@ -8,7 +8,7 @@ import { useToast } from '../lib/hooks/useToast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { fonts } from '../lib/theme';
 import { contacts as contactsApi } from '../lib/api';
 
 const CATEGORIES = [
@@ -46,17 +46,18 @@ export default function Contact() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="contact-back">
-            <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+            <Ionicons name="arrow-back" size={20} color="#374151" />
           </TouchableOpacity>
           <Text style={s.title}>Contact Us</Text>
           <View style={{ width: 40 }} />
         </View>
+        <View style={s.grayBand} />
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }} showsVerticalScrollIndicator={false}>
           {/* Info card */}
           <View style={s.infoCard}>
             <InfoRow icon="location" text="C-22, Pandav Nagar, New Delhi - 110092" />
@@ -65,20 +66,22 @@ export default function Contact() {
           </View>
 
           {/* Category */}
-          <Text style={s.sectionLabel}>· Category ·</Text>
-          <View style={s.catRow}>
-            {CATEGORIES.map((c) => (
-              <TouchableOpacity
-                key={c.id}
-                style={[s.catChip, form.category === c.id && s.catChipActive]}
-                onPress={() => set('category', c.id)}
-                testID={`cat-${c.id}`}
-              >
-                <Ionicons name={c.icon} size={14} color={form.category === c.id ? '#fff' : colors.primary} />
-                <Text style={[s.catText, form.category === c.id && { color: '#fff' }]}>{c.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={s.sectionLabel}>CATEGORY</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {CATEGORIES.map((c) => (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[s.catChip, form.category === c.id && s.catChipActive]}
+                  onPress={() => set('category', c.id)}
+                  testID={`cat-${c.id}`}
+                >
+                  <Ionicons name={c.icon} size={14} color={form.category === c.id ? '#fff' : '#D95D39'} />
+                  <Text style={[s.catText, form.category === c.id && { color: '#fff' }]}>{c.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
 
           {/* Form fields */}
           {[
@@ -90,12 +93,12 @@ export default function Contact() {
             <View key={f.k} style={s.field}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputWrap}>
-                <Ionicons name={f.icon} size={18} color={colors.textSecondary} />
+                <Ionicons name={f.icon} size={18} color="#6B7280" />
                 <TextInput
                   testID={`contact-${f.k}`}
                   style={s.input}
                   placeholder={f.label.replace(' *', '')}
-                  placeholderTextColor={colors.textDisabled}
+                  placeholderTextColor="#9CA3AF"
                   keyboardType={f.kb || 'default'}
                   value={form[f.k]}
                   onChangeText={(v) => set(f.k, v)}
@@ -110,7 +113,7 @@ export default function Contact() {
               testID="contact-message"
               style={s.textarea}
               placeholder="Write your message here..."
-              placeholderTextColor={colors.textDisabled}
+              placeholderTextColor="#9CA3AF"
               multiline
               numberOfLines={5}
               textAlignVertical="top"
@@ -137,34 +140,120 @@ export default function Contact() {
 function InfoRow({ icon, text }) {
   return (
     <View style={s.infoRow}>
-      <View style={s.infoIcon}><Ionicons name={icon} size={16} color={colors.primary} /></View>
+      <View style={s.infoIcon}>
+        <Ionicons name={icon} size={18} color="#D95D39" />
+      </View>
       <Text style={s.infoText}>{text}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, ...shadow.soft },
-  title: { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4F4F4',
+  },
+  title: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: '#111827',
+  },
+  grayBand: { height: 10, backgroundColor: '#F2F2F2' },
 
-  infoCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 18, marginBottom: 24, gap: 14, ...shadow.soft },
+  infoCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 24,
+    gap: 14,
+  },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  infoIcon: { width: 36, height: 36, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  infoText: { fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, flex: 1 },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEE8E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoText: { fontFamily: fonts.body, fontSize: 13, color: '#111827', flex: 1 },
 
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 12 },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
-  catChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
-  catChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  catText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textPrimary },
+  sectionLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#9CA3AF',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  catChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 50,
+    backgroundColor: '#F2F0ED',
+  },
+  catChipActive: { backgroundColor: '#D95D39' },
+  catText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#111827' },
 
   field: { marginBottom: 16 },
-  fieldLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, height: 54, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle },
-  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, height: 54 },
-  textarea: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, padding: 14, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, minHeight: 120 },
+  fieldLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#9CA3AF',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    height: 54,
+    backgroundColor: '#F2F0ED',
+    borderRadius: 12,
+  },
+  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: '#111827', height: 54 },
+  textarea: {
+    backgroundColor: '#F2F0ED',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: '#111827',
+    minHeight: 120,
+  },
 
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, marginTop: 8, ...shadow.card },
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#D95D39',
+    marginTop: 8,
+  },
   ctaText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
 });

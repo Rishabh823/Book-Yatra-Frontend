@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
 import { auth as authApi } from '../../lib/api';
 import Toast from '../../components/Toast';
 import { useToast } from '../../lib/hooks/useToast';
@@ -120,12 +120,12 @@ const s = StyleSheet.create({
   iconWrap:  { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,215,0,0.12)', borderWidth: 1.5, borderColor: 'rgba(255,215,0,0.3)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   title:     { fontFamily: fonts.heading, fontSize: 28, color: '#fff', letterSpacing: -0.5 },
   sub:       { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6, textAlign: 'center' },
-  card:      { width: '100%', marginTop: 32, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: radius.xxl, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 24 },
+  card:      { width: '100%', marginTop: 32, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 24 },
   field:     { marginBottom: 18 },
-  label:     { fontFamily: fonts.accent, fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 52, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: radius.lg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  label:     { fontFamily: fonts.bodyBold, fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 52, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   input:     { flex: 1, fontFamily: fonts.body, fontSize: 14, color: '#fff', height: 52 },
-  cta:       { marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FFD700', height: 52, borderRadius: radius.pill },
+  cta:       { marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FFD700', height: 52, borderRadius: 999 },
   ctaText:   { fontFamily: fonts.bodyBold, fontSize: 15, color: '#000' },
   notice:    { marginTop: 28, fontFamily: fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', lineHeight: 16 },
 });

@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -99,16 +99,21 @@ export default function SOSScreen() {
   });
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Emergency SOS</Text>
-        <View style={{ width: 36 }} />
+    <View style={{ flex: 1, backgroundColor: "#1A0505" }}>
+      {/* White header */}
+      <View style={[styles.whiteHeader, { paddingTop: insets.top }]}>
+        <View style={styles.whiteHeaderInner}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={20} color="#374151" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Emergency SOS</Text>
+          <View style={{ width: 40 }} />
+        </View>
       </View>
 
+      {/* Dark content area */}
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: 24, gap: 20, alignItems: "center" }}
       >
         <Text style={styles.instruction}>
@@ -163,9 +168,7 @@ export default function SOSScreen() {
                 <Ionicons
                   name={t.icon}
                   size={16}
-                  color={
-                    selectedType === t.key ? "white" : colors.textSecondary
-                  }
+                  color={selectedType === t.key ? "white" : "rgba(255,255,255,0.6)"}
                 />
                 <Text
                   style={[
@@ -180,12 +183,12 @@ export default function SOSScreen() {
           </View>
         </View>
 
-        <View style={[styles.messageBox, shadow.soft]}>
+        <View style={styles.messageBox}>
           <Text style={styles.sectionTitle}>Additional Message (optional)</Text>
           <TextInput
             style={styles.messageInput}
             placeholder="Describe your emergency..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="rgba(255,255,255,0.4)"
             value={message}
             onChangeText={setMessage}
             multiline
@@ -205,7 +208,7 @@ export default function SOSScreen() {
               style={styles.contactRow}
               onPress={() => Linking.openURL("tel:" + c.number)}
             >
-              <Ionicons name="call" size={16} color={colors.primary} />
+              <Ionicons name="call" size={16} color="#D95D39" />
               <Text style={styles.contactLabel}>{c.label}</Text>
               <Text style={styles.contactNumber}>{c.number}</Text>
             </TouchableOpacity>
@@ -218,28 +221,35 @@ export default function SOSScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#1A0505" },
-  header: {
+  // White header
+  whiteHeader: {
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
+  whiteHeaderInner: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    gap: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     flex: 1,
-    fontFamily: fonts.bodyBold,
-    fontSize: 18,
-    color: "white",
+    textAlign: "center",
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: "#111827",
   },
+
+  // Dark content
   instruction: {
     fontFamily: fonts.body,
     fontSize: 14,
@@ -295,14 +305,14 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.1)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
   },
   typeChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: "#D95D39",
+    borderColor: "#D95D39",
   },
   typeLabel: {
     fontFamily: fonts.bodyMedium,
@@ -313,7 +323,7 @@ const styles = StyleSheet.create({
   messageBox: {
     width: "100%",
     backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: radius.lg,
+    borderRadius: 12,
     padding: 14,
     gap: 8,
   },
@@ -327,7 +337,7 @@ const styles = StyleSheet.create({
   contactsCard: {
     width: "100%",
     backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: radius.lg,
+    borderRadius: 12,
     padding: 14,
     gap: 10,
   },
@@ -341,6 +351,6 @@ const styles = StyleSheet.create({
   contactNumber: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: colors.primary,
+    color: "#D95D39",
   },
 });

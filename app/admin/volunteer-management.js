@@ -14,9 +14,8 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { api, volunteerApi } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { colors, fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -241,7 +240,7 @@ export default function VolunteerManagementScreen() {
     ).length;
 
     return (
-      <View style={[s.card, shadow?.soft]}>
+      <View style={s.card}>
         {/* Tappable top area — navigates to detail */}
         <TouchableOpacity
           activeOpacity={0.85}
@@ -391,9 +390,9 @@ export default function VolunteerManagementScreen() {
   return (
     <View style={[s.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={s.header}>
+      <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>Volunteer Management</Text>
@@ -408,7 +407,7 @@ export default function VolunteerManagementScreen() {
           <Ionicons name="person-add" size={16} color={colors.primary} />
           <Text style={s.createHeaderBtnTxt}>Add</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       {/* Stats row */}
       <View style={s.statsRow}>
@@ -877,20 +876,23 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "white" },
+  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "rgba(255,255,255,0.65)",
+    color: colors.textSecondary,
     marginTop: 2,
   },
 
@@ -907,7 +909,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     backgroundColor: "#F9FAFB",
-    borderRadius: radius.lg,
+    borderRadius: 16,
   },
   statCount: { fontFamily: fonts.bodyBold, fontSize: 20 },
   statLabel: {
@@ -931,7 +933,7 @@ const s = StyleSheet.create({
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 7,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: "#F3F4F6",
     alignSelf: "center",
     height: 34,
@@ -948,10 +950,12 @@ const s = StyleSheet.create({
   tabTextActive: { color: "white" },
 
   card: {
-    backgroundColor: "white",
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 14,
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   cardRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   avatar: {
@@ -979,7 +983,7 @@ const s = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
@@ -995,7 +999,7 @@ const s = StyleSheet.create({
 
   toursSection: {
     backgroundColor: "#F9FAFB",
-    borderRadius: radius.lg,
+    borderRadius: 16,
     padding: 10,
     gap: 8,
   },
@@ -1029,7 +1033,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 9,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     backgroundColor: "#FEE8E2",
     borderWidth: 1,
     borderColor: colors.primary + "30",
@@ -1046,7 +1050,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 9,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     backgroundColor: "#DCFCE7",
     borderWidth: 1,
     borderColor: "#16A34A30",
@@ -1058,7 +1062,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 9,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     backgroundColor: "#FEE2E2",
     borderWidth: 1,
     borderColor: colors.error + "30",
@@ -1120,7 +1124,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 12,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
     marginBottom: 8,
@@ -1150,7 +1154,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: colors.primary,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     paddingVertical: 14,
     marginTop: 4,
   },
@@ -1163,10 +1167,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "#F3F4F6",
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: radius.pill,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   createHeaderBtnTxt: {
     fontFamily: fonts.bodyBold,
@@ -1176,10 +1182,10 @@ const s = StyleSheet.create({
   createField: { marginBottom: 12 },
   createLabel: {
     fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.textSecondary,
+    fontSize: 10,
+    color: "#9CA3AF",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
     marginBottom: 6,
   },
   createInputRow: {
@@ -1187,7 +1193,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    borderRadius: radius.lg,
+    borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: "#F9FAFB",
@@ -1216,7 +1222,7 @@ const s = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: "#F3F4F6",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -1253,17 +1259,12 @@ const s = StyleSheet.create({
     marginTop: 4,
     flexWrap: "wrap",
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
   docsBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
     backgroundColor: "#F9FAFB",
-    borderRadius: radius.pill,
+    borderRadius: 999,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderWidth: 1,
@@ -1275,7 +1276,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     backgroundColor: "#F0F9FF",
-    borderRadius: radius.lg,
+    borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },

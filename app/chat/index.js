@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
 
 const fmtTime = (d) => {
   if (!d) return "";
@@ -95,7 +93,7 @@ export default function ChatListScreen() {
       : 0;
     return (
       <TouchableOpacity
-        style={[styles.chatRow, shadow.soft]}
+        style={styles.chatRow}
         onPress={() => router.push("/chat/" + item._id)}
       >
         <View style={styles.avatar}>
@@ -130,27 +128,27 @@ export default function ChatListScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.title}>Messages</Text>
         <TouchableOpacity
           style={styles.composeBtn}
           onPress={() => router.push("/chat/new")}
         >
-          <Ionicons name="create-outline" size={22} color="white" />
+          <Ionicons name="create-outline" size={22} color="#111827" />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
       <View style={styles.searchWrap}>
-        <Ionicons name="search" size={16} color={colors.textSecondary} />
+        <Ionicons name="search" size={16} color="#6B7280" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search conversations..."
           value={search}
           onChangeText={handleSearch}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor="#6B7280"
         />
       </View>
       {loading ? (
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color="#D95D39" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filtered}
@@ -171,7 +169,7 @@ export default function ChatListScreen() {
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={48}
-                color={colors.textDisabled}
+                color="#9CA3AF"
               />
               <Text style={styles.emptyTitle}>No messages yet</Text>
               <Text style={styles.emptySub}>
@@ -192,25 +190,27 @@ export default function ChatListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
   },
   title: {
     flex: 1,
     fontFamily: "Philosopher_700Bold",
-    fontSize: 22,
-    color: "white",
+    fontSize: 20,
+    color: "#111827",
   },
   composeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -218,62 +218,63 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    margin: 16,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
+    height: 46,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    margin: 12,
+    marginTop: 8,
   },
   searchInput: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   chatRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#D6E4FF",
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontFamily: fonts.bodyBold, fontSize: 16, color: "white" },
+  avatarText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1E3A5F" },
   chatHeader: { flexDirection: "row", alignItems: "center" },
   chatName: {
     flex: 1,
     fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
+    fontSize: 15,
+    color: "#111827",
   },
   chatTime: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
   chatFooter: { flexDirection: "row", alignItems: "center" },
   lastMessage: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
-  unreadMsg: { fontFamily: fonts.bodyBold, color: colors.textPrimary },
+  unreadMsg: { fontFamily: fonts.bodyBold, color: "#111827" },
   badge: {
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: colors.primary,
+    backgroundColor: "#D95D39",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 4,
@@ -283,16 +284,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
   newChatBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
+    backgroundColor: "#D95D39",
+    borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
     marginTop: 8,

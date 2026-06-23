@@ -11,9 +11,8 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { tours as toursApi } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { colors, fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -106,7 +105,7 @@ export default function DraftsScreen() {
     const isDeleting = deleting === item._id;
 
     return (
-      <View style={[s.card, shadow?.soft]}>
+      <View style={s.card}>
         {/* Main tappable area */}
         <TouchableOpacity
           activeOpacity={0.85}
@@ -181,9 +180,9 @@ export default function DraftsScreen() {
 
   return (
     <View style={[s.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={s.header}>
+      <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>Draft Tours</Text>
@@ -195,9 +194,9 @@ export default function DraftsScreen() {
           style={s.newBtn}
           onPress={() => router.push("/admin/tour/create")}
         >
-          <Ionicons name="add" size={20} color="white" />
+          <Ionicons name="add" size={20} color={colors.primary} />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
@@ -271,24 +270,30 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "#F3F4F6",
     alignItems: "center", justifyContent: "center",
   },
-  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "white" },
-  subtitle: { fontFamily: fonts.body, fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 },
+  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
+  subtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   newBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "#F3F4F6",
     alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "#E5E7EB",
   },
 
   card: {
-    backgroundColor: "white",
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   cardTop: {
     flexDirection: "row",
@@ -297,7 +302,7 @@ const s = StyleSheet.create({
     paddingBottom: 10,
   },
   iconBox: {
-    width: 44, height: 44, borderRadius: radius.lg,
+    width: 44, height: 44, borderRadius: 16,
     backgroundColor: "#FEE8E2",
     alignItems: "center", justifyContent: "center",
   },
@@ -309,7 +314,7 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 3,
     backgroundColor: "#FEE8E2",
     paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   editChipTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
 
@@ -339,7 +344,7 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "#DCFCE7",
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   publishBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#16A34A" },
   deleteBtn: {
@@ -355,7 +360,7 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 8,
     backgroundColor: colors.primary,
     paddingHorizontal: 20, paddingVertical: 12,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     marginTop: 8,
   },
   emptyBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },

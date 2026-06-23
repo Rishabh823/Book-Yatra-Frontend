@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const ROLES = ['user', 'guest', 'volunteer', 'manager', 'admin', 'super_admin'];
@@ -141,14 +141,14 @@ export default function SuperUsers() {
 }
 
 const s = StyleSheet.create({
-  searchBar:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle },
+  searchBar:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle },
   searchInput:  { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  chip:         { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
+  chip:         { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
   chipActive:   { backgroundColor: colors.primary + '18', borderColor: colors.primary },
   chipTxt:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive:{ color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:         { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, ...shadow.soft },
+  card:         { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   cardRow:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar:       { width: 44, height: 44, borderRadius: 22 },
   avatarFallback:{ alignItems: 'center', justifyContent: 'center' },
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
   name:         { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   sub:          { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   right:        { alignItems: 'flex-end' },
-  roleBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  roleBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   roleText:     { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   foot:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.borderSubtle },

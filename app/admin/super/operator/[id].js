@@ -7,7 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../../lib/theme';
+import { colors, fonts, radius } from '../../../../lib/theme';
 import { superAdmin as superApi } from '../../../../lib/api';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', businessName: '', password: '' };
@@ -429,14 +429,14 @@ function EmptyState({ icon, text }) {
 }
 
 const s = StyleSheet.create({
-  profileCard:      { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, ...shadow.soft, marginTop: 8, marginBottom: 4 },
+  profileCard:      { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: "#E5E7EB", marginTop: 8, marginBottom: 4 },
   profileRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
   profileAvatar:    { width: 60, height: 60, borderRadius: 30 },
   profileAvatarFallback: { backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
   profileAvatarTxt: { fontFamily: fonts.bodyBold, fontSize: 24, color: colors.secondary },
   profileName:      { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginBottom: 2 },
   profileSub:       { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, marginBottom: 6 },
-  statusBadge:      { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'flex-start' },
+  statusBadge:      { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
   statusDot:        { width: 6, height: 6, borderRadius: 3 },
   statusTxt:        { fontFamily: fonts.bodyBold, fontSize: 11 },
   contactRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -444,26 +444,26 @@ const s = StyleSheet.create({
   contactTxt:       { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
 
   statsRow:         { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginVertical: 12 },
-  statCard:         { flex: 1, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, alignItems: 'center', ...shadow.soft },
+  statCard:         { flex: 1, backgroundColor: colors.surface, borderRadius: 16, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: "#E5E7EB" },
   statIcon:         { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   statValue:        { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   statLabel:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
 
   actionsWrap:      { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 12 },
-  actionBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: radius.lg, borderWidth: 1 },
+  actionBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 16, borderWidth: 1 },
   actionEdit:       { backgroundColor: colors.primary + '10', borderColor: colors.primary + '40' },
   actionDelete:     { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
   actionBtnTxt:     { fontFamily: fonts.bodyBold, fontSize: 13 },
-  actionToggle:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: colors.borderSubtle },
+  actionToggle:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: colors.borderSubtle },
   actionToggleTxt:  { fontFamily: fonts.bodyMedium || fonts.body, fontSize: 12, color: colors.textSecondary },
 
-  tabBar:           { flexDirection: 'row', marginHorizontal: 16, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 4, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 12 },
-  tabItem:          { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: radius.md },
+  tabBar:           { flexDirection: 'row', marginHorizontal: 16, backgroundColor: colors.surface, borderRadius: 16, padding: 4, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 12 },
+  tabItem:          { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 12 },
   tabItemActive:    { backgroundColor: colors.primary },
   tabTxt:           { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary, textTransform: 'capitalize' },
   tabTxtActive:     { color: '#fff' },
 
-  listCard:         { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 8, ...shadow.soft },
+  listCard:         { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
   listCardTitle:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   listCardSub:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   listCardPrice:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
@@ -471,36 +471,36 @@ const s = StyleSheet.create({
   listAvatar:       { width: 36, height: 36, borderRadius: 18 },
   listAvatarFallback:{ backgroundColor: colors.primary + '18', alignItems: 'center', justifyContent: 'center' },
   listAvatarTxt:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
-  rolePill:         { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  rolePill:         { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   rolePillTxt:      { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
-  bookingIdBadge:   { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
+  bookingIdBadge:   { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
   bookingIdTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
-  sBadge:           { paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  sBadge:           { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
   sBadgeTxt:        { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   emptyTxt:         { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginTop: 10 },
 
-  commissionCard:       { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, ...shadow.soft },
+  commissionCard:       { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: "#E5E7EB" },
   commissionHead:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   commissionIcon:       { width: 38, height: 38, borderRadius: 19, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
   commissionTitle:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   commissionSub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   commissionRow:        { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  commissionInput:      { flex: 1, backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.bodyBold, fontSize: 20, color: colors.textPrimary },
+  commissionInput:      { flex: 1, backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.bodyBold, fontSize: 20, color: colors.textPrimary },
   commissionPct:        { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.textSecondary },
-  commissionSaveBtn:    { backgroundColor: '#16A34A', borderRadius: radius.lg, paddingHorizontal: 18, paddingVertical: 12 },
+  commissionSaveBtn:    { backgroundColor: '#16A34A', borderRadius: 16, paddingHorizontal: 18, paddingVertical: 12 },
   commissionSaveTxt:    { fontFamily: fonts.bodyBold, fontSize: 14, color: '#fff' },
 
   overlay:          { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end', alignItems: 'center' },
-  sheet:            { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, maxHeight: '92%' },
+  sheet:            { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, maxHeight: '92%' },
   sheetHead:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   sheetTitle:       { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
   field:            { marginBottom: 12 },
-  label:            { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
-  input:            { backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  inputRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 12, paddingVertical: 10 },
-  saveBtn:          { backgroundColor: colors.primary, borderRadius: radius.pill, height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  label:            { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 },
+  input:            { backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
+  inputRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 12, paddingVertical: 10 },
+  saveBtn:          { backgroundColor: colors.primary, borderRadius: 999, height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   saveBtnTxt:       { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
-  cancelBtn:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.bg },
+  cancelBtn:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.bg },
   cancelText:       { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
 });

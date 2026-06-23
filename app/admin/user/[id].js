@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AdminShell } from "../../../lib/AdminScreen";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { api, auth as authApi } from "../../../lib/api";
 
 const ROLES = ["user", "volunteer", "manager", "admin"];
@@ -521,9 +521,10 @@ const s = StyleSheet.create({
     gap: 16,
     marginBottom: 24,
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     padding: 16,
-    ...shadow.soft,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   avatar: { width: 72, height: 72, borderRadius: 36 },
   avatarPlaceholder: {
@@ -542,7 +543,7 @@ const s = StyleSheet.create({
     alignSelf: "flex-start",
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   roleText: { fontFamily: fonts.bodyBold, fontSize: 10, letterSpacing: 1.5 },
   userSince: {
@@ -552,7 +553,7 @@ const s = StyleSheet.create({
   },
 
   sectionLabel: {
-    fontFamily: fonts.accent,
+    fontFamily: fonts.bodyBold,
     fontSize: 11,
     color: colors.textSecondary,
     letterSpacing: 3,
@@ -561,15 +562,16 @@ const s = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     padding: 18,
     marginBottom: 20,
-    ...shadow.soft,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
 
   field: { marginBottom: 14 },
   fieldLabel: {
-    fontFamily: fonts.accent,
+    fontFamily: fonts.bodyBold,
     fontSize: 10,
     color: colors.textSecondary,
     letterSpacing: 2,
@@ -582,7 +584,7 @@ const s = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 14,
     height: 50,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
@@ -598,7 +600,7 @@ const s = StyleSheet.create({
   roleChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     backgroundColor: colors.bg,
@@ -615,9 +617,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     height: 52,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: colors.primary,
-    ...shadow.card,
     marginTop: 6,
   },
   ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
@@ -627,7 +628,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     height: 52,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     borderWidth: 1.5,
     borderColor: colors.primary,
     marginTop: 6,
@@ -643,10 +644,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    ...shadow.soft,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   expandHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   expandIconBg: {
@@ -676,9 +678,8 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     height: 52,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: "#DC2626",
-    ...shadow.card,
   },
   deleteBtnText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
 
@@ -697,7 +698,7 @@ const s = StyleSheet.create({
 
   blockBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 8, height: 48, borderRadius: radius.pill, marginBottom: 20,
+    gap: 8, height: 48, borderRadius: 999, marginBottom: 20,
     borderWidth: 1.5, borderColor: "#FCA5A5", backgroundColor: "#FEF2F2",
   },
   blockBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight || "#FFEEE8" },

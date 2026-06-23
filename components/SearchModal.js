@@ -494,21 +494,61 @@ export default function SearchModal({ visible, onClose }) {
   };
 
   // ── Voice toggle ────────────────────────────────────────────────────────────
+  const webRecognitionRef = useRef(null);
+
   const toggleVoice = async () => {
-    if (!Voice) return;
-    if (isListening) {
-      try {
-        await Voice.stop();
-      } catch {}
-      setIsListening(false);
-    } else {
-      try {
-        setIsListening(true);
-        await Voice.start("en-IN");
-      } catch {
+    // Native voice (works in bare React Native builds)
+    if (Voice) {
+      if (isListening) {
+        try { await Voice.stop(); } catch {}
         setIsListening(false);
+      } else {
+        try {
+          setIsListening(true);
+          await Voice.start("en-IN");
+        } catch {
+          setIsListening(false);
+        }
+      }
+      return;
+    }
+
+    // Web Speech API (works in browser / Expo web)
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        if (isListening) {
+          webRecognitionRef.current?.stop();
+          setIsListening(false);
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        webRecognitionRef.current = recognition;
+        recognition.lang = "en-IN";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.onresult = (e) => {
+          const transcript = e.results[0]?.[0]?.transcript || "";
+          if (transcript) {
+            setQuery(transcript);
+            setIsListening(false);
+            handleApiSearch(transcript);
+          }
+        };
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
+        try {
+          setIsListening(true);
+          recognition.start();
+        } catch {
+          setIsListening(false);
+        }
+        return;
       }
     }
+
+    // No voice support available — show hint
+    alert("Voice search is not supported on this device/browser.");
   };
 
   // ── Derived flags ───────────────────────────────────────────────────────────

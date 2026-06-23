@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell, StatusBadge } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { members as membersApi, api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 import Toast from "../../components/Toast";
@@ -123,10 +123,10 @@ export default function AdminMembers() {
 
 const s = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 14 },
-  tab: { flex: 1, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   tabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, ...shadow.soft },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   initials: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.secondaryLight, alignItems: 'center', justifyContent: 'center' },
   initialText: { fontFamily: fonts.heading, fontSize: 18, color: '#fff' },
@@ -135,8 +135,8 @@ const s = StyleSheet.create({
   reason: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, fontStyle: 'italic', marginBottom: 6 },
   date: { fontFamily: fonts.accent, fontSize: 10, color: colors.textDisabled, letterSpacing: 1, marginBottom: 10 },
   actions: { flexDirection: 'row', gap: 10 },
-  approveBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#16A34A', borderRadius: radius.pill },
+  approveBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#16A34A', borderRadius: 999 },
   approveTxt: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
-  rejectBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#FEE2E2', borderRadius: radius.pill },
+  rejectBtn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#FEE2E2', borderRadius: 999 },
   rejectTxt: { color: '#DC2626', fontFamily: fonts.bodyBold, fontSize: 13 },
 });

@@ -16,10 +16,9 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { api, upload as uploadApi } from '../../lib/api';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts } from '../../lib/theme';
 import { DateInput } from '../../components/DateInput';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -166,7 +165,7 @@ export default function DriversScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View style={[styles.card, shadow.soft]}>
+    <View style={styles.card}>
       <View style={styles.cardRow}>
         <View style={[styles.driverIcon, { backgroundColor: item.isAvailable ? '#DCFCE7' : '#F3F4F6' }]}>
           {item.photo ? (
@@ -220,15 +219,15 @@ export default function DriversScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={['#1E0A0A', '#5C1615']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Drivers</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Ionicons name="add" size={22} color="white" />
+          <Ionicons name="add" size={22} color={colors.primary} />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
@@ -447,20 +446,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: 'white' },
+  title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: colors.textPrimary },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 10 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   driverIcon: {
     width: 44, height: 44, borderRadius: 22,
@@ -469,14 +480,14 @@ const styles = StyleSheet.create({
   driverName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   driverMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   driverPhone: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary, marginTop: 2 },
-  availBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill },
+  availBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   availText: { fontFamily: fonts.bodyBold, fontSize: 11 },
   docRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
   docText: { fontFamily: fonts.body, fontSize: 11, color: '#16A34A' },
   cardActions: { flexDirection: 'row', gap: 8 },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 4, paddingVertical: 7, borderRadius: radius.lg,
+    gap: 4, paddingVertical: 7, borderRadius: 16,
     borderWidth: 1, borderColor: colors.primary,
   },
   actionBtnDanger: { borderColor: colors.error },
@@ -489,7 +500,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#fff',
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, maxHeight: '92%',
   },
@@ -505,7 +516,7 @@ const styles = StyleSheet.create({
   photoImg: { width: 88, height: 88, borderRadius: 44, borderWidth: 2.5, borderColor: colors.primary },
   photoPlaceholder: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: '#F3F4F6', borderWidth: 2, borderColor: colors.borderSubtle,
+    backgroundColor: '#F3F4F6', borderWidth: 2, borderColor: '#E5E7EB',
     alignItems: 'center', justifyContent: 'center',
   },
   photoOverlay: {
@@ -525,13 +536,13 @@ const styles = StyleSheet.create({
 
   sectionHead: { marginTop: 12, marginBottom: 8 },
   sectionHeadTxt: {
-    fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary,
+    fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF",
     letterSpacing: 1.5, textTransform: 'uppercase',
   },
 
   input: {
     backgroundColor: '#F3F4F6',
-    borderRadius: radius.lg,
+    borderRadius: 16,
     paddingHorizontal: 14, paddingVertical: 12,
     fontFamily: fonts.body, fontSize: 14,
     color: colors.textPrimary, marginBottom: 10,
@@ -540,8 +551,8 @@ const styles = StyleSheet.create({
 
   aadhaarRow: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   aadhaarBox: {
-    flex: 1, borderRadius: radius.lg, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: colors.borderSubtle,
+    flex: 1, borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: '#E5E7EB',
     borderStyle: 'dashed', backgroundColor: '#F9FAFB',
   },
   aadhaarImg: { width: '100%', height: 100 },
@@ -563,7 +574,7 @@ const styles = StyleSheet.create({
 
   saveBtn: {
     backgroundColor: colors.primary,
-    borderRadius: radius.lg, padding: 14,
+    borderRadius: 16, padding: 14,
     alignItems: 'center', marginTop: 8,
   },
   saveBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: 'white' },

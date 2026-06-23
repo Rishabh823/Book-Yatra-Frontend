@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { api } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -263,9 +263,9 @@ const s = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
 
   sectionRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, marginBottom: 8 },
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
+  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, marginBottom: 8, ...shadow.soft },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
 
   toggleTop:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
   toggleIcon:   { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
@@ -273,20 +273,20 @@ const s = StyleSheet.create({
   fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, marginBottom: 4 },
   hint:       { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, lineHeight: 17, marginBottom: 10 },
 
-  input:       { backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
+  input:       { backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   textarea:    { height: 80, paddingTop: 10 },
 
-  inputRow:    { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.bg },
+  inputRow:    { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.bg },
   numInput:    { flex: 1, height: 52, paddingHorizontal: 16, fontFamily: fonts.bodyBold, fontSize: 22, color: colors.textPrimary },
   unit:        { paddingHorizontal: 14, fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary },
 
-  iconInput:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, height: 46 },
+  iconInput:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, height: 46 },
   iconInputField: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
 
-  dangerBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEE2E2', borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 7, marginTop: 10 },
+  dangerBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FEE2E2', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7, marginTop: 10 },
   dangerTxt:    { fontFamily: fonts.body, fontSize: 12, color: '#DC2626', flex: 1 },
 
-  saveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, ...shadow.card },
+  saveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, height: 56, borderRadius: 999, backgroundColor: colors.primary },
   saveBtnDim: { backgroundColor: colors.textDisabled, opacity: 0.6 },
   saveBtnTxt: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
 });

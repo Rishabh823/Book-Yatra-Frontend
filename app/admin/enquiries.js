@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 import Toast from "../../components/Toast";
@@ -179,27 +179,27 @@ export default function AdminEnquiries() {
 }
 
 const s = StyleSheet.create({
-  statsRow:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
+  statsRow:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   statItem:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
   statDiv:   { width: 1, backgroundColor: colors.borderSubtle },
   statVal:   { fontFamily: fonts.heading, fontSize: 18 },
   statLbl:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
 
   tabRow:    { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 10 },
-  tab:       { flex: 1, paddingVertical: 9, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
+  tab:       { flex: 1, paddingVertical: 9, borderRadius: 999, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   tabTxt:    { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
 
-  card:      { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, ...shadow.soft },
+  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   cardTop:   { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  iconCircle:{ width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  iconCircle:{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   name:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   meta:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  sBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  sBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   sBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
   date:      { fontFamily: fonts.accent, fontSize: 9, color: colors.textDisabled, letterSpacing: 1 },
   subject:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.secondary, marginBottom: 4 },
   message:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, lineHeight: 18, marginBottom: 8 },
-  resolveBtn:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#F0FDF4', borderRadius: radius.pill, marginBottom: 8, borderWidth: 1, borderColor: '#BBFAB1' },
+  resolveBtn:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, backgroundColor: '#F0FDF4', borderRadius: 999, marginBottom: 8, borderWidth: 1, borderColor: '#BBFAB1' },
   resolveTxt:{ fontFamily: fonts.bodyBold, fontSize: 13, color: '#16A34A' },
   cardFoot:  { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: colors.borderSubtle },
   expandHint:{ fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },

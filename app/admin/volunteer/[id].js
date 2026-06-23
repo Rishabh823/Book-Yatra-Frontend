@@ -13,9 +13,8 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { volunteerApi } from "../../../lib/api";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 
 const fmtDate = (d) =>
   d
@@ -149,19 +148,19 @@ export default function VolunteerDetailScreen() {
   return (
     <View style={[s.container, { paddingTop: insets.top }]}>
       {/* Header */}
-      <LinearGradient colors={["#1E0A0A", "#5C1615"]} style={s.header}>
+      <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={s.headerTitle} numberOfLines={1}>Volunteer Profile</Text>
         <TouchableOpacity onPress={handleDelete} style={s.deleteHeaderBtn}>
-          <Ionicons name="trash-outline" size={18} color="#FCA5A5" />
+          <Ionicons name="trash-outline" size={18} color="#DC2626" />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: insets.bottom + 24 }}>
         {/* Profile card */}
-        <View style={[s.card, shadow?.soft]}>
+        <View style={s.card}>
           <View style={s.profileTop}>
             <View style={[s.bigAvatar, { backgroundColor: status === "suspended" ? "#9CA3AF" : colors.primary }]}>
               <Text style={s.bigAvatarText}>{(volunteer.name || "V")[0].toUpperCase()}</Text>
@@ -241,7 +240,7 @@ export default function VolunteerDetailScreen() {
         </View>
 
         {/* Verification documents */}
-        <View style={[s.card, shadow?.soft]}>
+        <View style={s.card}>
           <View style={s.sectionHeader}>
             <Ionicons name="document-text-outline" size={18} color={colors.primary} />
             <Text style={s.sectionTitle}>Verification Documents</Text>
@@ -305,7 +304,7 @@ export default function VolunteerDetailScreen() {
         </View>
 
         {/* Assigned tours */}
-        <View style={[s.card, shadow?.soft]}>
+        <View style={s.card}>
           <View style={s.sectionHeader}>
             <Ionicons name="bus-outline" size={18} color={colors.primary} />
             <Text style={s.sectionTitle}>Assigned Tours</Text>
@@ -426,12 +425,15 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -439,22 +441,24 @@ const s = StyleSheet.create({
     flex: 1,
     fontFamily: "Philosopher_700Bold",
     fontSize: 20,
-    color: "white",
+    color: colors.textPrimary,
   },
   deleteHeaderBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(220,38,38,0.2)",
+    backgroundColor: "#FEE2E2",
     alignItems: "center",
     justifyContent: "center",
   },
 
   card: {
-    backgroundColor: "white",
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 16,
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   profileTop: { flexDirection: "row", alignItems: "flex-start" },
   bigAvatar: {
@@ -474,7 +478,7 @@ const s = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     alignSelf: "flex-start",
   },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
@@ -484,12 +488,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    backgroundColor: "#F9FAFB",
-    borderRadius: radius.lg,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
     padding: 12,
   },
   infoItem: { width: "47%", gap: 2 },
-  infoLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
+  infoLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
   infoValue: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#1F2937" },
 
   statusActions: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
@@ -499,7 +503,7 @@ const s = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     borderWidth: 1,
   },
   actionPillTxt: { fontFamily: fonts.bodyBold, fontSize: 13 },
@@ -513,7 +517,7 @@ const s = StyleSheet.create({
     backgroundColor: "#FEE8E2",
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
 
   emptySection: { alignItems: "center", paddingVertical: 20, gap: 6 },
@@ -521,11 +525,11 @@ const s = StyleSheet.create({
   emptySectionSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textDisabled, textAlign: "center" },
 
   docRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 8, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
-  docIconBox: { width: 40, height: 40, borderRadius: radius.lg, alignItems: "center", justifyContent: "center" },
+  docIconBox: { width: 40, height: 40, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   docType: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#1F2937" },
   docDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   docNote: { fontFamily: fonts.body, fontSize: 11, color: "#D97706", marginTop: 2, fontStyle: "italic" },
-  docStatusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, alignSelf: "flex-start", marginTop: 4 },
+  docStatusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: "flex-start", marginTop: 4 },
   docStatusTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
   docActions: { flexDirection: "row", gap: 4, alignItems: "center" },
   docActionBtn: {
@@ -542,7 +546,7 @@ const s = StyleSheet.create({
   tourTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#1F2937" },
   tourMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   tourDate: { fontFamily: fonts.body, fontSize: 11, color: colors.primary, marginTop: 1 },
-  tourStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill },
+  tourStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   tourStatusTxt: { fontFamily: fonts.bodyBold, fontSize: 11 },
 
   dangerCard: { borderWidth: 1, borderColor: "#FCA5A5", backgroundColor: "#FFF5F5" },
@@ -555,7 +559,7 @@ const s = StyleSheet.create({
     backgroundColor: "#DC2626",
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     alignSelf: "flex-start",
   },
   deleteBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
@@ -566,7 +570,7 @@ const s = StyleSheet.create({
 
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalSheet: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -584,16 +588,14 @@ const s = StyleSheet.create({
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   modalTitle: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
   modalSub: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
-  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5 },
+  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
   noteInput: {
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    borderRadius: radius.lg,
+    borderRadius: 12,
     padding: 12,
     fontFamily: fonts.body,
     fontSize: 14,
     color: "#1F2937",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F2F0ED",
     minHeight: 72,
     textAlignVertical: "top",
   },
@@ -605,7 +607,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 12,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1.5,
   },
   verifyBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14 },

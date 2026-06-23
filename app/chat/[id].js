@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
 import ChatBubble from '../../components/ChatBubble';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
 
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
@@ -61,16 +61,16 @@ export default function ChatScreen() {
     loadMessages(nextPage, true);
   }, [hasMore, page, loadMessages]);
 
-  if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator color="#D95D39" /></View>;
 
   return (
     <KeyboardAvoidingView style={[styles.container, { paddingTop: insets.top }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.chatName} numberOfLines={1}>Chat</Text>
-        <Ionicons name="ellipsis-vertical" size={20} color={colors.textPrimary} />
+        <Ionicons name="ellipsis-vertical" size={20} color="#374151" />
       </View>
       <FlatList
         ref={flatRef}
@@ -95,7 +95,7 @@ export default function ChatScreen() {
           value={text}
           onChangeText={setText}
           placeholder="Type a message..."
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor="#9CA3AF"
           multiline
           maxLength={2000}
         />
@@ -108,15 +108,15 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0EBE8' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
-  chatName: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.textPrimary },
+  container: { flex: 1, backgroundColor: '#fff' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
+  chatName: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 17, color: '#111827' },
   noMsg: { alignItems: 'center', padding: 40 },
-  noMsgText: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 12, paddingTop: 10, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-  input: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.textPrimary, backgroundColor: '#F3F4F6', borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 10, maxHeight: 100 },
-  sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  noMsgText: { fontFamily: fonts.body, fontSize: 14, color: '#6B7280' },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 12, paddingTop: 10, backgroundColor: '#fff', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E7EB' },
+  input: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: '#111827', backgroundColor: '#F2F0ED', borderRadius: 24, paddingHorizontal: 14, paddingVertical: 10, maxHeight: 100 },
+  sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#D95D39', alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { backgroundColor: '#E5E7EB' },
 });

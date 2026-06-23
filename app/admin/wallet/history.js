@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { operatorWalletApi } from "../../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
@@ -178,14 +178,14 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, ...shadow.soft },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   tabsRow: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
   tabActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   tabTxt: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   tabTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: colors.surface, padding: 14, borderRadius: radius.xl, marginVertical: 4, ...shadow.soft },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: colors.surface, padding: 14, borderRadius: 20, marginVertical: 4, borderWidth: 1, borderColor: "#E5E7EB" },
   rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   rowTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   rowSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
@@ -194,10 +194,10 @@ const s = StyleSheet.create({
   rowReject: { fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 },
   rowAmt: { fontFamily: fonts.bodyBold, fontSize: 14 },
   rowComm: { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11 },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
-  withdrawBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: radius.pill },
+  withdrawBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 },
   withdrawBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
 });

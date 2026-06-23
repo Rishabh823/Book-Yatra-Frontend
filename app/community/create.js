@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
-import Toast from "../../components/Toast";
-import { useToast } from "../../lib/hooks/useToast";
+import { colors, fonts } from '../../lib/theme';
+import Toast from '../../components/Toast';
+import { useToast } from '../../lib/hooks/useToast';
 
-const POST_TYPES = ['post','memory','travel_tip','experience'];
+const PRIMARY = '#D95D39';
+const POST_TYPES = ['post', 'memory', 'travel_tip', 'experience'];
 
 export default function CreatePostScreen() {
   const insets = useSafeAreaInsets();
@@ -21,70 +21,191 @@ export default function CreatePostScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
-    if (!content.trim()) { showToast("Content is required", "error"); return; }
+    if (!content.trim()) { showToast('Content is required', 'error'); return; }
     setSubmitting(true);
     try {
       const tagArr = tags.split(',').map(t => t.trim()).filter(Boolean);
       await api.post('/community', { type, title: title.trim() || undefined, content: content.trim(), tags: tagArr, isPublic: true });
       router.back();
-    } catch { showToast("Failed to create post", "error"); }
+    } catch { showToast('Failed to create post', 'error'); }
     setSubmitting(false);
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.cancelBtn}>
-          <Text style={styles.cancelText}>Cancel</Text>
+    <View style={[s.container, { paddingTop: insets.top }]}>
+
+      {/* Header */}
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.cancelBtn}>
+          <Text style={s.cancelText}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Create Post</Text>
-        <TouchableOpacity style={[styles.postBtn, !content.trim() && styles.postBtnDisabled]} onPress={submit} disabled={!content.trim() || submitting}>
-          {submitting ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.postText}>Post</Text>}
+        <Text style={s.headerTitle}>Create post</Text>
+        <TouchableOpacity
+          style={[s.postBtn, !content.trim() && s.postBtnDisabled]}
+          onPress={submit}
+          disabled={!content.trim() || submitting}
+        >
+          {submitting
+            ? <ActivityIndicator size="small" color="white" />
+            : <Text style={s.postBtnTxt}>Post</Text>
+          }
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: insets.bottom + 20 }}>
+
+      <ScrollView
+        contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: insets.bottom + 24 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Type */}
         <View>
-          <Text style={styles.label}>Type</Text>
+          <Text style={s.label}>Type</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {POST_TYPES.map(t => (
-              <TouchableOpacity key={t} style={[styles.typeChip, type === t && styles.typeChipActive]} onPress={() => setType(t)}>
-                <Text style={[styles.typeChipText, type === t && styles.typeChipTextActive]}>{t.replace('_', ' ')}</Text>
+              <TouchableOpacity
+                key={t}
+                style={[s.typeChip, type === t && s.typeChipActive]}
+                onPress={() => setType(t)}
+              >
+                <Text style={[s.typeChipText, type === t && s.typeChipTextActive]}>
+                  {t.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
+
+        {/* Title */}
         <View>
-          <Text style={styles.label}>Title (optional)</Text>
-          <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Add a title..." placeholderTextColor={colors.textSecondary} />
+          <Text style={s.label}>Title <Text style={s.labelOpt}>(optional)</Text></Text>
+          <TextInput
+            style={s.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Add a title..."
+            placeholderTextColor="#C0C0C0"
+          />
         </View>
+
+        {/* Content */}
         <View>
-          <Text style={styles.label}>Content *</Text>
-          <TextInput style={[styles.input, styles.contentInput]} value={content} onChangeText={setContent} placeholder="Share your experience, tips, or memories..." placeholderTextColor={colors.textSecondary} multiline />
+          <Text style={s.label}>Content <Text style={s.labelReq}>*</Text></Text>
+          <TextInput
+            style={[s.input, s.contentInput]}
+            value={content}
+            onChangeText={setContent}
+            placeholder="Share your experience, tips, or memories..."
+            placeholderTextColor="#C0C0C0"
+            multiline
+            textAlignVertical="top"
+          />
         </View>
+
+        {/* Tags */}
         <View>
-          <Text style={styles.label}>Tags (comma separated)</Text>
-          <TextInput style={styles.input} value={tags} onChangeText={setTags} placeholder="e.g. vrindavan, mathura, yatra" placeholderTextColor={colors.textSecondary} />
+          <Text style={s.label}>Tags <Text style={s.labelOpt}>(comma separated)</Text></Text>
+          <TextInput
+            style={s.input}
+            value={tags}
+            onChangeText={setTags}
+            placeholder="e.g. vrindavan, mathura, yatra"
+            placeholderTextColor="#C0C0C0"
+          />
         </View>
       </ScrollView>
+
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  cancelBtn: { paddingHorizontal: 4 },
-  cancelText: { fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textSecondary },
-  title: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.textPrimary, textAlign: 'center' },
-  postBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill },
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  cancelBtn: { paddingHorizontal: 4, minWidth: 60 },
+  cancelText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 15,
+    color: '#6B7280',
+  },
+  headerTitle: {
+    flex: 1,
+    fontFamily: fonts.bodyBold,
+    fontSize: 17,
+    color: '#111827',
+    textAlign: 'center',
+  },
+  postBtn: {
+    backgroundColor: PRIMARY,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 50,
+    minWidth: 60,
+    alignItems: 'center',
+  },
   postBtnDisabled: { backgroundColor: '#E5E7EB' },
-  postText: { fontFamily: fonts.bodyBold, fontSize: 14, color: 'white' },
-  label: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
-  typeChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: '#E5E7EB' },
-  typeChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  typeChipText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary, textTransform: 'capitalize' },
-  typeChipTextActive: { color: 'white' },
-  input: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 15, color: colors.textPrimary, borderWidth: 1, borderColor: '#E5E7EB' },
-  contentInput: { minHeight: 120, textAlignVertical: 'top' },
+  postBtnTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: 'white',
+  },
+
+  label: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: '#374151',
+    marginBottom: 8,
+  },
+  labelOpt: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  labelReq: {
+    color: PRIMARY,
+  },
+
+  typeChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 50,
+    backgroundColor: '#F3F4F6',
+  },
+  typeChipActive: {
+    backgroundColor: PRIMARY,
+  },
+  typeChipText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  typeChipTextActive: {
+    color: 'white',
+    fontFamily: fonts.bodyBold,
+  },
+
+  input: {
+    backgroundColor: '#F2F0ED',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: '#111827',
+  },
+  contentInput: {
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
 });

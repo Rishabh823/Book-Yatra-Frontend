@@ -3,10 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts } from "../../../lib/theme";
 import { operatorWalletApi } from "../../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
@@ -87,24 +86,24 @@ export default function OperatorWalletScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Balance hero */}
-        <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s.hero}>
+        <View style={s.hero}>
           <Text style={s.heroLabel}>Available Balance</Text>
           <Text style={s.heroBalance}>{fmtCurrency(wallet?.balance)}</Text>
           <View style={s.heroPendingRow}>
-            <Ionicons name="time" size={14} color="rgba(255,233,192,0.7)" />
+            <Ionicons name="time" size={14} color={colors.textSecondary} />
             <Text style={s.heroPending}>Pending Settlement: {fmtCurrency(wallet?.pendingBalance)}</Text>
           </View>
           <View style={s.heroActions}>
             <TouchableOpacity style={s.heroBtn} onPress={() => router.push("/admin/wallet/withdraw")}>
-              <Ionicons name="arrow-up-circle" size={16} color={colors.secondary} />
+              <Ionicons name="arrow-up-circle" size={16} color={colors.primary} />
               <Text style={s.heroBtnTxt}>Withdraw</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[s.heroBtn, { backgroundColor: "rgba(255,255,255,0.15)" }]} onPress={() => router.push("/admin/wallet/history")}>
-              <Ionicons name="receipt" size={16} color="#fff" />
-              <Text style={[s.heroBtnTxt, { color: "#fff" }]}>History</Text>
+            <TouchableOpacity style={[s.heroBtn, s.heroBtnOutline]} onPress={() => router.push("/admin/wallet/history")}>
+              <Ionicons name="receipt" size={16} color={colors.textPrimary} />
+              <Text style={[s.heroBtnTxt, { color: colors.textPrimary }]}>History</Text>
             </TouchableOpacity>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Stats */}
         <View style={s.statsGrid}>
@@ -160,18 +159,62 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, ...shadow.soft },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
-  hero: { borderRadius: radius.xxl, padding: 24, gap: 8 },
-  heroLabel: { color: "rgba(255,233,192,0.7)", fontFamily: fonts.accent, fontSize: 10, letterSpacing: 2, textTransform: "uppercase" },
-  heroBalance: { color: "#fff", fontFamily: fonts.heading, fontSize: 38 },
+  hero: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 24,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  heroLabel: {
+    color: "#9CA3AF",
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  heroBalance: { color: colors.textPrimary, fontFamily: fonts.heading, fontSize: 38 },
   heroPendingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  heroPending: { color: "rgba(255,233,192,0.7)", fontFamily: fonts.body, fontSize: 12 },
+  heroPending: { color: colors.textSecondary, fontFamily: fonts.body, fontSize: 12 },
   heroActions: { flexDirection: "row", gap: 10, marginTop: 8 },
-  heroBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#fff", paddingHorizontal: 18, paddingVertical: 9, borderRadius: radius.pill },
-  heroBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.secondary },
+  heroBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  heroBtnOutline: {
+    backgroundColor: "#fff",
+  },
+  heroBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  statCard: { flex: 1, minWidth: "44%", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 5, ...shadow.soft },
+  statCard: {
+    flex: 1,
+    minWidth: "44%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 14,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   statIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   statValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
   statLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
@@ -179,13 +222,26 @@ const s = StyleSheet.create({
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   sectionLink: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
-  chartCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, gap: 10, ...shadow.soft },
+  chartCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   monthBarWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
   monthBarTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: colors.bg, flexDirection: "row", overflow: "hidden" },
   monthBarFill: { backgroundColor: colors.primary, borderRadius: 4 },
   monthLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textSecondary, width: 28 },
   monthAmt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, width: 64, textAlign: "right" },
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 4, ...shadow.soft },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   settlRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   settlTour: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
   settlDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },

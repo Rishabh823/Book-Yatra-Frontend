@@ -19,7 +19,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AdminShell } from "../../lib/AdminScreen";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { colors, fonts, radius } from "../../lib/theme";
 import { tours as toursApi, upload as uploadApi } from "../../lib/api";
 import { DateInput } from "../../components/DateInput";
 import Toast from "../../components/Toast";
@@ -574,12 +574,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     paddingHorizontal: 12,
     height: 42,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderColor: "#E5E7EB",
   },
   searchInput: {
     flex: 1,
@@ -594,16 +594,16 @@ const s = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: 14,
     height: 42,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   newBtnTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 13 },
   draftsBtn: {
     width: 42,
     height: 42,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: "#fff",
     borderWidth: 1.5,
     borderColor: colors.primary + "40",
   },
@@ -612,22 +612,23 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     padding: 10,
-    ...shadow.soft,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   thumb: {
     width: 72,
     height: 72,
-    borderRadius: radius.md,
+    borderRadius: 12,
     resizeMode: "cover",
     backgroundColor: colors.borderSubtle,
   },
   thumbFallback: {
     width: 72,
     height: 72,
-    borderRadius: radius.md,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -659,7 +660,7 @@ const s = StyleSheet.create({
   typeBadge: {
     paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   typeText: {
     fontFamily: fonts.bodyBold,
@@ -681,10 +682,11 @@ const s = StyleSheet.create({
     padding: 14,
   },
   sheet: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xxl,
+    backgroundColor: "#fff",
+    borderRadius: 24,
     padding: 20,
-    ...shadow.card,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
 
   sheetTitle: {
@@ -696,7 +698,7 @@ const s = StyleSheet.create({
 
   // Photo picker
   photoPicker: {
-    borderRadius: radius.lg,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: colors.bg,
     borderWidth: 1.5,
@@ -734,24 +736,22 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   photoChangeTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 11 },
 
   field: { marginBottom: 11 },
   label: {
-    fontFamily: fonts.accent,
-    fontSize: 9,
-    color: colors.textSecondary,
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: "#9CA3AF",
     letterSpacing: 1.5,
     textTransform: "uppercase",
     marginBottom: 5,
   },
   input: {
-    backgroundColor: colors.bg,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontFamily: fonts.body,
@@ -762,7 +762,7 @@ const s = StyleSheet.create({
   chip: {
     paddingHorizontal: 11,
     paddingVertical: 6,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
@@ -782,7 +782,7 @@ const s = StyleSheet.create({
     height: 46,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.pill,
+    borderRadius: 999,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     backgroundColor: colors.bg,
@@ -798,7 +798,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.primary,
-    borderRadius: radius.pill,
+    borderRadius: 999,
   },
   saveBtnTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 15 },
 });

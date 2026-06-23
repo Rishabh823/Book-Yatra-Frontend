@@ -6,13 +6,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as WebBrowser from "expo-web-browser";
 import { Video, ResizeMode } from "expo-av";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { tours as toursApi, upload as uploadApi, api } from "../../../lib/api";
 import { DateInput } from "../../../components/DateInput";
 
@@ -709,7 +708,7 @@ function Step7({ data, set }) {
     if (cfg.womenReservedSeats?.includes(num)) return ["#DB2777", "#FDF2F8"];
     if (cfg.volunteerSeats?.includes(num)) return ["#16A34A", "#F0FDF4"];
     if (cfg.reservedSeats?.includes(num)) return ["#0284C7", "#EFF6FF"];
-    return [colors.textDisabled, colors.surface];
+    return [colors.textDisabled, "#fff"];
   };
 
   const cols = layout === "2x3" ? 5 : layout.includes("sleeper") ? 3 : 4;
@@ -938,14 +937,14 @@ function Step11({ data, set }) {
 }
 
 function Step12({ data, set }) {
-  const s = data.safety || {};
-  const ss = (k, v) => set("safety", { ...s, [k]: v });
+  const sv = data.safety || {};
+  const ss = (k, v) => set("safety", { ...sv, [k]: v });
   const [showContact, setShowContact] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", phone: "", relation: "" });
 
   const addContact = () => {
     if (!contactForm.name || !contactForm.phone) return Alert.alert("Error", "Name and phone are required");
-    ss("emergencyContacts", [...(s.emergencyContacts || []), { ...contactForm }]);
+    ss("emergencyContacts", [...(sv.emergencyContacts || []), { ...contactForm }]);
     setContactForm({ name: "", phone: "", relation: "" });
     setShowContact(false);
   };
@@ -953,16 +952,16 @@ function Step12({ data, set }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <SectionTitle icon="shield" title="Safety & Tracking" sub="Configure safety features and monitoring" />
-      <ToggleRow label="SOS Emergency Button" sub="Passengers can trigger SOS during the tour" value={s.sosEnabled} onToggle={v => ss("sosEnabled", v)} icon="alert-circle" />
-      <ToggleRow label="GPS Tracking" sub="Track tour bus location in real-time" value={s.gpsTracking} onToggle={v => ss("gpsTracking", v)} icon="location" />
-      <ToggleRow label="Driver Live Tracking" sub="Share driver location with all passengers" value={s.driverLiveTracking} onToggle={v => ss("driverLiveTracking", v)} icon="navigate" />
-      <ToggleRow label="Geo Fencing" sub="Alert when bus deviates from planned route" value={s.geofencing} onToggle={v => ss("geofencing", v)} icon="map" />
-      <ToggleRow label="Route Monitoring" sub="Continuous route adherence monitoring" value={s.routeMonitoring} onToggle={v => ss("routeMonitoring", v)} icon="pulse" />
-      <ToggleRow label="Emergency Broadcasting" sub="Send mass alerts to all passengers" value={s.emergencyBroadcasting} onToggle={v => ss("emergencyBroadcasting", v)} icon="radio" />
+      <ToggleRow label="SOS Emergency Button" sub="Passengers can trigger SOS during the tour" value={sv.sosEnabled} onToggle={v => ss("sosEnabled", v)} icon="alert-circle" />
+      <ToggleRow label="GPS Tracking" sub="Track tour bus location in real-time" value={sv.gpsTracking} onToggle={v => ss("gpsTracking", v)} icon="location" />
+      <ToggleRow label="Driver Live Tracking" sub="Share driver location with all passengers" value={sv.driverLiveTracking} onToggle={v => ss("driverLiveTracking", v)} icon="navigate" />
+      <ToggleRow label="Geo Fencing" sub="Alert when bus deviates from planned route" value={sv.geofencing} onToggle={v => ss("geofencing", v)} icon="map" />
+      <ToggleRow label="Route Monitoring" sub="Continuous route adherence monitoring" value={sv.routeMonitoring} onToggle={v => ss("routeMonitoring", v)} icon="pulse" />
+      <ToggleRow label="Emergency Broadcasting" sub="Send mass alerts to all passengers" value={sv.emergencyBroadcasting} onToggle={v => ss("emergencyBroadcasting", v)} icon="radio" />
 
       <Text style={[h.subSectionLabel, { marginTop: 20 }]}>Emergency Contacts</Text>
-      {(s.emergencyContacts || []).map((c, i) => (
-        <ItemCard key={i} onDelete={() => ss("emergencyContacts", s.emergencyContacts.filter((_, j) => j !== i))}>
+      {(sv.emergencyContacts || []).map((c, i) => (
+        <ItemCard key={i} onDelete={() => ss("emergencyContacts", sv.emergencyContacts.filter((_, j) => j !== i))}>
           <Text style={h.dayTitle}>{c.name} <Text style={h.daySub}>({c.relation || "—"})</Text></Text>
           <Text style={h.daySub}>📱 {c.phone}</Text>
         </ItemCard>
@@ -1017,7 +1016,8 @@ function Step14({ data, tourId, saving, onSaveDraft, onPublish }) {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <LinearGradient colors={[colors.secondary, "#3D0D0C"]} style={s14.hero}>
+      {/* Hero summary card — white flat */}
+      <View style={s14.hero}>
         <Text style={s14.heroTitle}>{data.title || "Unnamed Tour"}</Text>
         {data.tourCode ? <Text style={s14.heroCode}>#{data.tourCode}</Text> : null}
         <View style={s14.heroStats}>
@@ -1027,9 +1027,14 @@ function Step14({ data, tourId, saving, onSaveDraft, onPublish }) {
           <View style={s14.heroDivider} />
           <View style={s14.heroStat}><Text style={s14.heroStatVal}>{adultPrice ? `₹${adultPrice}` : "—"}</Text><Text style={s14.heroStatLbl}>Adult</Text></View>
           <View style={s14.heroDivider} />
-          <View style={s14.heroStat}><Text style={[s14.heroStatVal, { color: data.status === "published" ? "#4ADE80" : "#FCD34D" }]}>{data.status || "draft"}</Text><Text style={s14.heroStatLbl}>Status</Text></View>
+          <View style={s14.heroStat}>
+            <Text style={[s14.heroStatVal, { color: data.status === "published" ? "#16A34A" : "#D97706" }]}>
+              {data.status || "draft"}
+            </Text>
+            <Text style={s14.heroStatLbl}>Status</Text>
+          </View>
         </View>
-      </LinearGradient>
+      </View>
 
       {reviewSections.map((sec, si) => (
         sec.items.length > 0 && (
@@ -1365,22 +1370,22 @@ export default function CreateTour() {
   return (
     <SafeAreaView style={s.safe} edges={["top"]}>
       {/* Header */}
-      <LinearGradient colors={[colors.secondary, "#4A0F0E"]} style={s.header}>
+      <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={s.headerTitle} numberOfLines={1}>{tour.title || "New Tour"}</Text>
           <Text style={s.headerSub}>Step {step} of {TOTAL_STEPS} — {STEP_TITLES[step - 1]}</Text>
         </View>
         <View style={s.headerRight}>
-          {autoSaving && <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ marginRight: 8 }} />}
+          {autoSaving && <ActivityIndicator size="small" color={colors.textSecondary} style={{ marginRight: 8 }} />}
           <TouchableOpacity onPress={onSaveDraft} style={s.draftTopBtn}>
             <Ionicons name="save-outline" size={14} color={colors.primary} />
             <Text style={s.draftTopBtnTxt}>Draft</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Progress Bar */}
       <View style={s.progressWrap}>
@@ -1438,65 +1443,65 @@ export default function CreateTour() {
 // ─── Shared Helper Styles (h) ─────────────────────────────────────────────────
 const h = StyleSheet.create({
   secHead:     { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 },
-  secIconBox:  { width: 36, height: 36, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  secIconBox:  { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   secTitle:    { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
   secSub:      { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   field:       { marginBottom: 16 },
-  label:       { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textPrimary, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
+  label:       { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 },
   fieldError:  { fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 },
-  input:       { borderWidth: 1.5, borderColor: colors.borderSubtle, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, backgroundColor: colors.surface, minHeight: 48 },
+  input:       { backgroundColor: "#F2F0ED", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, minHeight: 48 },
   inputMulti:  { minHeight: 90, paddingTop: 12 },
   row:         { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  chip:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff" },
   chipTxt:     { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
   toggleRow:   { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle },
-  toggleIcon:  { width: 32, height: 32, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  toggleIcon:  { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   toggleLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   toggleSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  addBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed", justifyContent: "center", marginVertical: 8 },
+  addBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12, borderRadius: 20, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed", justifyContent: "center", marginVertical: 8 },
   addBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary },
-  itemCard:    { flexDirection: "row", alignItems: "flex-start", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSubtle, ...shadow.soft },
+  itemCard:    { flexDirection: "row", alignItems: "flex-start", backgroundColor: "#fff", borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
   itemDelete:  { width: 32, height: 32, borderRadius: 16, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center", marginLeft: 8 },
-  formCard:    { backgroundColor: colors.surface, borderRadius: radius.xxl, padding: 16, marginVertical: 8, borderWidth: 1.5, borderColor: colors.primary + "40", ...shadow.card },
+  formCard:    { backgroundColor: "#fff", borderRadius: 24, padding: 16, marginVertical: 8, borderWidth: 1.5, borderColor: colors.primary + "40" },
   formCardTitle:{ fontFamily: fonts.heading, fontSize: 16, color: colors.secondary, marginBottom: 14 },
-  cancelBtn:   { flex: 1, height: 44, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
+  cancelBtn:   { flex: 1, height: 44, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
   cancelBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textSecondary },
-  saveBtn:     { flex: 2, height: 44, borderRadius: radius.pill, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  saveBtn:     { flex: 2, height: 44, borderRadius: 999, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   saveBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
   dayBadge:    { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   dayBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary, textAlign: "center" },
   dayTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   daySub:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   dayDesc:     { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  timeChip:    { fontFamily: fonts.body, fontSize: 11, color: colors.primary, backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
-  imagePicker: { borderRadius: radius.xl, overflow: "hidden", borderWidth: 1.5, borderColor: colors.borderSubtle, borderStyle: "dashed" },
-  imagePickerEmpty: { height: 160, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.surface },
+  timeChip:    { fontFamily: fonts.body, fontSize: 11, color: colors.primary, backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  imagePicker: { borderRadius: 20, overflow: "hidden", borderWidth: 1.5, borderColor: colors.borderSubtle, borderStyle: "dashed" },
+  imagePickerEmpty: { height: 160, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#F2F0ED" },
   imagePickerTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textDisabled },
   coverImg:    { width: "100%", height: 200 },
   changeImgBtn:{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
   changeImgTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
   statRow:     { flexDirection: "row", gap: 12, marginBottom: 16 },
-  statBox:     { flex: 1, backgroundColor: colors.primaryLight, borderRadius: radius.xl, padding: 14, alignItems: "center" },
+  statBox:     { flex: 1, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 14, alignItems: "center" },
   statVal:     { fontFamily: fonts.heading, fontSize: 24, color: colors.primary },
-  statLbl:     { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 1.5, marginTop: 2 },
-  busIcon:     { width: 44, height: 44, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
-  acBadge:     { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill },
+  statLbl:     { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
+  busIcon:     { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  acBadge:     { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   acBadgeTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: "#0284C7" },
-  amenityChip: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, backgroundColor: colors.borderSubtle, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
-  fleetRow:       { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.bg, borderRadius: radius.lg, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.borderSubtle },
+  amenityChip: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, backgroundColor: colors.borderSubtle, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  fleetRow:       { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#fff", borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
   fleetRowActive: { backgroundColor: "#F0FDF4", borderColor: "#16A34A" },
   fleetCheckBadge:{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   fleetAddBadge:  { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  driverCard:  { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.primaryLight, borderRadius: radius.xl, padding: 12 },
+  driverCard:  { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 12 },
   driverAvatar:{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center" },
-  driverChip:  { alignItems: "center", minWidth: 80, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface, marginRight: 8 },
+  driverChip:  { alignItems: "center", minWidth: 80, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff", marginRight: 8 },
   driverChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
   driverChipTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textPrimary },
   driverChipSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 2 },
-  emptyBox:    { alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 24, backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.borderSubtle },
+  emptyBox:    { alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 24, backgroundColor: "#fff", borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB" },
   emptyBoxTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: "center", paddingHorizontal: 24 },
   volAvatar:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  roleBadge:   { backgroundColor: colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  roleBadge:   { backgroundColor: colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   roleBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
   legendRow:   { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 12 },
   legendItem:  { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -1504,28 +1509,28 @@ const h = StyleSheet.create({
   legendTxt:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   seatNote:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textAlign: "center", marginBottom: 12 },
   seatGrid:    { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" },
-  seat:        { width: 38, height: 38, borderRadius: radius.md, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  seat:        { width: 38, height: 38, borderRadius: 12, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   seatNum:     { fontFamily: fonts.bodyBold, fontSize: 10 },
   pricingGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
-  priceBox:    { flex: 1, minWidth: "45%", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
+  priceBox:    { flex: 1, minWidth: "45%", backgroundColor: "#fff", borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   priceBoxLabel:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
-  priceInputRow:{ flexDirection: "row", alignItems: "center", gap: 4, borderTopWidth: 1, borderColor: colors.borderSubtle, paddingTop: 8, marginTop: 4 },
+  priceInputRow:{ flexDirection: "row", alignItems: "center", gap: 4, borderTopWidth: 1, borderColor: "#E5E7EB", paddingTop: 8, marginTop: 4 },
   currencySymbol:{ fontFamily: fonts.heading, fontSize: 18, color: colors.primary },
   priceInput:  { flex: 1, fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary },
-  subSectionLabel:{ fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12, marginTop: 4 },
+  subSectionLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 4 },
   facilityGrid:{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
-  facilityCard:{ width: "30%", alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface, gap: 8 },
+  facilityCard:{ width: "30%", alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff", gap: 8 },
   facilityCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  facilityIcon:{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
+  facilityIcon:{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#F2F0ED", alignItems: "center", justifyContent: "center" },
   facilityLabel:{ fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, textAlign: "center" },
-  listItem:    { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#F0FDF4", marginBottom: 8 },
+  listItem:    { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#F0FDF4", marginBottom: 8 },
   listItemTxt: { flex: 1, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary },
-  addInlineBtn:{ width: 44, height: 44, borderRadius: radius.lg, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginLeft: 8 },
-  docIcon:     { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  addInlineBtn:{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginLeft: 8 },
+  docIcon:     { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   uploadMediaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  uploadMediaBtn: { width: 44, height: 48, borderRadius: radius.lg, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: colors.primary + "60" },
+  uploadMediaBtn: { width: 44, height: 48, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: colors.primary + "60" },
   uploadHint:  { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 4 },
-  mediaPreview:{ flexDirection: "row", alignItems: "center", marginTop: 10, padding: 12, borderRadius: radius.xl, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary + "40" },
+  mediaPreview:{ flexDirection: "row", alignItems: "center", marginTop: 10, padding: 12, borderRadius: 20, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary + "40" },
   mediaPreviewTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
   mediaPreviewUrl: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 });
@@ -1533,12 +1538,12 @@ const h = StyleSheet.create({
 // ─── Main Wizard Styles (s) ───────────────────────────────────────────────────
 const s = StyleSheet.create({
   safe:        { flex: 1, backgroundColor: colors.bg },
-  header:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6 },
-  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontFamily: fonts.heading, fontSize: 17, color: "#fff" },
-  headerSub:   { fontFamily: fonts.body, fontSize: 11, color: "rgba(255,233,192,0.8)", marginTop: 1 },
+  header:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontFamily: fonts.heading, fontSize: 17, color: colors.textPrimary },
+  headerSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-  draftTopBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(255,255,255,0.12)", paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill },
+  draftTopBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" },
   draftTopBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
   progressWrap:{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
   progressBg:  { flex: 1, height: 6, backgroundColor: colors.borderSubtle, borderRadius: 3, overflow: "hidden" },
@@ -1546,7 +1551,7 @@ const s = StyleSheet.create({
   progressTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary, minWidth: 36 },
   pillsScroll: { maxHeight: 64 },
   pillsContent:{ paddingHorizontal: 12, paddingVertical: 8, flexDirection: "row", gap: 6 },
-  pill:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  pill:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#fff" },
   pillActive:  { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   pillDone:    { borderColor: "#16A34A", backgroundColor: "#F0FDF4" },
   pillDot:     { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
@@ -1556,35 +1561,35 @@ const s = StyleSheet.create({
   pillTxt:     { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   content:     { flex: 1 },
   contentPad:  { paddingHorizontal: 20, paddingTop: 20 },
-  footer:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.borderSubtle, ...shadow.card },
-  footerBack:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderSubtle },
+  footer:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#fff", borderTopWidth: 1, borderColor: "#E5E7EB" },
+  footerBack:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle },
   footerBackDisabled: { borderColor: colors.borderSubtle, opacity: 0.4 },
   footerBackTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
   footerCenter:{ flex: 1, alignItems: "center" },
   footerStepTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
-  footerNext:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 24, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.primary, ...shadow.soft },
+  footerNext:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.primary },
   footerNextTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
 });
 
 // ─── Step 14 Styles ───────────────────────────────────────────────────────────
 const s14 = StyleSheet.create({
-  hero:        { borderRadius: radius.xxl, padding: 24, marginBottom: 20 },
-  heroTitle:   { fontFamily: fonts.heading, fontSize: 22, color: "#fff", textAlign: "center" },
-  heroCode:    { fontFamily: fonts.accent, fontSize: 11, color: "#FFE9C0", textAlign: "center", letterSpacing: 2, marginTop: 4 },
-  heroStats:   { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 16, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: radius.xl, paddingVertical: 12 },
+  hero:        { backgroundColor: "#fff", borderRadius: 24, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
+  heroTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, textAlign: "center" },
+  heroCode:    { fontFamily: fonts.bodyBold, fontSize: 11, color: "#9CA3AF", textAlign: "center", letterSpacing: 2, marginTop: 4, textTransform: "uppercase" },
+  heroStats:   { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 16, backgroundColor: "#F2F0ED", borderRadius: 20, paddingVertical: 12 },
   heroStat:    { flex: 1, alignItems: "center" },
-  heroStatVal: { fontFamily: fonts.heading, fontSize: 18, color: "#fff" },
-  heroStatLbl: { fontFamily: fonts.accent, fontSize: 9, color: "#FFE9C0", letterSpacing: 1.5, marginTop: 2 },
-  heroDivider: { width: 1, height: 32, backgroundColor: "rgba(255,255,255,0.2)" },
-  section:     { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, marginBottom: 12, ...shadow.soft },
+  heroStatVal: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
+  heroStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
+  heroDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
+  section:     { backgroundColor: "#fff", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   sectionHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle, paddingBottom: 10 },
   sectionTitle:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
   row:         { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 6 },
   rowKey:      { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, flex: 1 },
   rowVal:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, flex: 1, textAlign: "right" },
   actions:     { flexDirection: "row", gap: 12, marginTop: 8 },
-  draftBtn:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.primary },
+  draftBtn:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, borderWidth: 2, borderColor: colors.primary },
   draftBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.primary },
-  publishBtn:  { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: radius.pill, backgroundColor: colors.primary, ...shadow.card },
+  publishBtn:  { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, backgroundColor: colors.primary },
   publishBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
 });

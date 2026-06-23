@@ -10,8 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { colors, fonts } from '../lib/theme';
 import { auth as authApi } from '../lib/api';
+
+const PRIMARY = '#D95D39';
 
 export default function EditProfile() {
   const router = useRouter();
@@ -44,10 +46,7 @@ export default function EditProfile() {
 
   const pickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      showToast('Please allow access to your photo library.');
-      return;
-    }
+    if (status !== 'granted') { showToast('Please allow access to your photo library.'); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -55,7 +54,6 @@ export default function EditProfile() {
       quality: 0.8,
     });
     if (result.canceled || !result.assets?.[0]) return;
-
     const localUri = result.assets[0].uri;
     setLoadingPhoto(true);
     try {
@@ -94,15 +92,9 @@ export default function EditProfile() {
   };
 
   const changePassword = async () => {
-    if (!pwForm.currentPassword || !pwForm.newPassword) {
-      showToast('Current and new password are required.'); return;
-    }
-    if (pwForm.newPassword !== pwForm.confirm) {
-      showToast('New password and confirm password do not match.'); return;
-    }
-    if (pwForm.newPassword.length < 6) {
-      showToast('Password must be at least 6 characters.'); return;
-    }
+    if (!pwForm.currentPassword || !pwForm.newPassword) { showToast('Current and new password are required.'); return; }
+    if (pwForm.newPassword !== pwForm.confirm) { showToast('New password and confirm password do not match.'); return; }
+    if (pwForm.newPassword.length < 6) { showToast('Password must be at least 6 characters.'); return; }
     setLoadingPw(true);
     try {
       await authApi.changePassword(pwForm.currentPassword, pwForm.newPassword);
@@ -117,58 +109,68 @@ export default function EditProfile() {
 
   if (fetching) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }} edges={['top']}>
-        <ActivityIndicator color={colors.primary} size="large" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff", alignItems: 'center', justifyContent: 'center' }} edges={['top']}>
+        <ActivityIndicator color={PRIMARY} size="large" />
       </SafeAreaView>
     );
   }
 
+  const initials = (profile.name || '?').charAt(0).toUpperCase();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={s.head}>
-          <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="edit-profile-back">
-            <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+
+        {/* Header */}
+        <View style={s.header}>
+          <TouchableOpacity onPress={() => router.back()} style={s.backBtn} testID="edit-profile-back">
+            <Ionicons name="arrow-back" size={20} color="#374151" />
           </TouchableOpacity>
-          <Text style={s.title}>Edit Profile</Text>
+          <Text style={s.headerTitle}>Edit profile</Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          {/* Photo section */}
-          <View style={s.photoSection}>
-            <TouchableOpacity style={s.photoWrap} onPress={pickPhoto} disabled={loadingPhoto} testID="pick-photo-btn">
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+
+          {/* Avatar */}
+          <View style={s.avatarSection}>
+            <TouchableOpacity style={s.avatarWrap} onPress={pickPhoto} disabled={loadingPhoto} testID="pick-photo-btn">
               {loadingPhoto ? (
-                <View style={s.photoPlaceholder}><ActivityIndicator color={colors.primary} /></View>
+                <View style={s.avatarCircle}><ActivityIndicator color={PRIMARY} /></View>
               ) : profile.photoUrl ? (
-                <Image source={{ uri: profile.photoUrl }} style={s.photoImg} />
+                <Image source={{ uri: profile.photoUrl }} style={s.avatarImg} />
               ) : (
-                <View style={s.photoPlaceholder}>
-                  <Text style={s.photoInitial}>{(profile.name || '?').charAt(0).toUpperCase()}</Text>
+                <View style={s.avatarCircle}>
+                  <Text style={s.avatarInitial}>{initials}</Text>
                 </View>
               )}
-              <View style={s.photoBadge}><Ionicons name="camera" size={16} color="#fff" /></View>
+              <View style={s.cameraBadge}>
+                <Ionicons name="camera" size={14} color="#fff" />
+              </View>
             </TouchableOpacity>
-            <Text style={s.photoHint}>Tap to change profile photo</Text>
+            <Text style={s.avatarHint}>Tap to change profile photo</Text>
           </View>
 
-          {/* Profile info */}
-          <Text style={s.sectionLabel}>· Personal Info ·</Text>
+          {/* Personal Info */}
+          <Text style={s.sectionLabel}>PERSONAL INFO</Text>
+
           {[
-            { k: 'name', label: 'Full Name *', icon: 'person-outline' },
-            { k: 'email', label: 'Email (optional)', icon: 'mail-outline', kb: 'email-address' },
-            { k: 'mobile', label: 'Mobile (optional)', icon: 'call-outline', kb: 'phone-pad' },
+            { k: 'name', label: 'Full name', req: true, icon: 'person-outline', kb: 'default' },
+            { k: 'email', label: 'Email', opt: true, icon: 'mail-outline', kb: 'email-address' },
+            { k: 'mobile', label: 'Mobile', opt: true, icon: 'call-outline', kb: 'phone-pad' },
           ].map((f) => (
-            <View key={f.k} style={s.field}>
-              <Text style={s.fieldLabel}>{f.label}</Text>
-              <View style={s.inputWrap}>
-                <Ionicons name={f.icon} size={18} color={colors.textSecondary} />
+            <View key={f.k} style={s.fieldWrap}>
+              <Text style={s.fieldLabel}>
+                {f.label}{f.req ? ' *' : ''}{f.opt ? ' (optional)' : ''}
+              </Text>
+              <View style={s.inputRow}>
+                <Ionicons name={f.icon} size={18} color="#9CA3AF" />
                 <TextInput
                   testID={`ep-${f.k}`}
                   style={s.input}
-                  placeholder={f.label.replace(' *', '')}
-                  placeholderTextColor={colors.textDisabled}
-                  keyboardType={f.kb || 'default'}
+                  placeholder={f.label}
+                  placeholderTextColor="#C0C0C0"
+                  keyboardType={f.kb}
                   value={profile[f.k]}
                   onChangeText={(v) => setP(f.k, v)}
                 />
@@ -176,46 +178,55 @@ export default function EditProfile() {
             </View>
           ))}
 
-          <TouchableOpacity style={s.cta} onPress={saveProfile} disabled={loadingProfile} testID="save-profile-btn">
+          <TouchableOpacity style={s.saveBtnOrange} onPress={saveProfile} disabled={loadingProfile} testID="save-profile-btn">
             {loadingProfile ? <ActivityIndicator color="#fff" /> : (
-              <><Ionicons name="checkmark" size={16} color="#fff" /><Text style={s.ctaText}>Save Profile</Text></>
+              <>
+                <Ionicons name="checkmark" size={18} color="#fff" />
+                <Text style={s.saveBtnTxt}>Save profile</Text>
+              </>
             )}
           </TouchableOpacity>
 
+          {/* Divider */}
           <View style={s.divider} />
 
-          {/* Change password */}
-          <Text style={s.sectionLabel}>· Change Password ·</Text>
+          {/* Change Password */}
+          <Text style={s.sectionLabel}>CHANGE PASSWORD</Text>
+
           {[
-            { k: 'currentPassword', label: 'Current Password', showK: 'current' },
-            { k: 'newPassword', label: 'New Password', showK: 'new' },
-            { k: 'confirm', label: 'Confirm New Password', showK: 'confirm' },
+            { k: 'currentPassword', label: 'Current password', showK: 'current' },
+            { k: 'newPassword', label: 'New password', showK: 'new' },
+            { k: 'confirm', label: 'Confirm new password', showK: 'confirm' },
           ].map((f) => (
-            <View key={f.k} style={s.field}>
+            <View key={f.k} style={s.fieldWrap}>
               <Text style={s.fieldLabel}>{f.label}</Text>
-              <View style={s.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={colors.textSecondary} />
+              <View style={s.inputRow}>
+                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
                 <TextInput
                   testID={`ep-${f.k}`}
                   style={s.input}
-                  placeholder={f.label}
-                  placeholderTextColor={colors.textDisabled}
+                  placeholder={f.label.charAt(0).toUpperCase() + f.label.slice(1)}
+                  placeholderTextColor="#C0C0C0"
                   secureTextEntry={!showPw[f.showK]}
                   value={pwForm[f.k]}
                   onChangeText={(v) => setPw(f.k, v)}
                 />
-                <TouchableOpacity onPress={() => setShowPw((p) => ({ ...p, [f.showK]: !p[f.showK] }))}>
-                  <Ionicons name={showPw[f.showK] ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textSecondary} />
+                <TouchableOpacity onPress={() => setShowPw((p) => ({ ...p, [f.showK]: !p[f.showK] }))} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name={showPw[f.showK] ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
                 </TouchableOpacity>
               </View>
             </View>
           ))}
 
-          <TouchableOpacity style={[s.cta, { backgroundColor: colors.secondary }]} onPress={changePassword} disabled={loadingPw} testID="change-pw-btn">
-            {loadingPw ? <ActivityIndicator color="#fff" /> : (
-              <><Ionicons name="lock-closed" size={16} color="#fff" /><Text style={s.ctaText}>Change Password</Text></>
+          <TouchableOpacity style={s.saveBtnOutlined} onPress={changePassword} disabled={loadingPw} testID="change-pw-btn">
+            {loadingPw ? <ActivityIndicator color="#374151" /> : (
+              <>
+                <Ionicons name="lock-closed" size={16} color="#374151" />
+                <Text style={s.saveBtnOutlinedTxt}>Change password</Text>
+              </>
             )}
           </TouchableOpacity>
+
         </ScrollView>
       </KeyboardAvoidingView>
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
@@ -224,25 +235,143 @@ export default function EditProfile() {
 }
 
 const s = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, ...shadow.soft },
-  title: { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4F4F4',
+  },
+  headerTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: '#111827',
+  },
 
-  photoSection: { alignItems: 'center', marginBottom: 28 },
-  photoWrap: { position: 'relative', marginBottom: 8 },
-  photoImg: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: colors.primary },
-  photoPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.primary },
-  photoInitial: { fontFamily: fonts.heading, fontSize: 42, color: colors.primary },
-  photoBadge: { position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  photoHint: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
+  avatarSection: {
+    alignItems: 'center',
+    paddingTop: 28,
+    marginBottom: 28,
+  },
+  avatarWrap: { position: 'relative', marginBottom: 10 },
+  avatarCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#D6E4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarImg: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  avatarInitial: {
+    fontFamily: fonts.heading,
+    fontSize: 36,
+    color: '#2563EB',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: PRIMARY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  avatarHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: '#9CA3AF',
+  },
 
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 14 },
-  field: { marginBottom: 14 },
-  fieldLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, height: 54, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.borderSubtle },
-  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, height: 54 },
+  sectionLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#9CA3AF',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
 
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, marginTop: 4, ...shadow.card },
-  ctaText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
-  divider: { height: 1, backgroundColor: colors.borderSubtle, marginVertical: 28 },
+  fieldWrap: { marginBottom: 14 },
+  fieldLabel: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: '#374151',
+    marginBottom: 6,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#F2F0ED',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+  input: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: '#111827',
+    height: 52,
+  },
+
+  saveBtnOrange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: PRIMARY,
+    borderRadius: 12,
+    height: 52,
+    marginTop: 8,
+  },
+  saveBtnTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: '#fff',
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 28,
+  },
+
+  saveBtnOutlined: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    height: 52,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  saveBtnOutlinedTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: '#111827',
+  },
 });

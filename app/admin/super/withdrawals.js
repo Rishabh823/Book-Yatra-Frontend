@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { settlementApi } from "../../../lib/api";
 import Toast from "../../../components/Toast";
 import { useToast } from "../../../lib/hooks/useToast";
@@ -293,20 +293,20 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, ...shadow.soft },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   tabs: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 10, gap: 6 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
   tabActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   tabTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
   tabTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  row: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, padding: 14, borderRadius: radius.xl, marginVertical: 3, ...shadow.soft },
+  row: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, padding: 14, borderRadius: 20, marginVertical: 3, borderWidth: 1, borderColor: "#E5E7EB" },
   rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   rowOp: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   rowBank: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   rowDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 },
   rowAmt: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   statusTxt: { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: "capitalize" },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
@@ -316,17 +316,17 @@ const s = StyleSheet.create({
   sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 16, maxHeight: "90%" },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.borderSubtle, alignSelf: "center", marginBottom: 4 },
   sheetTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary, textAlign: "center" },
-  sheetInfo: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 10 },
+  sheetInfo: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, gap: 10 },
   sheetRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
   sheetLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   sheetVal: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textPrimary, flex: 1, textAlign: "right" },
   fieldWrap: { gap: 6 },
   fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
-  fieldInput: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
+  fieldInput: { backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
   sheetBtns: { flexDirection: "row", gap: 10 },
-  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: radius.pill, padding: 13, backgroundColor: "#FEF2F2", borderWidth: 1.5, borderColor: "#DC2626" },
+  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 999, padding: 13, backgroundColor: "#FEF2F2", borderWidth: 1.5, borderColor: "#DC2626" },
   rejectBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#DC2626" },
-  approveBtn: { flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: radius.pill, padding: 13, backgroundColor: "#16A34A" },
+  approveBtn: { flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 999, padding: 13, backgroundColor: "#16A34A" },
   approveBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
   sheetDone: { alignItems: "center", paddingVertical: 20, gap: 8 },
   sheetDoneTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },

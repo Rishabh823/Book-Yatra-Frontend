@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const ROLES = ['user', 'guest', 'volunteer', 'manager', 'admin', 'super_admin'];
@@ -185,33 +185,33 @@ export default function SuperRoles() {
 }
 
 const s = StyleSheet.create({
-  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
+  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
+  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
   chipTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
-  card:       { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, ...shadow.soft },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   cardRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  roleIcon:   { width: 38, height: 38, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  roleIcon:   { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   name:       { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   sub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   rightCol:   { alignItems: 'flex-end', gap: 6 },
-  rolePill:   { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  rolePill:   { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   rolePillTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
-  changeBtn:  { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.primary, minWidth: 64, alignItems: 'center' },
+  changeBtn:  { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: colors.primary, minWidth: 64, alignItems: 'center' },
   changeBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   empty:      { textAlign: 'center', fontFamily: fonts.body, color: colors.textSecondary, marginTop: 40 },
 
   overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end', alignItems: 'center' },
-  sheet:      { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: radius.xxl, borderTopRightRadius: radius.xxl, padding: 20, maxHeight: '90%' },
+  sheet:      { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, maxHeight: '90%' },
   sheetHead:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   sheetTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
   sheetSub:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  roleRow:    { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.lg, borderWidth: 1, borderColor: 'transparent', marginBottom: 8 },
-  roleRowIcon:{ width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  roleRow:    { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: 'transparent', marginBottom: 8 },
+  roleRowIcon:{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   roleRowLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, textTransform: 'capitalize' },
   roleRowDesc:{ fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-  saveBtn:    { borderRadius: radius.pill, height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+  saveBtn:    { borderRadius: 999, height: 48, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   saveBtnTxt: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 15 },
-  cancelBtn:  { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.bg },
+  cancelBtn:  { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.bg },
   cancelText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
 });

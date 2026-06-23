@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const STATUSES = ['all', 'pending', 'confirmed', 'checked_in', 'cancelled'];
@@ -166,27 +166,27 @@ export default function SuperBookings() {
 }
 
 const s = StyleSheet.create({
-  statsRow:   { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 8, marginTop: 4, borderWidth: 1, borderColor: colors.borderSubtle },
+  statsRow:   { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, marginTop: 4, borderWidth: 1, borderColor: colors.borderSubtle },
   statItem:   { flex: 1, alignItems: 'center' },
   statValue:  { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
   statLabel:  { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
 
-  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
+  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
-  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
+  chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
   chipActive: { backgroundColor: colors.primary + '18', borderColor: colors.primary },
   chipTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:       { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, ...shadow.soft },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   cardRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  idBadge:    { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
+  idBadge:    { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
   idText:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
   name:       { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   sub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   rightCol:   { alignItems: 'flex-end', gap: 2 },
   amount:     { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  sBadge:     { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  sBadge:     { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   sBadgeTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
   payRow:     { flexDirection: 'row', alignItems: 'center', gap: 3 },
   payTxt:     { fontFamily: fonts.body, fontSize: 10 },

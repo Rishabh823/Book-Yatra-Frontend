@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const TARGETS = [
@@ -184,26 +184,26 @@ const s = StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
 
   sectionRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, marginBottom: 8 },
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
+  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, marginBottom: 10, ...shadow.soft },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
   fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 8 },
-  input: { backgroundColor: colors.bg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
+  input: { backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   textarea: { height: 96, paddingTop: 12, textAlignVertical: 'top' },
   charCount: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, textAlign: 'right', marginTop: 4 },
 
   targetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 4 },
-  targetCard: { flex: 1, minWidth: '45%', backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.borderSubtle, padding: 14, alignItems: 'center', gap: 8, ...shadow.soft },
+  targetCard: { flex: 1, minWidth: '45%', backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB", padding: 14, alignItems: 'center', gap: 8 },
   targetIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   targetLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textPrimary, textAlign: 'center' },
 
-  sendBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, height: 56, borderRadius: radius.pill, backgroundColor: colors.primary, ...shadow.card },
+  sendBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, height: 56, borderRadius: 999, backgroundColor: colors.primary, borderWidth: 1, borderColor: "#E5E7EB" },
   sendTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' },
 
-  emptyCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 32, alignItems: 'center', gap: 10, ...shadow.soft },
+  emptyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: "#E5E7EB" },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textDisabled },
 
-  historyCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, marginBottom: 10, ...shadow.soft },
+  historyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
   historyTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   historyTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, flex: 1 },
   historyBody: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, lineHeight: 18 },

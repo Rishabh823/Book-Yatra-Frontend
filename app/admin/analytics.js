@@ -3,9 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts } from '../../lib/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -121,13 +120,13 @@ export default function AnalyticsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={['#1E0A0A', '#5C1615']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Analytics</Text>
         <View style={{ width: 36 }} />
-      </LinearGradient>
+      </View>
 
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
@@ -145,7 +144,7 @@ export default function AnalyticsScreen() {
           {/* KPI Cards 2x2 */}
           <View style={styles.kpiGrid}>
             {KPIS.map(k => (
-              <View key={k.label} style={[styles.kpiCard, shadow.soft, { backgroundColor: k.bg }]}>
+              <View key={k.label} style={[styles.kpiCard, { backgroundColor: k.bg }]}>
                 <View style={[styles.kpiIconWrap, { backgroundColor: k.color + '22' }]}>
                   <Ionicons name={k.icon} size={18} color={k.color} />
                 </View>
@@ -157,7 +156,7 @@ export default function AnalyticsScreen() {
           </View>
 
           {/* Revenue chart */}
-          <View style={[styles.section, shadow.soft]}>
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Revenue Trend</Text>
               <View style={styles.periodTabs}>
@@ -185,7 +184,7 @@ export default function AnalyticsScreen() {
 
           {/* Top tours by occupancy */}
           {occupancy.length > 0 && (
-            <View style={[styles.section, shadow.soft]}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tour Occupancy</Text>
               {occupancy.map((t, i) => (
                 <View key={t._id || i} style={styles.occRow}>
@@ -217,7 +216,7 @@ export default function AnalyticsScreen() {
 
           {/* Top performing tours */}
           {topTours.length > 0 && (
-            <View style={[styles.section, shadow.soft]}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Top Tours by Revenue</Text>
               {topTours.map((t, i) => (
                 <View key={t._id || i} style={styles.tourRow}>
@@ -235,7 +234,7 @@ export default function AnalyticsScreen() {
           )}
 
           {/* Quick actions */}
-          <View style={[styles.section, shadow.soft]}>
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {[
@@ -270,18 +269,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: 'white' },
+  title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: colors.textPrimary },
   kpiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  kpiCard: { width: '47%', borderRadius: radius.xl, padding: 14, gap: 6 },
+  kpiCard: {
+    width: '47%',
+    borderRadius: 20,
+    padding: 14,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   kpiIconWrap: {
     width: 36,
     height: 36,
@@ -292,7 +301,14 @@ const styles = StyleSheet.create({
   kpiValue: { fontFamily: fonts.bodyBold, fontSize: 24 },
   kpiLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   kpiGrowth: { fontFamily: fonts.bodyMedium, fontSize: 11 },
-  section: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, gap: 12 },
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -303,7 +319,7 @@ const styles = StyleSheet.create({
   periodTab: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 999,
     backgroundColor: '#F3F4F6',
   },
   periodTabActive: { backgroundColor: colors.primary },
@@ -338,6 +354,6 @@ const styles = StyleSheet.create({
   tourRankTxt: { fontFamily: fonts.bodyBold, fontSize: 12 },
   tourRowTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
   tourRowMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.lg },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16 },
   actionBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });

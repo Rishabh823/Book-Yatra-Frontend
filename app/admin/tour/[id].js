@@ -5,10 +5,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { tours as toursApi } from "../../../lib/api";
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -153,9 +152,9 @@ export default function TourDetailAdmin() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
-      <LinearGradient colors={[colors.secondary, "#4A0F0E"]} style={c.header}>
+      <View style={c.header}>
         <TouchableOpacity style={c.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#fff" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={c.headerTitle} numberOfLines={1}>{tour.title || "Tour Details"}</Text>
@@ -165,7 +164,7 @@ export default function TourDetailAdmin() {
           <Ionicons name="create-outline" size={16} color={colors.primary} />
           <Text style={c.editBtnTxt}>Edit</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={c.content}>
 
@@ -527,25 +526,25 @@ export default function TourDetailAdmin() {
 }
 
 const c = StyleSheet.create({
-  header:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6 },
-  backBtn:      { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  headerTitle:  { fontFamily: fonts.heading, fontSize: 17, color: "#fff", marginLeft: 0 },
-  headerCode:   { fontFamily: fonts.accent, fontSize: 10, color: "rgba(255,233,192,0.8)", letterSpacing: 2, marginTop: 2 },
-  editBtn:      { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(255,255,255,0.12)", paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill },
+  header:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+  backBtn:      { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  headerTitle:  { fontFamily: fonts.heading, fontSize: 17, color: colors.textPrimary, marginLeft: 0 },
+  headerCode:   { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 2, marginTop: 2 },
+  editBtn:      { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" },
   editBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
   content:      { paddingBottom: 40 },
   cover:        { width: "100%", height: 220 },
   coverPlaceholder: { width: "100%", height: 160, backgroundColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
   statusBar:    { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
-  statusBadge:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill },
+  statusBadge:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   statusTxt:    { fontFamily: fonts.bodyBold, fontSize: 12 },
-  statsRow:     { flexDirection: "row", marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 12, ...shadow.soft },
+  statsRow:     { flexDirection: "row", marginHorizontal: 16, marginBottom: 8, backgroundColor: "#fff", borderRadius: 20, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   statBox:      { flex: 1, alignItems: "center", gap: 4 },
   statVal:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, textAlign: "center" },
-  statLbl:      { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1 },
-  card:         { marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: radius.xxl, padding: 16, ...shadow.soft },
+  statLbl:      { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
+  card:         { marginHorizontal: 16, marginBottom: 12, backgroundColor: "#fff", borderRadius: 24, padding: 16, borderWidth: 1, borderColor: "#E5E7EB" },
   cardHead:     { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, borderBottomWidth: 1, borderColor: colors.borderSubtle, paddingBottom: 10 },
-  cardIconBox:  { width: 30, height: 30, borderRadius: radius.md, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  cardIconBox:  { width: 30, height: 30, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   cardTitle:    { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.secondary, flex: 1 },
   descText:     { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, lineHeight: 21, marginBottom: 10 },
   infoRow:      { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 5, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
@@ -557,9 +556,9 @@ const c = StyleSheet.create({
   routeStop:    { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
   routeDot:     { width: 12, height: 12, borderRadius: 6 },
   routeLine:    { width: 2, height: 16, backgroundColor: colors.borderSubtle, marginLeft: 5 },
-  routeLabel:   { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1.5, textTransform: "uppercase" },
+  routeLabel:   { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
   routeCity:    { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
-  subLabel:     { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
+  subLabel:     { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
   pointRow:     { flexDirection: "row", alignItems: "flex-start", paddingVertical: 5, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
   pointName:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   pointMeta:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
@@ -569,24 +568,24 @@ const c = StyleSheet.create({
   dayTitle:     { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   dayMeta:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   dayDesc:      { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 3 },
-  fleetStats:   { flexDirection: "row", backgroundColor: colors.primaryLight, borderRadius: radius.xl, paddingVertical: 12, marginBottom: 12 },
+  fleetStats:   { flexDirection: "row", backgroundColor: colors.primaryLight, borderRadius: 20, paddingVertical: 12, marginBottom: 12 },
   fleetStat:    { flex: 1, alignItems: "center" },
   fleetStatVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.primary },
-  fleetStatLbl: { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1 },
+  fleetStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
   busCard:      { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
   busNum:       { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   busMeta:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
-  acBadge:      { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  acBadge:      { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   acBadgeTxt:   { fontFamily: fonts.bodyBold, fontSize: 10, color: "#0284C7" },
-  driverCard:   { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 10, padding: 12, backgroundColor: colors.primaryLight, borderRadius: radius.xl },
+  driverCard:   { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 10, padding: 12, backgroundColor: colors.primaryLight, borderRadius: 20 },
   driverIcon:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary + "25", alignItems: "center", justifyContent: "center" },
   driverName:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   driverMeta:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
-  driverBadge:  { backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  driverBadge:  { backgroundColor: colors.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   driverBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
   pricingGrid:  { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 8 },
-  priceBox:     { flex: 1, minWidth: "45%", backgroundColor: colors.primaryLight, borderRadius: radius.xl, padding: 12, alignItems: "center" },
-  priceBoxLbl:  { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 1 },
+  priceBox:     { flex: 1, minWidth: "45%", backgroundColor: colors.primaryLight, borderRadius: 20, padding: 12, alignItems: "center" },
+  priceBoxLbl:  { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
   priceBoxVal:  { fontFamily: fonts.heading, fontSize: 20, color: colors.primary, marginTop: 4 },
   featureRow:   { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 5 },
   featureTxt:   { fontFamily: fonts.bodyMedium, fontSize: 13 },
@@ -596,16 +595,16 @@ const c = StyleSheet.create({
   volMeta:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: "capitalize" },
   volTask:      { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, maxWidth: 100 },
   facilityGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  facilityItem: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: radius.pill },
+  facilityItem: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: 999 },
   facilityItemTxt:{ fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.primary },
-  listItem:     { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5, paddingHorizontal: 8, borderRadius: radius.md, backgroundColor: "#F0FDF4", marginBottom: 4 },
+  listItem:     { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5, paddingHorizontal: 8, borderRadius: 12, backgroundColor: "#F0FDF4", marginBottom: 4 },
   listItemTxt:  { fontFamily: fonts.body, fontSize: 12, color: colors.textPrimary, flex: 1 },
   docRow:       { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
   docName:      { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary, flex: 1 },
-  docBadge:     { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  docBadge:     { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   docBadgeTxt:  { fontFamily: fonts.bodyBold, fontSize: 10 },
   safetyGrid:   { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  safetyItem:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderSubtle },
+  safetyItem:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle },
   safetyItemActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   safetyItemTxt:{ fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   ecRow:        { paddingVertical: 6, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
@@ -613,8 +612,8 @@ const c = StyleSheet.create({
   ecMeta:       { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   policyText:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, lineHeight: 18 },
   actions:      { flexDirection: "row", gap: 12, marginHorizontal: 16, marginTop: 8, marginBottom: 10 },
-  actionBtn:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: radius.pill, borderWidth: 2 },
+  actionBtn:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 999, borderWidth: 2 },
   actionBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14 },
-  deleteBtn:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginHorizontal: 16, paddingVertical: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" },
+  deleteBtn:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginHorizontal: 16, paddingVertical: 14, borderRadius: 999, borderWidth: 1, borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" },
   deleteBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#DC2626" },
 });

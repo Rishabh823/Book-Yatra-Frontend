@@ -3,23 +3,22 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, ActivityIndicator, useWindowDimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts } from '../../lib/theme';
 import { api } from '../../lib/api';
 
 const MODULES = [
-  { icon: 'ticket',         label: 'Bookings',  route: '/admin/bookings',  color: colors.primary,  bg: '#FDECE7' },
-  { icon: 'bus',            label: 'Tours',     route: '/admin/tours',     color: '#7C3AED',       bg: '#F5F3FF' },
-  { icon: 'people',         label: 'Members',   route: '/admin/members',   color: '#16A34A',       bg: '#F0FDF4' },
-  { icon: 'person',         label: 'Users',     route: '/admin/users',     color: '#0284C7',       bg: '#EFF6FF' },
-  { icon: 'chatbubble',     label: 'Enquiries', route: '/admin/enquiries', color: '#D97706',       bg: '#FFFBEB' },
-  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',   color: '#EA580C',       bg: '#FFF7ED' },
-  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',    color: '#0891B2',       bg: '#ECFEFF' },
-  { icon: 'shield-checkmark', label: 'Moderate', route: '/admin/community', color: '#7C3AED',       bg: '#F5F3FF' },
-  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',   color: colors.secondary, bg: '#FEF2F2' },
+  { icon: 'ticket',         label: 'Bookings',  route: '/admin/bookings',  color: '#D95D39',  bg: '#FDECE7' },
+  { icon: 'bus',            label: 'Tours',     route: '/admin/tours',     color: '#7C3AED',  bg: '#F5F3FF' },
+  { icon: 'people',         label: 'Members',   route: '/admin/members',   color: '#16A34A',  bg: '#F0FDF4' },
+  { icon: 'person',         label: 'Users',     route: '/admin/users',     color: '#0284C7',  bg: '#EFF6FF' },
+  { icon: 'chatbubble',     label: 'Enquiries', route: '/admin/enquiries', color: '#D97706',  bg: '#FFFBEB' },
+  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',  color: '#EA580C',  bg: '#FFF7ED' },
+  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',   color: '#0891B2',  bg: '#ECFEFF' },
+  { icon: 'shield-checkmark', label: 'Moderate', route: '/admin/community', color: '#7C3AED', bg: '#F5F3FF' },
+  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',  color: '#374151',  bg: '#FEF2F2' },
 ];
 
 export default function AdminDashboard() {
@@ -76,27 +75,21 @@ export default function AdminDashboard() {
       >
         {/* Hero stats banner */}
         <View style={{ paddingHorizontal: px, paddingTop: 4 }}>
-          <LinearGradient
-            colors={[colors.secondary, '#3D0D0C']}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={[s.heroBanner, { borderRadius: radius.xxl }]}
-          >
-            <View style={s.heroDecor1} />
-            <View style={s.heroDecor2} />
+          <View style={s.heroBanner}>
             <Text style={s.heroLabel}>TOTAL BOOKINGS</Text>
             <Text style={s.heroValue}>{loading ? '—' : stats?.total ?? 0}</Text>
             <Text style={s.heroSub}>for your operator's tours</Text>
 
             {!loading && stats && (
               <View style={s.heroStrip}>
-                <HeroStat label="Confirmed" value={stats.confirmed} color="#86EFAC" />
+                <HeroStat label="Confirmed" value={stats.confirmed} color="#16A34A" />
                 <View style={s.heroDivider} />
-                <HeroStat label="Pending" value={stats.pending} color="#FDE68A" />
+                <HeroStat label="Pending" value={stats.pending} color="#D97706" />
                 <View style={s.heroDivider} />
-                <HeroStat label="Revenue" value={fmt(stats.revenue)} color="#A5F3FC" />
+                <HeroStat label="Revenue" value={fmt(stats.revenue)} color="#0284C7" />
               </View>
             )}
-          </LinearGradient>
+          </View>
         </View>
 
         {/* Module grid */}
@@ -203,7 +196,7 @@ function HeroStat({ label, value, color }) {
 
 function StatPill({ icon, label, value, color, bg }) {
   return (
-    <View style={[s.statPill, { backgroundColor: bg }]}>
+    <View style={[s.statPill, { backgroundColor: bg, borderWidth: 1, borderColor: '#E5E7EB' }]}>
       <View style={[s.statPillIcon, { backgroundColor: color + '20' }]}>
         <Ionicons name={icon} size={16} color={color} />
       </View>
@@ -215,47 +208,51 @@ function StatPill({ icon, label, value, color, bg }) {
 
 const s = StyleSheet.create({
   // Hero
-  heroBanner:  { padding: 22, overflow: 'hidden', position: 'relative' },
-  heroDecor1:  { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.05)', top: -60, right: -40 },
-  heroDecor2:  { position: 'absolute', width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -20, left: -20 },
-  heroLabel:   { fontFamily: fonts.accent, fontSize: 10, color: 'rgba(255,233,192,0.7)', letterSpacing: 2.5, marginBottom: 4 },
-  heroValue:   { fontFamily: fonts.heading, fontSize: 48, color: '#fff', letterSpacing: -1 },
-  heroSub:     { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2, marginBottom: 16 },
-  heroStrip:   { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: radius.lg, paddingVertical: 12, paddingHorizontal: 8 },
-  heroDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
+  heroBanner:  {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    padding: 20,
+  },
+  heroLabel:   { fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
+  heroValue:   { fontFamily: fonts.heading, fontSize: 48, color: '#111827', letterSpacing: -1 },
+  heroSub:     { fontFamily: fonts.body, fontSize: 12, color: '#6B7280', marginTop: 2, marginBottom: 0 },
+  heroStrip:   { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F2F2F2', paddingTop: 14, marginTop: 14 },
+  heroDivider: { width: 1, backgroundColor: '#E5E7EB' },
   heroStatValue:{ fontFamily: fonts.heading, fontSize: 18 },
-  heroStatLabel:{ fontFamily: fonts.body, fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
+  heroStatLabel:{ fontFamily: fonts.body, fontSize: 10, color: '#9CA3AF', marginTop: 1 },
 
   // Section
-  sectionLabel: { fontFamily: fonts.accent, fontSize: 10, color: colors.textSecondary, letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 12 },
+  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
   sectionHead:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   viewAll:      { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
 
   // Module grid
   moduleGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 4 },
-  moduleCard:  { alignItems: 'center', gap: 8, backgroundColor: colors.surface, padding: 14, borderRadius: radius.xl, ...shadow.soft },
-  moduleIcon:  { width: 48, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
+  moduleCard:  { alignItems: 'center', gap: 8, backgroundColor: '#fff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  moduleIcon:  { width: 48, height: 48, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   moduleLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textPrimary, textAlign: 'center' },
 
   // Stat pills
   statsRow:      { flexDirection: 'row', gap: 8 },
-  statPill:      { flex: 1, borderRadius: radius.lg, padding: 12, alignItems: 'center', gap: 4 },
+  statPill:      { flex: 1, borderRadius: 16, padding: 12, alignItems: 'center', gap: 4 },
   statPillIcon:  { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   statPillValue: { fontFamily: fonts.heading, fontSize: 22 },
   statPillLabel: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary },
 
   // Recent bookings
-  bookingRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, marginBottom: 8, ...shadow.soft },
-  bookingIdBadge:{ width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
-  bookingIdTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
+  bookingRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, marginBottom: 8 },
+  bookingIdBadge:{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#D95D39' + '14', alignItems: 'center', justifyContent: 'center' },
+  bookingIdTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: '#D95D39' },
   bookingName:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   bookingSub:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   bookingAmount: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
-  sBadge:        { paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  sBadge:        { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
   sBadgeTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   // List
-  listRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: radius.lg, gap: 14, marginBottom: 8, ...shadow.soft },
-  listRowIcon: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  listRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', gap: 14, marginBottom: 8 },
+  listRowIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   listRowLabel:{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
 });

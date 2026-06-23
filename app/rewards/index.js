@@ -13,9 +13,8 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -125,7 +124,7 @@ export default function RewardsScreen() {
   if (loading)
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color="#D95D39" />
       </View>
     );
 
@@ -144,18 +143,22 @@ export default function RewardsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={["#92400E", "#D97706"]} style={styles.header}>
+      {/* Flat white header */}
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color="#111827" />
         </TouchableOpacity>
         <Text style={styles.title}>Rewards & Points</Text>
         <TouchableOpacity
           onPress={() => router.push("/rewards/leaderboard")}
           style={styles.leaderBtn}
         >
-          <Ionicons name="trophy-outline" size={20} color="white" />
+          <Ionicons name="trophy-outline" size={20} color="#111827" />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
+
+      {/* Gray band */}
+      <View style={styles.grayBand} />
 
       <ScrollView
         refreshControl={
@@ -165,7 +168,7 @@ export default function RewardsScreen() {
               setRefreshing(true);
               load();
             }}
-            tintColor={colors.primary}
+            tintColor="#D95D39"
           />
         }
         contentContainerStyle={{
@@ -175,10 +178,7 @@ export default function RewardsScreen() {
         }}
       >
         {/* Tier card */}
-        <LinearGradient
-          colors={["#92400E", "#D97706"]}
-          style={[styles.tierCard, shadow.card]}
-        >
+        <View style={styles.tierCard}>
           <View style={styles.tierRow}>
             <Text style={styles.tierIcon}>{tierInfo.icon}</Text>
             <View style={{ flex: 1 }}>
@@ -203,31 +203,32 @@ export default function RewardsScreen() {
               style={[styles.progressFill, { width: progress * 100 + "%" }]}
             />
           </View>
-          <View style={styles.statsRow}>
+          <View style={styles.statsDividerRow}>
             <View style={styles.stat}>
               <Text style={styles.statVal}>
                 {(loyalty?.totalEarned || 0).toLocaleString()}
               </Text>
               <Text style={styles.statLbl}>Earned</Text>
             </View>
+            <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statVal}>
                 {(loyalty?.totalRedeemed || 0).toLocaleString()}
               </Text>
               <Text style={styles.statLbl}>Redeemed</Text>
             </View>
+            <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statVal}>{loyalty?.referralCount || 0}</Text>
               <Text style={styles.statLbl}>Referrals</Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Daily reward */}
         <TouchableOpacity
           style={[
             styles.dailyCard,
-            shadow.soft,
             !canClaimDaily && styles.dailyCardClaimed,
           ]}
           onPress={canClaimDaily ? claimDaily : undefined}
@@ -245,20 +246,18 @@ export default function RewardsScreen() {
             </Text>
           </View>
           {claimingDaily ? (
-            <ActivityIndicator color={colors.primary} />
+            <ActivityIndicator color="#D95D39" />
           ) : (
             canClaimDaily && (
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.primary}
-              />
+              <View style={styles.claimBtn}>
+                <Text style={styles.claimBtnText}>Claim</Text>
+              </View>
             )
           )}
         </TouchableOpacity>
 
         {/* Badges preview */}
-        <View style={[styles.section, shadow.soft]}>
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               My Badges ({loyalty?.badgeCount || 0})
@@ -279,7 +278,7 @@ export default function RewardsScreen() {
                 <Text
                   style={[
                     styles.badgeName,
-                    !b.earned && { color: colors.textSecondary },
+                    !b.earned && { color: "#9CA3AF" },
                   ]}
                   numberOfLines={1}
                 >
@@ -291,7 +290,7 @@ export default function RewardsScreen() {
         </View>
 
         {/* Redeem */}
-        <View style={[styles.section, shadow.soft]}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Redeem Points</Text>
           <Text style={styles.redeemInfo}>
             1 point = ₹0.50 discount • Min 100 points
@@ -303,7 +302,7 @@ export default function RewardsScreen() {
               onChangeText={setRedeemPoints}
               placeholder="Points to redeem"
               keyboardType="numeric"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#6B7280"
             />
             {redeemPoints ? (
               <Text style={styles.redeemValue}>
@@ -331,12 +330,9 @@ export default function RewardsScreen() {
         </View>
 
         {/* Referral */}
-        <TouchableOpacity
-          style={[styles.referralCard, shadow.soft]}
-          onPress={shareReferral}
-        >
+        <View style={styles.referralCard}>
           <View style={styles.referralIcon}>
-            <Ionicons name="gift-outline" size={24} color={colors.primary} />
+            <Ionicons name="gift-outline" size={24} color="#D95D39" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.referralTitle}>Refer & Earn</Text>
@@ -344,8 +340,11 @@ export default function RewardsScreen() {
               Earn 200 pts for each friend who joins
             </Text>
           </View>
-          <Ionicons name="share-outline" size={20} color={colors.primary} />
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.shareBtn} onPress={shareReferral}>
+            <Ionicons name="share-outline" size={16} color="white" />
+            <Text style={styles.shareBtnText}>Share</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
@@ -353,103 +352,138 @@ export default function RewardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  container: { flex: 1, backgroundColor: "#fff" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
+
+  // Header
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    paddingTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     flex: 1,
     fontFamily: "Philosopher_700Bold",
-    fontSize: 22,
-    color: "white",
+    fontSize: 18,
+    color: "#111827",
+    marginLeft: 10,
   },
   leaderBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F4F4F4",
     alignItems: "center",
     justifyContent: "center",
   },
-  tierCard: { borderRadius: radius.xl, padding: 20, gap: 12 },
+
+  // Gray band
+  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
+
+  // Tier card
+  tierCard: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   tierIcon: { fontSize: 36 },
-  tierName: { fontFamily: fonts.bodyBold, fontSize: 18, color: "white" },
+  tierName: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
   tierProgress: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: "#6B7280",
     marginTop: 2,
   },
   pointsDisplay: { alignItems: "flex-end" },
-  pointsValue: { fontFamily: fonts.bodyBold, fontSize: 28, color: "white" },
+  pointsValue: { fontFamily: fonts.heading, fontSize: 28, color: "#D95D39" },
   pointsLabel: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "rgba(255,255,255,0.8)",
+    color: "#9CA3AF",
   },
   progressBg: {
-    height: 8,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    height: 6,
+    backgroundColor: "#F2F2F2",
     borderRadius: 4,
     overflow: "hidden",
   },
-  progressFill: { height: "100%", backgroundColor: "white", borderRadius: 4 },
-  statsRow: { flexDirection: "row", justifyContent: "space-around" },
-  stat: { alignItems: "center" },
-  statVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: "white" },
+  progressFill: { height: "100%", backgroundColor: "#D95D39", borderRadius: 4 },
+  statsDividerRow: { flexDirection: "row", justifyContent: "space-around", alignItems: "center" },
+  stat: { alignItems: "center", flex: 1 },
+  statDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
+  statVal: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
   statLbl: {
     fontFamily: fonts.body,
-    fontSize: 11,
-    color: "rgba(255,255,255,0.75)",
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 2,
   },
+
+  // Daily reward
   dailyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: 16,
+    backgroundColor: "#FEF3F0",
+    borderWidth: 1,
+    borderColor: "#FECAB7",
+    borderRadius: 12,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    borderWidth: 1.5,
-    borderColor: "#FCD34D",
   },
-  dailyCardClaimed: { borderColor: "#E5E7EB", opacity: 0.7 },
+  dailyCardClaimed: {
+    backgroundColor: "#fff",
+    borderColor: "#E5E7EB",
+    opacity: 0.7,
+  },
   dailyIcon: {
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   dailyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   dailySub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
     marginTop: 2,
   },
+  claimBtn: {
+    backgroundColor: "#D95D39",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  claimBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
+
+  // Section cards
   section: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
     padding: 16,
     gap: 12,
   },
@@ -461,53 +495,64 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
   },
-  seeAll: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
+  seeAll: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#D95D39" },
+
+  // Badges
   badgesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   badgeItem: {
     width: "30%",
     alignItems: "center",
     gap: 4,
     padding: 8,
-    borderRadius: radius.lg,
-    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#fff",
   },
   badgeItemLocked: { opacity: 0.5 },
   badgeName: {
     fontFamily: fonts.bodyMedium,
     fontSize: 10,
-    color: colors.textPrimary,
+    color: "#111827",
     textAlign: "center",
   },
+
+  // Redeem
   redeemInfo: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
   redeemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   redeemInput: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
-    borderRadius: radius.lg,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
+    height: 52,
     paddingHorizontal: 14,
-    paddingVertical: 10,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   redeemValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#16A34A" },
   redeemBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    padding: 14,
+    backgroundColor: "#D95D39",
+    borderRadius: 12,
+    height: 52,
     alignItems: "center",
+    justifyContent: "center",
   },
   redeemBtnDisabled: { backgroundColor: "#E5E7EB" },
   redeemBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "white" },
+
+  // Referral
   referralCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -517,19 +562,29 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "#FEF3F0",
     alignItems: "center",
     justifyContent: "center",
   },
   referralTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
   },
   referralSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
     marginTop: 2,
   },
+  shareBtn: {
+    backgroundColor: "#D95D39",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  shareBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
 });

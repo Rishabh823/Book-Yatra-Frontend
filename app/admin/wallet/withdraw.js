@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../../lib/theme";
+import { colors, fonts, radius } from "../../../lib/theme";
 import { operatorWalletApi } from "../../../lib/api";
 import Toast from "../../../components/Toast";
 import { useToast } from "../../../lib/hooks/useToast";
@@ -303,7 +303,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, ...shadow.soft },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   scroll: { paddingHorizontal: 20, paddingBottom: 110, gap: 20 },
   balCard: { backgroundColor: colors.secondary, borderRadius: radius.xxl, padding: 24, alignItems: "center", gap: 6 },
@@ -314,13 +314,13 @@ const s = StyleSheet.create({
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   addLink: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
-  amtRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, gap: 8, ...shadow.soft },
+  amtRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 8, borderWidth: 1, borderColor: "#E5E7EB" },
   rupee: { fontFamily: fonts.bodyBold, fontSize: 20, color: colors.secondary },
   amtInput: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 22, color: colors.textPrimary },
-  maxBtn: { backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
+  maxBtn: { backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   maxBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   amtError: { fontFamily: fonts.body, fontSize: 12, color: colors.error },
-  bankCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "transparent", ...shadow.soft },
+  bankCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#E5E7EB" },
   bankCardSelected: { borderColor: colors.primary, backgroundColor: colors.primaryLight + "30" },
   bankCardLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   bankIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" },
@@ -330,25 +330,25 @@ const s = StyleSheet.create({
   bankRadio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
   bankRadioSelected: { borderColor: colors.primary },
   bankRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  noBankCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 28, alignItems: "center", gap: 10, ...shadow.soft },
+  noBankCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 28, alignItems: "center", gap: 10, borderWidth: 1, borderColor: "#E5E7EB" },
   noBankTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
-  addBankBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: radius.pill },
+  addBankBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 },
   addBankBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
-  addBankForm: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16, gap: 14, ...shadow.soft },
+  addBankForm: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 14, borderWidth: 1, borderColor: "#E5E7EB" },
   fieldWrap: { gap: 6 },
   fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
-  fieldInput: { backgroundColor: colors.bg, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
+  fieldInput: { backgroundColor: colors.bg, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
   typeRow: { flexDirection: "row", gap: 10 },
-  typeBtn: { flex: 1, padding: 10, borderRadius: radius.lg, backgroundColor: colors.bg, borderWidth: 1.5, borderColor: colors.borderSubtle, alignItems: "center" },
+  typeBtn: { flex: 1, padding: 10, borderRadius: 16, backgroundColor: colors.bg, borderWidth: 1.5, borderColor: colors.borderSubtle, alignItems: "center" },
   typeBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   typeBtnTxt: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   typeBtnTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  addBankSubmit: { backgroundColor: colors.secondary, borderRadius: radius.pill, padding: 14, alignItems: "center", marginTop: 4 },
+  addBankSubmit: { backgroundColor: colors.secondary, borderRadius: 999, padding: 14, alignItems: "center", marginTop: 4 },
   addBankSubmitTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
-  noticeCard: { backgroundColor: "#EFF6FF", borderRadius: radius.xl, padding: 14, flexDirection: "row", gap: 8, alignItems: "flex-start" },
+  noticeCard: { backgroundColor: "#EFF6FF", borderRadius: 20, padding: 14, flexDirection: "row", gap: 8, alignItems: "flex-start" },
   noticeTxt: { flex: 1, fontFamily: fonts.body, fontSize: 12, color: "#1D4ED8", lineHeight: 18 },
   footer: { position: "absolute", bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.borderSubtle },
-  withdrawBtn: { height: 54, borderRadius: radius.pill, backgroundColor: colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  withdrawBtn: { height: 54, borderRadius: 999, backgroundColor: colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   withdrawBtnDisabled: { opacity: 0.5 },
   withdrawBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
 });

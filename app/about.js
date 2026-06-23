@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Linking, useWindowDimensions, Animated,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { fonts } from '../lib/theme';
 
 const STATS = [
   { value: '5000+', label: 'Devotees Served' },
@@ -100,11 +98,11 @@ export default function About() {
   const colW = (width - 48 - 12) / 2;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+          <Ionicons name="arrow-back" size={20} color="#374151" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>About Us</Text>
         <View style={{ width: 40 }} />
@@ -113,47 +111,44 @@ export default function About() {
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
-        <LinearGradient colors={['#1E0A0A', '#5C1615', '#8B2C2A']} style={s.hero}>
-          <View style={s.omCircle}>
-            <Text style={s.omText}>ॐ</Text>
-          </View>
-          <Text style={s.heroTitle}>TripKart</Text>
-          <Text style={s.heroSubtitle}>Shyam Sawariya Parivar</Text>
-          <Text style={s.heroBadge}>· PANDAV NAGAR, NEW DELHI ·</Text>
-          <View style={s.heroTagRow}>
-            {['Pilgrimage', 'Community', 'Seva', 'Devotion'].map((tag, i) => (
-              <View key={i} style={s.heroTag}>
-                <Text style={s.heroTagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        </LinearGradient>
+        <View style={s.hero}>
+          <Text style={s.omText}>ॐ</Text>
+          <Text style={s.heroTitle}>Shyam Sawariya Parivar</Text>
+          <Text style={s.heroTagline}>Pilgrimage · Community · Seva · Devotion</Text>
+          <View style={s.heroUnderline} />
+        </View>
+
+        {/* Gray band after hero */}
+        <View style={s.grayBand} />
 
         {/* Stats strip */}
-        <View style={s.statsStrip}>
-          {STATS.map((stat, i) => (
-            <View key={i} style={[s.statItem, i < STATS.length - 1 && s.statBorder]}>
-              <Text style={s.statValue}>{stat.value}</Text>
-              <Text style={s.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
+        <View style={s.section}>
+          <View style={s.statsStrip}>
+            {STATS.map((stat, i) => (
+              <React.Fragment key={i}>
+                <View style={s.statItem}>
+                  <Text style={s.statValue}>{stat.value}</Text>
+                  <Text style={s.statLabel}>{stat.label}</Text>
+                </View>
+                {i < STATS.length - 1 && <View style={s.statDivider} />}
+              </React.Fragment>
+            ))}
+          </View>
         </View>
 
         {/* Mission */}
         <View style={s.section}>
           <View style={s.sectionHead}>
             <View style={s.sectionLine} />
-            <Text style={s.sectionLabel}>Our Mission</Text>
+            <Text style={s.sectionLabel}>OUR MISSION</Text>
             <View style={s.sectionLine} />
           </View>
           <View style={s.missionCard}>
-            <LinearGradient colors={['#FFF4EE', '#FDECE7']} style={s.missionGrad}>
-              <Ionicons name="flame" size={28} color={colors.primary} style={{ marginBottom: 12 }} />
-              <Text style={s.missionText}>
-                To make sacred pilgrimages accessible to every devotee — providing safe, comfortable, and spiritually enriching yatras across India's holy sites, while building a vibrant community of like-minded bhakts united by faith in Khatu Shyam Ji.
-              </Text>
-              <Text style={s.missionMantra}>जय श्री श्याम 🙏</Text>
-            </LinearGradient>
+            <Ionicons name="flame" size={28} color="#D95D39" style={{ marginBottom: 12 }} />
+            <Text style={s.missionText}>
+              To make sacred pilgrimages accessible to every devotee — providing safe, comfortable, and spiritually enriching yatras across India's holy sites, while building a vibrant community of like-minded bhakts united by faith in Khatu Shyam Ji.
+            </Text>
+            <Text style={s.missionMantra}>जय श्री श्याम 🙏</Text>
           </View>
         </View>
 
@@ -161,12 +156,12 @@ export default function About() {
         <View style={s.section}>
           <View style={s.sectionHead}>
             <View style={s.sectionLine} />
-            <Text style={s.sectionLabel}>What We Do</Text>
+            <Text style={s.sectionLabel}>WHAT WE DO</Text>
             <View style={s.sectionLine} />
           </View>
           <View style={s.featureGrid}>
             {FEATURES.map((f, i) => (
-              <View key={i} style={[s.featureCard, { width: colW }, shadow.soft]}>
+              <View key={i} style={[s.featureCard, { width: colW }]}>
                 <View style={[s.featureIcon, { backgroundColor: f.bg }]}>
                   <Ionicons name={f.icon} size={22} color={f.color} />
                 </View>
@@ -181,10 +176,10 @@ export default function About() {
         <View style={s.section}>
           <View style={s.sectionHead}>
             <View style={s.sectionLine} />
-            <Text style={s.sectionLabel}>The App</Text>
+            <Text style={s.sectionLabel}>THE APP</Text>
             <View style={s.sectionLine} />
           </View>
-          <LinearGradient colors={['#0F0A0A', '#1E1410']} style={s.appCard}>
+          <View style={s.appCard}>
             <Text style={s.appCardTitle}>TripKart App</Text>
             <Text style={s.appCardSub}>A complete digital ecosystem for the Shyam Sawariya Parivar community</Text>
             <View style={s.appFeatures}>
@@ -196,24 +191,24 @@ export default function About() {
               ].map((item, i) => (
                 <View key={i} style={s.appFeatureRow}>
                   <View style={s.appFeatureDot}>
-                    <Ionicons name={item.icon} size={14} color={colors.primary} />
+                    <Ionicons name={item.icon} size={14} color="#D95D39" />
                   </View>
                   <Text style={s.appFeatureText}>{item.text}</Text>
                 </View>
               ))}
             </View>
-          </LinearGradient>
+          </View>
         </View>
 
         {/* Team */}
         <View style={s.section}>
           <View style={s.sectionHead}>
             <View style={s.sectionLine} />
-            <Text style={s.sectionLabel}>Our Team</Text>
+            <Text style={s.sectionLabel}>OUR TEAM</Text>
             <View style={s.sectionLine} />
           </View>
           {TEAM.map((member, i) => (
-            <View key={i} style={[s.teamCard, shadow.soft]}>
+            <View key={i} style={s.teamCard}>
               <View style={[s.teamAvatar, { backgroundColor: member.color }]}>
                 <Text style={s.teamInitial}>{member.initial}</Text>
               </View>
@@ -230,24 +225,24 @@ export default function About() {
         <View style={s.section}>
           <View style={s.sectionHead}>
             <View style={s.sectionLine} />
-            <Text style={s.sectionLabel}>Contact Us</Text>
+            <Text style={s.sectionLabel}>CONTACT US</Text>
             <View style={s.sectionLine} />
           </View>
           {CONTACT.map((c, i) => (
             <TouchableOpacity
               key={i}
-              style={[s.contactCard, shadow.soft]}
+              style={s.contactCard}
               onPress={c.onPress}
               activeOpacity={c.onPress ? 0.7 : 1}
             >
-              <View style={[s.contactIcon, { backgroundColor: c.onPress ? colors.primaryLight : '#F3F4F6' }]}>
-                <Ionicons name={c.icon} size={18} color={c.onPress ? colors.primary : colors.textSecondary} />
+              <View style={[s.contactIcon, { backgroundColor: c.onPress ? '#FEE8E2' : '#F3F4F6' }]}>
+                <Ionicons name={c.icon} size={18} color={c.onPress ? '#D95D39' : '#6B7280'} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.contactLabel}>{c.label}</Text>
-                <Text style={[s.contactValue, c.onPress && { color: colors.primary }]}>{c.value}</Text>
+                <Text style={[s.contactValue, c.onPress && { color: '#D95D39' }]}>{c.value}</Text>
               </View>
-              {c.onPress && <Ionicons name="open-outline" size={16} color={colors.primary} />}
+              {c.onPress && <Ionicons name="open-outline" size={16} color="#D95D39" />}
             </TouchableOpacity>
           ))}
         </View>
@@ -265,80 +260,153 @@ export default function About() {
 
 const s = StyleSheet.create({
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
-    ...shadow.soft,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F4F4F4',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: '#111827',
+  },
 
+  // Hero
   hero: {
-    marginHorizontal: 16, borderRadius: radius.xxl,
-    padding: 32, alignItems: 'center', overflow: 'hidden', marginBottom: 0,
+    alignItems: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 24,
+    backgroundColor: '#fff',
   },
-  omCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: 'rgba(255,233,192,0.15)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-  },
-  omText:         { fontSize: 36, color: '#FFE9C0', fontFamily: fonts.heading },
-  heroTitle:      { fontFamily: fonts.heading, fontSize: 28, color: 'white', letterSpacing: 0.5 },
-  heroSubtitle:   { fontFamily: fonts.body, fontSize: 14, color: 'rgba(255,233,192,0.8)', marginTop: 4 },
-  heroBadge:      { fontFamily: fonts.accent, fontSize: 9, letterSpacing: 3, color: 'rgba(255,233,192,0.5)', marginTop: 10 },
-  heroTagRow:     { flexDirection: 'row', gap: 8, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  heroTag:        { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5 },
-  heroTagText:    { fontFamily: fonts.bodyMedium, fontSize: 12, color: 'rgba(255,255,255,0.85)' },
+  omText: { fontSize: 44, color: '#D95D39', fontFamily: fonts.heading, marginBottom: 12 },
+  heroTitle: { fontFamily: fonts.heading, fontSize: 28, color: '#111827', textAlign: 'center', marginBottom: 8 },
+  heroTagline: { fontFamily: fonts.body, fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 12 },
+  heroUnderline: { height: 3, width: 40, backgroundColor: '#D95D39', borderRadius: 2 },
 
+  grayBand: { height: 10, backgroundColor: '#F2F2F2' },
+
+  // Stats
+  section: { paddingHorizontal: 16, paddingTop: 28 },
   statsStrip: {
-    flexDirection: 'row', backgroundColor: colors.surface, marginHorizontal: 16,
-    borderRadius: radius.xl, padding: 16, marginTop: 12, marginBottom: 8,
-    ...shadow.card,
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
   },
-  statItem:  { flex: 1, alignItems: 'center' },
-  statBorder:{ borderRightWidth: 1, borderRightColor: colors.borderSubtle },
-  statValue: { fontFamily: fonts.heading, fontSize: 18, color: colors.primary },
-  statLabel: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 2, textAlign: 'center' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 32, backgroundColor: '#E5E7EB' },
+  statValue: { fontFamily: fonts.bodyBold, fontSize: 22, color: '#D95D39' },
+  statLabel: { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF', marginTop: 2, textAlign: 'center' },
 
-  section:     { paddingHorizontal: 16, paddingTop: 28 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  sectionLine: { flex: 1, height: 1, backgroundColor: colors.borderSubtle },
-  sectionLabel:{ fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 2 },
+  sectionLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  sectionLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#9CA3AF',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
 
-  missionCard: { borderRadius: radius.xl, overflow: 'hidden', ...shadow.soft },
-  missionGrad: { padding: 24, alignItems: 'center' },
-  missionText: { fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, lineHeight: 24, textAlign: 'center' },
-  missionMantra: { fontFamily: fonts.heading, fontSize: 18, color: colors.primary, marginTop: 16 },
+  // Mission
+  missionCard: {
+    backgroundColor: '#FEF3F0',
+    borderRadius: 12,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#FECAB7',
+    alignItems: 'center',
+  },
+  missionText: { fontFamily: fonts.body, fontSize: 14, color: '#111827', lineHeight: 24, textAlign: 'center' },
+  missionMantra: { fontFamily: fonts.heading, fontSize: 18, color: '#D95D39', marginTop: 16 },
 
+  // Features
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  featureCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 16 },
+  featureCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 16,
+  },
   featureIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  featureTitle:{ fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 4 },
-  featureDesc: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, lineHeight: 16 },
+  featureTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#111827', marginBottom: 4 },
+  featureDesc: { fontFamily: fonts.body, fontSize: 12, color: '#6B7280', lineHeight: 16 },
 
-  appCard:     { borderRadius: radius.xl, padding: 24 },
-  appCardTitle:{ fontFamily: fonts.heading, fontSize: 22, color: 'white', marginBottom: 8 },
-  appCardSub:  { fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 20 },
+  // App card
+  appCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 24,
+  },
+  appCardTitle: { fontFamily: fonts.heading, fontSize: 22, color: '#111827', marginBottom: 8 },
+  appCardSub: { fontFamily: fonts.body, fontSize: 13, color: '#6B7280', marginBottom: 20, lineHeight: 20 },
   appFeatures: { gap: 12 },
-  appFeatureRow:{ flexDirection: 'row', alignItems: 'center', gap: 12 },
-  appFeatureDot:{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(217,93,57,0.15)', alignItems: 'center', justifyContent: 'center' },
-  appFeatureText:{ fontFamily: fonts.bodyMedium, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  appFeatureRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  appFeatureDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FEE8E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appFeatureText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#374151' },
 
-  teamCard:   { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, marginBottom: 10 },
+  // Team
+  teamCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
   teamAvatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  teamInitial:{ fontFamily: fonts.bodyBold, fontSize: 15, color: 'white' },
-  teamName:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  teamRole:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  teamInitial: { fontFamily: fonts.bodyBold, fontSize: 15, color: 'white' },
+  teamName: { fontFamily: fonts.bodyBold, fontSize: 14, color: '#111827' },
+  teamRole: { fontFamily: fonts.body, fontSize: 12, color: '#6B7280', marginTop: 2 },
 
-  contactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, marginBottom: 10 },
-  contactIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  contactLabel:{ fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled },
-  contactValue:{ fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary, marginTop: 1 },
+  // Contact
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
+  contactIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  contactLabel: { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF' },
+  contactValue: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#111827', marginTop: 1 },
 
-  footer:      { alignItems: 'center', paddingTop: 32, paddingBottom: 8, gap: 6 },
-  footerMantra:{ fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
-  footerCopy:  { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
-  footerDev:   { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled },
+  // Footer
+  footer: { alignItems: 'center', paddingTop: 32, paddingBottom: 8, gap: 6 },
+  footerMantra: { fontFamily: fonts.heading, fontSize: 20, color: '#374151' },
+  footerCopy: { fontFamily: fonts.body, fontSize: 12, color: '#6B7280' },
+  footerDev: { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF' },
 });

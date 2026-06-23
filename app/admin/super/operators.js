@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../../lib/theme';
+import { colors, fonts, radius } from '../../../lib/theme';
 import { superAdmin as superApi } from '../../../lib/api';
 
 export default function SuperOperators() {
@@ -126,10 +126,10 @@ export default function SuperOperators() {
 }
 
 const s = StyleSheet.create({
-  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 4, marginTop: 4 },
+  searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 4, marginTop: 4 },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
 
-  card:       { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, ...shadow.soft },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   cardTop:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar:     { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
   avatarTxt:  { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.secondary },

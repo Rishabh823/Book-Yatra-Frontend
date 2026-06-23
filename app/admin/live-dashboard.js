@@ -3,9 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts } from '../../lib/theme';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -60,24 +59,24 @@ export default function LiveDashboard() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient colors={['#1E0A0A', '#5C1615']} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Live Dashboard</Text>
           <Text style={styles.subtitle}>Auto-refreshes every 30s</Text>
         </View>
         <TouchableOpacity style={styles.refreshBtn} onPress={load}>
-          <Ionicons name="refresh" size={18} color="white" />
+          <Ionicons name="refresh" size={18} color={colors.textPrimary} />
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
       {loading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.primary} />} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 20 }}>
           <View style={styles.statsRow}>
             {STATS.map(s => (
-              <View key={s.label} style={[styles.statCard, shadow.soft, { backgroundColor: s.bg }]}>
+              <View key={s.label} style={[styles.statCard, { backgroundColor: s.bg }]}>
                 <Ionicons name={s.icon} size={24} color={s.color} />
                 <Text style={[styles.statVal, { color: s.color }]}>{s.value}</Text>
                 <Text style={[styles.statLabel, { color: s.color }]}>{s.label}</Text>
@@ -90,7 +89,7 @@ export default function LiveDashboard() {
             <View>
               <Text style={styles.sectionTitle}>🚨 Active SOS Alerts ({activeSOS.length})</Text>
               {activeSOS.map(sos => (
-                <View key={sos._id} style={[styles.sosCard, shadow.card]}>
+                <View key={sos._id} style={styles.sosCard}>
                   <View style={styles.sosCardHeader}>
                     <View style={styles.sosIcon}><Ionicons name="alert-circle" size={20} color="white" /></View>
                     <View style={{ flex: 1 }}>
@@ -121,12 +120,12 @@ export default function LiveDashboard() {
           <View>
             <Text style={styles.sectionTitle}>🚌 Active Tours ({trackings.length})</Text>
             {trackings.length === 0 ? (
-              <View style={[styles.emptyCard, shadow.soft]}>
+              <View style={styles.emptyCard}>
                 <Ionicons name="bus-outline" size={32} color={colors.textDisabled} />
                 <Text style={styles.emptyText}>No active tours right now</Text>
               </View>
             ) : trackings.map(t => (
-              <View key={t._id} style={[styles.trackCard, shadow.soft]}>
+              <View key={t._id} style={styles.trackCard}>
                 <View style={styles.trackHeader}>
                   <View style={styles.trackIcon}><Ionicons name="bus" size={18} color="white" /></View>
                   <View style={{ flex: 1 }}>
@@ -154,30 +153,80 @@ export default function LiveDashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: 'white' },
-  subtitle: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.7)' },
-  refreshBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    paddingTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: colors.textPrimary },
+  subtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
+  refreshBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: { flex: 1, borderRadius: radius.xl, padding: 16, alignItems: 'center', gap: 6 },
+  statCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   statVal: { fontFamily: fonts.bodyBold, fontSize: 28 },
   statLabel: { fontFamily: fonts.body, fontSize: 12, textAlign: 'center' },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary, marginBottom: 10 },
-  sosCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 10, marginBottom: 8, borderLeftWidth: 4, borderLeftColor: '#DC2626' },
+  sosCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 14,
+    gap: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC2626',
+  },
   sosCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sosIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
   sosUser: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   sosMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, textTransform: 'capitalize' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   statusText: { fontFamily: fonts.bodyBold, fontSize: 11 },
   sosMsg: { fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary },
   sosActions: { flexDirection: 'row', gap: 8 },
-  viewBtn: { flex: 1, paddingVertical: 8, borderRadius: radius.lg, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  viewBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center' },
   viewBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
-  ackBtn: { flex: 1, paddingVertical: 8, borderRadius: radius.lg, backgroundColor: '#FFFBEB', alignItems: 'center' },
+  ackBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#FFFBEB', alignItems: 'center' },
   ackBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#D97706' },
-  trackCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 8, marginBottom: 8 },
+  trackCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 14,
+    gap: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   trackHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trackIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center' },
   trackTour: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
@@ -185,6 +234,14 @@ const styles = StyleSheet.create({
   trackLocation: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   viewMapBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   viewMapText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
-  emptyCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 32, alignItems: 'center', gap: 8 },
+  emptyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
 });

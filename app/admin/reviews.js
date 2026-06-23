@@ -5,10 +5,9 @@ import {
   Animated, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts } from '../../lib/theme';
 import { reviews as reviewsApi, auth as authApi } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 
@@ -30,7 +29,7 @@ function StarRow({ rating, size = 13 }) {
           key={n}
           name="star"
           size={size}
-          color={n <= (rating || 0) ? '#F59E0B' : colors.borderSubtle}
+          color={n <= (rating || 0) ? '#F59E0B' : '#E5E7EB'}
         />
       ))}
     </View>
@@ -298,11 +297,11 @@ export default function AdminReviews() {
     );
   }
 
-  // ── Header gradient ────────────────────────────────────────────────────────
+  // ── Header flat ────────────────────────────────────────────────────────────
   const headerEl = (
-    <LinearGradient colors={['#1E0A0A', '#5C1615']} style={s.header}>
+    <View style={s.header}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={8}>
-        <Ionicons name="arrow-back" size={20} color="#FFE9C0" />
+        <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <Text style={s.headerTitle}>Reviews</Text>
@@ -314,7 +313,7 @@ export default function AdminReviews() {
         <Ionicons name="star-half" size={13} color="#F59E0B" />
         <Text style={s.headerBadgeTxt}>Moderation</Text>
       </View>
-    </LinearGradient>
+    </View>
   );
 
   // ── Stats banner ───────────────────────────────────────────────────────────
@@ -427,34 +426,34 @@ const s = StyleSheet.create({
   lockIcon:    { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
   lockTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary, marginTop: 14, marginBottom: 8 },
   lockSub:     { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  lockBack:    { marginTop: 24, backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 12, borderRadius: radius.pill },
+  lockBack:    { marginTop: 24, backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 999 },
   lockBackTxt: { color: '#fff', fontFamily: fonts.bodyBold },
 
   // Header
-  header:        { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16 },
-  backBtn:       { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,233,192,0.2)' },
-  headerTitle:   { fontFamily: fonts.heading, fontSize: 22, color: '#fff', letterSpacing: -0.3 },
-  headerSubtitle:{ fontFamily: fonts.body, fontSize: 12, color: '#FFE9C0', marginTop: 2 },
-  headerBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)' },
+  header:        { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  backBtn:       { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
+  headerTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, letterSpacing: -0.3 },
+  headerSubtitle:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  headerBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFBEB', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: '#F59E0B30' },
   headerBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: '#F59E0B', letterSpacing: 0.5 },
 
   // Stats banner
-  statsBanner: { flexDirection: 'row', marginHorizontal: 16, marginVertical: 12, backgroundColor: colors.surface, borderRadius: radius.xl, paddingVertical: 14, ...shadow.soft },
+  statsBanner: { flexDirection: 'row', marginHorizontal: 16, marginVertical: 12, backgroundColor: '#fff', borderRadius: 20, paddingVertical: 14, borderWidth: 1, borderColor: '#E5E7EB' },
   statItem:    { flex: 1, alignItems: 'center' },
   statValue:   { fontFamily: fonts.heading, fontSize: 22, letterSpacing: -0.5 },
   statLabel:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 
   // Filter pills
-  filterPill:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
+  filterPill:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB' },
   filterTxt:       { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary },
-  filterCount:     { paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  filterCount:     { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
   filterCountTxt:  { fontFamily: fonts.bodyBold, fontSize: 11 },
 
   // Review card
-  card:           { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, ...shadow.soft },
+  card:           { backgroundColor: '#fff', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
 
   cardTourRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  tourIconWrap:   { width: 32, height: 32, borderRadius: radius.md, backgroundColor: colors.secondary + '15', alignItems: 'center', justifyContent: 'center' },
+  tourIconWrap:   { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.secondary + '15', alignItems: 'center', justifyContent: 'center' },
   tourName:       { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   operatorTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
 
@@ -463,32 +462,32 @@ const s = StyleSheet.create({
   avatarLetter:   { fontFamily: fonts.heading, fontSize: 15, color: colors.primary },
   reviewerName:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 3 },
 
-  verifiedBadge:  { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#DCFCE7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: radius.pill },
+  verifiedBadge:  { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#DCFCE7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
   verifiedTxt:    { fontFamily: fonts.bodyBold, fontSize: 9, color: '#16A34A' },
-  dateTxt:        { fontFamily: fonts.accent, fontSize: 9, color: colors.textDisabled, letterSpacing: 0.5 },
+  dateTxt:        { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 0.5 },
 
-  statusBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill },
+  statusBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999 },
   statusDot:      { width: 6, height: 6, borderRadius: 3 },
   statusTxt:      { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   reviewTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary, marginBottom: 4 },
   reviewBody:     { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, lineHeight: 19, marginBottom: 8 },
 
-  adminNoteWrap:  { flexDirection: 'row', alignItems: 'flex-start', gap: 5, backgroundColor: '#FEF2F2', borderRadius: radius.md, padding: 8, marginBottom: 10 },
+  adminNoteWrap:  { flexDirection: 'row', alignItems: 'flex-start', gap: 5, backgroundColor: '#FEF2F2', borderRadius: 12, padding: 8, marginBottom: 10 },
   adminNoteTxt:   { flex: 1, fontFamily: fonts.body, fontSize: 11, color: '#DC2626', lineHeight: 16 },
 
   // Reject expand
   rejectExpand:   { overflow: 'hidden' },
-  noteInput:      { borderWidth: 1, borderColor: '#FCA5A5', borderRadius: radius.md, padding: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, backgroundColor: '#FFF5F5', marginTop: 10, minHeight: 60, textAlignVertical: 'top' },
+  noteInput:      { borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, padding: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, backgroundColor: '#FFF5F5', marginTop: 10, minHeight: 60, textAlignVertical: 'top' },
   rejectConfirmRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  cancelBtn:      { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: radius.lg, backgroundColor: colors.borderSubtle },
+  cancelBtn:      { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 16, backgroundColor: '#E5E7EB' },
   cancelBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
-  confirmRejectBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: radius.lg, backgroundColor: '#DC2626' },
+  confirmRejectBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 16, backgroundColor: '#DC2626' },
   confirmRejectTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },
 
   // Action row
   actionRow:  { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' },
-  actionBtn:  { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.lg },
+  actionBtn:  { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 },
   actionBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: '#fff' },
   approveBtn: { backgroundColor: '#16A34A' },
   rejectBtn:  { backgroundColor: '#DC2626' },
@@ -497,7 +496,7 @@ const s = StyleSheet.create({
   // Error
   errorWrap:  { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12, paddingBottom: 60 },
   errorTxt:   { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
-  retryBtn:   { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 10, borderRadius: radius.pill },
+  retryBtn:   { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 10, borderRadius: 999 },
   retryBtnTxt:{ fontFamily: fonts.bodyBold, color: '#fff', fontSize: 13 },
 
   // Empty

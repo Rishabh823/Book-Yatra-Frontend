@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell, StatCard } from '../../lib/AdminScreen';
-import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { colors, fonts, radius } from '../../lib/theme';
 import { donations as donationsApi } from '../../lib/api';
 import { fmtDate, fmtCurrency } from '../../lib/utils';
 
@@ -124,7 +124,7 @@ export default function AdminDonations() {
             const catMeta = CATEGORY_META[item.donationType] || CATEGORY_META.general;
             const statusMeta = STATUS_META[item.status] || STATUS_META.pending;
             return (
-              <View style={[s.card, shadow.soft]}>
+              <View style={s.card}>
                 {/* Category icon */}
                 <View style={[s.iconBox, { backgroundColor: catMeta.color + '18' }]}>
                   <Ionicons name={catMeta.icon} size={20} color={catMeta.color} />
@@ -162,7 +162,7 @@ const s = StyleSheet.create({
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: radius.full, borderWidth: 1.5, borderColor: colors.borderSubtle,
+    borderRadius: 999, borderWidth: 1.5, borderColor: colors.borderSubtle,
     backgroundColor: colors.surface,
   },
   chipTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
@@ -173,8 +173,8 @@ const s = StyleSheet.create({
   },
   card: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    backgroundColor: colors.surface, borderRadius: radius.lg,
-    padding: 14, marginBottom: 10,
+    backgroundColor: colors.surface, borderRadius: 16,
+    padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB",
   },
   iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   donorName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
@@ -183,7 +183,7 @@ const s = StyleSheet.create({
   messageTxt: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, fontStyle: 'italic' },
   dateTxt: { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled, marginTop: 2 },
   amount: { fontFamily: fonts.heading, fontSize: 17, color: '#16A34A' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   statusTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
   emptyTxt: { fontFamily: fonts.body, color: colors.textSecondary, marginTop: 8 },
 });

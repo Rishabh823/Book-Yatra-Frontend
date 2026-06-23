@@ -4,22 +4,21 @@ import {
   RefreshControl, useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { securityApi } from '../../lib/api';
-import { colors, fonts, radius, shadow, spacing } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
 
 const SCORE_COLOR = (s) => s >= 80 ? '#16A34A' : s >= 60 ? '#D97706' : '#DC2626';
 const SCORE_LABEL = (s) => s >= 80 ? 'Strong' : s >= 60 ? 'Fair' : s >= 40 ? 'Weak' : 'At Risk';
 
 const MENU = [
-  { key: 'biometric', icon: 'scan-circle', label: 'Biometric Login',       sub: 'Face ID / Fingerprint',   route: '/security/biometric' },
-  { key: 'pin',       icon: 'keypad',      label: 'App Lock PIN',           sub: '4 or 6-digit PIN',         route: '/security/pin' },
-  { key: 'mfa',       icon: 'shield-checkmark', label: 'Two-Factor Auth',   sub: 'Authenticator App (TOTP)', route: '/security/mfa' },
-  { key: 'devices',   icon: 'phone-portrait', label: 'Trusted Devices',     sub: 'Manage known devices',     route: '/security/devices' },
-  { key: 'sessions',  icon: 'layers',      label: 'Active Sessions',        sub: 'View & revoke sessions',   route: '/security/sessions' },
-  { key: 'activity',  icon: 'time',        label: 'Activity Log',           sub: 'Account history',          route: '/security/activity' },
+  { key: 'biometric', icon: 'scan-circle',      label: 'Biometric Login',   sub: 'Face ID / Fingerprint',    route: '/security/biometric', iconBg: '#EFF6FF', iconColor: '#3B82F6' },
+  { key: 'pin',       icon: 'keypad',            label: 'App Lock PIN',      sub: '4 or 6-digit PIN',          route: '/security/pin',       iconBg: '#F5F3FF', iconColor: '#7C3AED' },
+  { key: 'mfa',       icon: 'shield-checkmark',  label: 'Two-Factor Auth',   sub: 'Authenticator App (TOTP)', route: '/security/mfa',       iconBg: '#ECFDF5', iconColor: '#10B981' },
+  { key: 'devices',   icon: 'phone-portrait',    label: 'Trusted Devices',   sub: 'Manage known devices',     route: '/security/devices',   iconBg: '#FFF7ED', iconColor: '#F97316' },
+  { key: 'sessions',  icon: 'layers',            label: 'Active Sessions',   sub: 'View & revoke sessions',   route: '/security/sessions',  iconBg: '#FEF2F2', iconColor: '#EF4444' },
+  { key: 'activity',  icon: 'time',              label: 'Activity Log',      sub: 'Account history',          route: '/security/activity',  iconBg: '#F0FDF4', iconColor: '#22C55E' },
 ];
 
 export default function SecurityCenter() {
@@ -45,8 +44,6 @@ export default function SecurityCenter() {
 
   const score = data?.securityScore ?? 0;
   const scoreColor = SCORE_COLOR(score);
-  const circumference = 2 * Math.PI * 38;
-  const dashOffset = circumference * (1 - score / 100);
 
   const getMenuStatus = (key) => {
     if (!data) return null;
@@ -60,97 +57,136 @@ export default function SecurityCenter() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <LinearGradient colors={['#1E0A0A', '#5C1615']} style={[styles.hero, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Flat white header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={20} color="#111827" />
         </TouchableOpacity>
-        <Text style={styles.heroTitle}>Security Center</Text>
-        <Text style={styles.heroSub}>Protect your account</Text>
+        <Text style={styles.title}>Security</Text>
+        <TouchableOpacity style={styles.headerRight}>
+          <Ionicons name="shield-checkmark-outline" size={20} color="#6B7280" />
+        </TouchableOpacity>
+      </View>
 
-        {/* Score ring */}
-        <View style={styles.scoreWrap}>
-          <View style={styles.scoreCircle}>
-            <Text style={[styles.scoreNum, { color: scoreColor }]}>{score}</Text>
-            <Text style={styles.scoreLabel}>{SCORE_LABEL(score)}</Text>
-          </View>
-          <Text style={styles.scoreTip}>Security Score</Text>
-        </View>
-
-        {/* Quick stats */}
-        <View style={styles.statsRow}>
-          {[
-            { icon: 'phone-portrait', val: data?.trustedDevices ?? '—', lbl: 'Devices' },
-            { icon: 'layers',         val: data?.activeSessions ?? '—', lbl: 'Sessions' },
-          ].map((s, i) => (
-            <View key={i} style={styles.stat}>
-              <Ionicons name={s.icon} size={16} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.statVal}>{s.val}</Text>
-              <Text style={styles.statLbl}>{s.lbl}</Text>
-            </View>
-          ))}
-        </View>
-      </LinearGradient>
+      {/* Gray band */}
+      <View style={styles.grayBand} />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 24, maxWidth: 520, width: '100%', alignSelf: 'center' }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.primary} colors={[colors.primary]} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); load(true); }}
+            tintColor="#D95D39"
+            colors={['#D95D39']}
+          />
+        }
       >
+        {/* Security score card */}
+        <View style={styles.scoreSection}>
+          <View style={styles.scoreCard}>
+            <View style={[styles.scoreCircle, { borderColor: scoreColor }]}>
+              <Text style={[styles.scoreNum, { color: '#111827' }]}>{score}</Text>
+            </View>
+            <Text style={styles.scoreStatusLabel}>{SCORE_LABEL(score)}</Text>
+            <Text style={styles.scoreTip}>Security Score</Text>
+
+            {/* Quick stats row */}
+            <View style={styles.statsRow}>
+              <View style={styles.stat}>
+                <Ionicons name="phone-portrait" size={16} color="#6B7280" />
+                <Text style={styles.statVal}>{data?.trustedDevices ?? '—'}</Text>
+                <Text style={styles.statLbl}>Devices</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.stat}>
+                <Ionicons name="layers" size={16} color="#6B7280" />
+                <Text style={styles.statVal}>{data?.activeSessions ?? '—'}</Text>
+                <Text style={styles.statLbl}>Sessions</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Security Features */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security Features</Text>
-          {MENU.map((item) => {
-            const status = getMenuStatus(item.key);
-            const isEnabled = status === true;
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.menuRow, shadow.soft]}
-                onPress={() => router.push(item.route)}
-                activeOpacity={0.75}
-              >
-                <View style={[styles.menuIcon, { backgroundColor: isEnabled ? colors.primaryLight : '#F3F4F6' }]}>
-                  <Ionicons name={item.icon} size={22} color={isEnabled ? colors.primary : colors.textSecondary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.menuLabel}>{item.label}</Text>
-                  <Text style={styles.menuSub}>{item.sub}</Text>
-                </View>
-                <View style={styles.menuRight}>
-                  {typeof status === 'boolean' && (
-                    <View style={[styles.badge, { backgroundColor: isEnabled ? '#DCFCE7' : '#FEE2E2' }]}>
-                      <Text style={[styles.badgeText, { color: isEnabled ? '#16A34A' : '#DC2626' }]}>
-                        {isEnabled ? 'On' : 'Off'}
-                      </Text>
+          <View style={styles.menuList}>
+            {MENU.map((item, index) => {
+              const status = getMenuStatus(item.key);
+              const isEnabled = status === true;
+              const isLast = index === MENU.length - 1;
+              return (
+                <React.Fragment key={item.key}>
+                  <TouchableOpacity
+                    style={styles.menuRow}
+                    onPress={() => router.push(item.route)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[styles.menuIcon, { backgroundColor: item.iconBg }]}>
+                      <Ionicons name={item.icon} size={20} color={item.iconColor} />
                     </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.menuLabel}>{item.label}</Text>
+                      <Text style={styles.menuSub}>{item.sub}</Text>
+                    </View>
+                    <View style={styles.menuRight}>
+                      {typeof status === 'boolean' && (
+                        <View style={[styles.badge, { backgroundColor: isEnabled ? '#DCFCE7' : '#FEE2E2' }]}>
+                          <Text style={[styles.badgeText, { color: isEnabled ? '#16A34A' : '#DC2626' }]}>
+                            {isEnabled ? 'On' : 'Off'}
+                          </Text>
+                        </View>
+                      )}
+                      {typeof status === 'string' && (
+                        <Text style={styles.menuCount}>{status}</Text>
+                      )}
+                      <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+                    </View>
+                  </TouchableOpacity>
+                  {!isLast && (
+                    <View style={styles.separator} />
                   )}
-                  {typeof status === 'string' && (
-                    <Text style={styles.menuCount}>{status}</Text>
-                  )}
-                  <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </React.Fragment>
+              );
+            })}
+          </View>
         </View>
 
         {/* Recent events */}
         {data?.recentEvents?.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recent Events</Text>
-            {data.recentEvents.map((ev, i) => (
-              <View key={i} style={[styles.eventRow, shadow.soft]}>
-                <View style={[styles.eventDot, { backgroundColor: ev.severity === 'high' || ev.severity === 'critical' ? '#FEE2E2' : '#DCFCE7' }]}>
-                  <Ionicons name={ev.severity === 'high' || ev.severity === 'critical' ? 'warning' : 'checkmark-circle'} size={14} color={ev.severity === 'high' || ev.severity === 'critical' ? '#DC2626' : '#16A34A'} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.eventType}>{ev.eventType.replace(/_/g, ' ')}</Text>
-                  <Text style={styles.eventMeta}>{ev.deviceName} · {new Date(ev.createdAt).toLocaleDateString('en-IN')}</Text>
-                </View>
-              </View>
-            ))}
+            <View style={styles.menuList}>
+              {data.recentEvents.map((ev, i) => {
+                const isBad = ev.severity === 'high' || ev.severity === 'critical';
+                const isLast = i === data.recentEvents.length - 1;
+                return (
+                  <React.Fragment key={i}>
+                    <View style={styles.eventRow}>
+                      <View style={[styles.eventDot, { backgroundColor: isBad ? '#FEE2E2' : '#DCFCE7' }]}>
+                        <Ionicons
+                          name={isBad ? 'warning' : 'checkmark-circle'}
+                          size={14}
+                          color={isBad ? '#DC2626' : '#16A34A'}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.eventType}>{ev.eventType.replace(/_/g, ' ')}</Text>
+                        <Text style={styles.eventMeta}>
+                          {ev.deviceName} · {new Date(ev.createdAt).toLocaleDateString('en-IN')}
+                        </Text>
+                      </View>
+                    </View>
+                    {!isLast && <View style={styles.separator} />}
+                  </React.Fragment>
+                );
+              })}
+            </View>
             <TouchableOpacity onPress={() => router.push('/security/activity')} style={styles.viewAll}>
               <Text style={styles.viewAllText}>View full activity log</Text>
-              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+              <Ionicons name="arrow-forward" size={14} color="#D95D39" />
             </TouchableOpacity>
           </View>
         )}
@@ -160,40 +196,244 @@ export default function SecurityCenter() {
 }
 
 const styles = StyleSheet.create({
-  hero: { paddingHorizontal: 20, paddingBottom: 28 },
-  back: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  heroTitle: { fontFamily: fonts.heading, fontSize: 26, color: 'white' },
-  heroSub:   { fontFamily: fonts.body, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
 
-  scoreWrap:   { alignItems: 'center', marginBottom: 8 },
-  scoreCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  scoreNum:    { fontFamily: fonts.bodyBold, fontSize: 28 },
-  scoreLabel:  { fontFamily: fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.7)' },
-  scoreTip:    { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 4 },
+  /* Header */
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E7EB',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F4F4F4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    flex: 1,
+    fontFamily: 'Philosopher_700Bold',
+    fontSize: 18,
+    color: '#111827',
+    marginLeft: 10,
+  },
+  headerRight: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F4F4F4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: 12 },
-  stat: { alignItems: 'center', gap: 2 },
-  statVal: { fontFamily: fonts.bodyBold, fontSize: 18, color: 'white' },
-  statLbl: { fontFamily: fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
+  /* Gray band */
+  grayBand: {
+    height: 10,
+    backgroundColor: '#F2F2F2',
+  },
 
-  section: { paddingHorizontal: 16, paddingTop: 20, gap: 8 },
-  sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
+  /* Score section */
+  scoreSection: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  scoreCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    gap: 6,
+  },
+  scoreCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 4,
+    borderColor: '#D95D39',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  scoreNum: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: '#111827',
+  },
+  scoreStatusLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    color: '#111827',
+  },
+  scoreTip: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: '#6B7280',
+  },
 
-  menuRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14 },
-  menuIcon:  { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.textPrimary },
-  menuSub:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 1 },
-  menuRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  menuCount: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
+  /* Stats row inside score card */
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 32,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E5E7EB',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  stat: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  statVal: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 18,
+    color: '#111827',
+    marginTop: 2,
+  },
+  statLbl: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: '#9CA3AF',
+  },
+  statDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 40,
+    backgroundColor: '#E5E7EB',
+  },
 
-  badge:     { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill },
-  badgeText: { fontFamily: fonts.bodyBold, fontSize: 11 },
+  /* Section */
+  section: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
 
-  eventRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: radius.md, padding: 12 },
-  eventDot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  eventType: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary, textTransform: 'capitalize' },
-  eventMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
+  /* Menu list container */
+  menuList: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
 
-  viewAll: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8 },
-  viewAllText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
+  /* Menu rows */
+  menuRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: '#111827',
+  },
+  menuSub: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+  menuRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  menuCount: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: '#6B7280',
+  },
+
+  /* Badge */
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+  },
+
+  /* Separator */
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#E5E7EB',
+    marginLeft: 64,
+  },
+
+  /* Event row */
+  eventRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+  },
+  eventDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eventType: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: '#111827',
+    textTransform: 'capitalize',
+  },
+  eventMeta: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: '#6B7280',
+  },
+
+  /* View all */
+  viewAll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 12,
+  },
+  viewAllText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: '#D95D39',
+  },
 });

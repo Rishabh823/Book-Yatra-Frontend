@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { fonts, radius, spacing, shadow } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
 import {
   tours as toursApi,
   feedback as feedbackApi,
@@ -30,6 +30,7 @@ import {
   volunteerApi,
   walletApi,
   api,
+  search as searchApi,
 } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { resolveImageUrl } from "../../lib/utils";
@@ -53,9 +54,18 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
   return (
     <View style={sectionHeaderStyles.container}>
       <View style={{ flex: 1 }}>
-        <Text style={[sectionHeaderStyles.title, { color: colors.secondary }]}>{title}</Text>
+        <Text style={[sectionHeaderStyles.title, { color: "#111827" }]}>
+          {title}
+        </Text>
         {subtitle ? (
-          <Text style={[sectionHeaderStyles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+          <Text
+            style={[
+              sectionHeaderStyles.subtitle,
+              { color: colors.textSecondary },
+            ]}
+          >
+            {subtitle}
+          </Text>
         ) : null}
       </View>
       {onSeeAll ? (
@@ -63,7 +73,11 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
           onPress={onSeeAll}
           style={sectionHeaderStyles.seeAllBtn}
         >
-          <Text style={[sectionHeaderStyles.seeAllText, { color: colors.primary }]}>See All</Text>
+          <Text
+            style={[sectionHeaderStyles.seeAllText, { color: colors.primary }]}
+          >
+            See All
+          </Text>
           <Ionicons name="arrow-forward" size={13} color={colors.primary} />
         </TouchableOpacity>
       ) : null}
@@ -81,7 +95,7 @@ const sectionHeaderStyles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: "#5C1615",
+    color: "#111827",
     letterSpacing: -0.3,
   },
   subtitle: {
@@ -104,7 +118,7 @@ const sectionHeaderStyles = StyleSheet.create({
 });
 
 // ─── Shimmer placeholder ──────────────────────────────────────────────────────
-function ShimmerCard({ width: w, height: h, borderRadius: br = radius.xl }) {
+function ShimmerCard({ width: w, height: h, borderRadius: br = 20 }) {
   const colors = useColors();
   const shimmer = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -163,7 +177,7 @@ function StarRow({ rating = 0, count, size = 11, color = "#F59E0B" }) {
           style={{
             fontFamily: fonts.body,
             fontSize: size - 1,
-            color: "rgba(255,255,255,0.85)",
+            color: "#6B7280",
             marginLeft: 3,
           }}
         >
@@ -196,7 +210,16 @@ function fallbackTopRated(all) {
 function fallbackOffers(all) {
   const now = new Date();
   return all
-    .filter((t) => (t.discountPercent > 0 || t.originalPrice > 0) && (!t.startDate || new Date(t.startDate) >= now))
+    .filter((t) => {
+      if (t.isExternal) return true;
+      const end = t.endDate
+        ? new Date(t.endDate)
+        : t.startDate
+          ? new Date(t.startDate)
+          : null;
+      if (end && end < now) return false;
+      return t.discountPercent > 0 || t.originalPrice > 0;
+    })
     .slice(0, 6);
 }
 
@@ -275,7 +298,14 @@ export default function Home() {
   const scrollRef = useRef(null);
   const toursYRef = useRef(0);
 
-  const TOUR_TYPES = ["All", "Pilgrimage", "Heritage", "Hills", "Beach", "Weekend"];
+  const TOUR_TYPES = [
+    "All",
+    "Pilgrimage",
+    "Heritage",
+    "Hills",
+    "Beach",
+    "Weekend",
+  ];
 
   const formatSearchDate = (date) => {
     const today = new Date();
@@ -283,15 +313,20 @@ export default function Home() {
     tomorrow.setDate(today.getDate() + 1);
     if (date.toDateString() === today.toDateString()) return "Today";
     if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
-    return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const fromQ = searchFrom.trim().toLowerCase();
     const toQ = searchTo.trim().toLowerCase();
     const typeQ = tourTypeFilter;
+    const combinedQ = [fromQ, toQ].filter(Boolean).join(" ").trim();
 
-    // Combine all available tour pools for search
+    // Combine all available tour pools for client-side search
     const allAvailable = [
       ...upcoming,
       ...trendingTours,
@@ -307,23 +342,49 @@ export default function Home() {
       return true;
     });
 
-    const filtered = pool.filter((t) => {
-      const title = (t.title || "").toLowerCase();
-      const source = (t.source || "").toLowerCase();
-      const dest = (t.destination || "").toLowerCase();
-      const category = (t.category || t.tourType || "").toLowerCase();
+    function tourMatchesQuery(t) {
+      const haystack = [
+        t.title,
+        t.source,
+        t.destination,
+        t.category,
+        t.tourType,
+        t.description,
+        ...(t.pickupPoints || []).map((pp) => pp.name),
+        ...(t.itinerary || []).map((it) => it.location),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-      const matchFrom = fromQ === "" || source.includes(fromQ) || title.includes(fromQ);
-      const matchTo = toQ === "" || dest.includes(toQ) || title.includes(toQ);
+      const fromWords = fromQ.split(/\s+/).filter(Boolean);
+      const toWords = toQ.split(/\s+/).filter(Boolean);
+      const matchFrom =
+        fromQ === "" || fromWords.every((w) => haystack.includes(w));
+      const matchTo = toQ === "" || toWords.every((w) => haystack.includes(w));
       const matchType =
-        typeQ === "All" ||
-        category.includes(typeQ.toLowerCase()) ||
-        title.includes(typeQ.toLowerCase());
-      const matchDate =
-        !t.startDate || new Date(t.startDate) >= searchDate;
+        typeQ === "All" || haystack.includes(typeQ.toLowerCase());
+      const matchDate = !t.startDate || new Date(t.startDate) >= searchDate;
 
       return matchFrom && matchTo && matchType && matchDate;
-    });
+    }
+
+    let filtered = pool.filter(tourMatchesQuery);
+
+    // If nothing found locally, call the backend unified search as fallback
+    if (filtered.length === 0 && combinedQ.length >= 2) {
+      try {
+        const res = await searchApi.unified(combinedQ);
+        const apiTours = res?.data?.tours || [];
+        // Also try the tours search endpoint for a broader match
+        if (apiTours.length === 0) {
+          const searchRes = await toursApi.search({ q: combinedQ, limit: 20 });
+          filtered = searchRes?.data || searchRes || [];
+        } else {
+          filtered = apiTours;
+        }
+      } catch {}
+    }
 
     setSearchResults(filtered);
     // Scroll down to tour results section
@@ -507,7 +568,18 @@ export default function Home() {
     try {
       const res = await toursApi.specialOffers();
       const now = new Date();
-      const data = extractArray(res).filter(t => !t.startDate || new Date(t.startDate) >= now);
+      const data = extractArray(res).filter((t) => {
+        // External/aggregated tours (no dates): always include
+        if (t.isExternal) return true;
+        // Platform tours: exclude if end date has passed
+        const end = t.endDate
+          ? new Date(t.endDate)
+          : t.startDate
+            ? new Date(t.startDate)
+            : null;
+        if (end && end < now) return false;
+        return true;
+      });
       setSpecialOffers(data.length > 0 ? data : fallbackOffers(allTours));
     } catch {
       setSpecialOffers(fallbackOffers(allTours));
@@ -810,7 +882,7 @@ export default function Home() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: theme.bg,
+          backgroundColor: "#fff",
           alignItems: "center",
           justifyContent: "center",
           padding: 32,
@@ -847,10 +919,7 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.bg }}
-      edges={["top"]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
@@ -859,13 +928,14 @@ export default function Home() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary} colors={[colors.primary]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         testID="home-scroll"
       >
         {/* Announcement Banner */}
-        {!!(appSettings.announcement?.trim()) && (
+        {!!appSettings.announcement?.trim() && (
           <View style={styles.announcementBanner}>
             <Ionicons name="megaphone-outline" size={15} color="#92400E" />
             <Text style={styles.announcementText} numberOfLines={3}>
@@ -884,7 +954,7 @@ export default function Home() {
                   ? "Command Center"
                   : userRole === "admin" || userRole === "manager"
                     ? "Operator Hub"
-                    : t.jai}
+                    : "TripKart"}
             </Text>
             <Text style={styles.greetSub}>
               {userRole === "volunteer"
@@ -929,11 +999,25 @@ export default function Home() {
           activeOpacity={0.85}
           onPress={() => setShowSearchModal(true)}
         >
-          <Ionicons name="search-outline" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
-          <Text style={{ fontFamily: fonts.body, fontSize: 14, color: "#9CA3AF", flex: 1 }}>
+          <Ionicons
+            name="search-outline"
+            size={18}
+            color="#9CA3AF"
+            style={{ marginRight: 10 }}
+          />
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 14,
+              color: "#9CA3AF",
+              flex: 1,
+            }}
+          >
             Search tours, destinations...
           </Text>
-          <View style={{ backgroundColor: "#FEE9E3", borderRadius: 8, padding: 6 }}>
+          <View
+            style={{ backgroundColor: "#FEE9E3", borderRadius: 8, padding: 6 }}
+          >
             <Ionicons name="options-outline" size={16} color="#D95D39" />
           </View>
         </TouchableOpacity>
@@ -1002,25 +1086,18 @@ export default function Home() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.statsRow}
-          style={{ marginTop: 20 }}
+          style={{ marginTop: 16 }}
         >
           {QUICK_STATS.map((stat, i) => (
             <View
               key={i}
-              style={[styles.statPill, { borderColor: stat.color + "33" }]}
+              style={[styles.statPill, { borderColor: stat.color + "22" }]}
             >
-              <View
-                style={[
-                  styles.statIconWrap,
-                  { backgroundColor: stat.color + "18" },
-                ]}
-              >
-                <Ionicons name={stat.icon} size={14} color={stat.color} />
-              </View>
+              <Ionicons name={stat.icon} size={14} color={stat.color} />
               <Text style={[styles.statValue, { color: stat.color }]}>
                 {stat.value}
               </Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statLabel}>{stat.label.toLowerCase()}</Text>
             </View>
           ))}
         </ScrollView>
@@ -1028,24 +1105,21 @@ export default function Home() {
         {/* ── Volunteer Home Section ──────────────────────────────────────── */}
         {isLoggedIn && userRole === "volunteer" && (
           <View style={styles.section}>
-            <LinearGradient
-              colors={["#064E3B", "#065F46"]}
-              style={styles.roleBanner}
-            >
+            <View style={styles.roleBanner}>
               <View style={styles.roleBannerTop}>
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "rgba(255,255,255,0.15)" },
+                    { backgroundColor: "#F0FDF4" },
                   ]}
                 >
-                  <Ionicons name="shield-checkmark" size={22} color="#A7F3D0" />
+                  <Ionicons name="shield-checkmark" size={22} color="#16A34A" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleBannerTitle, { color: "#A7F3D0" }]}>
+                  <Text style={[styles.roleBannerTitle, { color: "#16A34A" }]}>
                     Volunteer Panel
                   </Text>
-                  <Text style={styles.roleBannerSub}>
+                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
                     {volDashboard?.assignedTours?.length
                       ? `${volDashboard.assignedTours.length} tour${volDashboard.assignedTours.length > 1 ? "s" : ""} assigned`
                       : "No tours assigned yet"}
@@ -1083,25 +1157,25 @@ export default function Home() {
                   {
                     icon: "location",
                     label: "Check In",
-                    color: "#A7F3D0",
+                    color: "#16A34A",
                     route: "/volunteer/checkin",
                   },
                   {
                     icon: "qr-code",
                     label: "Scan QR",
-                    color: "#A7F3D0",
+                    color: "#16A34A",
                     route: "/volunteer/checkin",
                   },
                   {
                     icon: "people",
                     label: "Passengers",
-                    color: "#A7F3D0",
+                    color: "#16A34A",
                     route: "/volunteer/passengers",
                   },
                   {
                     icon: "warning",
                     label: "Report",
-                    color: "#FCA5A5",
+                    color: "#EF4444",
                     route: "/volunteer/report-incident",
                   },
                 ].map((a) => (
@@ -1125,31 +1199,28 @@ export default function Home() {
                   </TouchableOpacity>
                 ))}
               </View>
-            </LinearGradient>
+            </View>
           </View>
         )}
 
         {/* ── Admin / Manager Home Section ────────────────────────────────── */}
         {isLoggedIn && (userRole === "admin" || userRole === "manager") && (
           <View style={styles.section}>
-            <LinearGradient
-              colors={[colors.secondary, "#3D0D0C"]}
-              style={styles.roleBanner}
-            >
+            <View style={styles.roleBanner}>
               <View style={styles.roleBannerTop}>
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "rgba(255,255,255,0.12)" },
+                    { backgroundColor: "#FEE8E2" },
                   ]}
                 >
-                  <Ionicons name="shield" size={22} color="#FFD700" />
+                  <Ionicons name="shield" size={22} color="#D95D39" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleBannerTitle, { color: "#FFD700" }]}>
+                  <Text style={[styles.roleBannerTitle, { color: "#D95D39" }]}>
                     Admin Dashboard
                   </Text>
-                  <Text style={styles.roleBannerSub}>
+                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
                     Manage your tour operations
                   </Text>
                 </View>
@@ -1157,8 +1228,10 @@ export default function Home() {
                   style={styles.roleBannerCta}
                   onPress={() => router.push("/admin/dashboard")}
                 >
-                  <Text style={styles.roleBannerCtaTxt}>Full View</Text>
-                  <Ionicons name="arrow-forward" size={12} color="#FFD700" />
+                  <Text style={[styles.roleBannerCtaTxt, { color: "#D95D39" }]}>
+                    Full View
+                  </Text>
+                  <Ionicons name="arrow-forward" size={12} color="#D95D39" />
                 </TouchableOpacity>
               </View>
               <View style={styles.adminStatsRow}>
@@ -1167,13 +1240,13 @@ export default function Home() {
                     label: "Bookings",
                     value: adminStats?.totalBookings ?? "—",
                     icon: "ticket",
-                    color: "#FCA5A5",
+                    color: "#EF4444",
                   },
                   {
                     label: "Tours",
                     value: adminStats?.tourCount ?? "—",
                     icon: "bus",
-                    color: "#86EFAC",
+                    color: "#16A34A",
                   },
                   {
                     label: "Revenue",
@@ -1181,7 +1254,7 @@ export default function Home() {
                       ? "₹" + Math.round(adminStats.monthRevenue / 1000) + "k"
                       : "—",
                     icon: "cash",
-                    color: "#FDE68A",
+                    color: "#D97706",
                   },
                 ].map((st) => (
                   <View key={st.label} style={styles.adminStatCard}>
@@ -1199,25 +1272,25 @@ export default function Home() {
                     icon: "bus",
                     label: "Tours",
                     route: "/admin/tours",
-                    color: "#86EFAC",
+                    color: "#16A34A",
                   },
                   {
                     icon: "ticket",
                     label: "Bookings",
                     route: "/admin/bookings",
-                    color: "#FCA5A5",
+                    color: "#D95D39",
                   },
                   {
                     icon: "people",
                     label: "Volunteers",
                     route: "/admin/volunteer-management",
-                    color: "#C4B5FD",
+                    color: "#7C3AED",
                   },
                   {
                     icon: "bar-chart",
                     label: "Analytics",
                     route: "/admin/analytics",
-                    color: "#FDE68A",
+                    color: "#D97706",
                   },
                 ].map((a) => (
                   <TouchableOpacity
@@ -1233,31 +1306,28 @@ export default function Home() {
                   </TouchableOpacity>
                 ))}
               </View>
-            </LinearGradient>
+            </View>
           </View>
         )}
 
         {/* ── Super Admin Home Section ─────────────────────────────────────── */}
         {isLoggedIn && userRole === "super_admin" && (
           <View style={styles.section}>
-            <LinearGradient
-              colors={["#1E0A0A", "#3D0D0C"]}
-              style={styles.roleBanner}
-            >
+            <View style={styles.roleBanner}>
               <View style={styles.roleBannerTop}>
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "rgba(255,215,0,0.12)" },
+                    { backgroundColor: "#F5F3FF" },
                   ]}
                 >
-                  <Ionicons name="planet" size={22} color="#FFD700" />
+                  <Ionicons name="planet" size={22} color="#7C3AED" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleBannerTitle, { color: "#FFD700" }]}>
+                  <Text style={[styles.roleBannerTitle, { color: "#111827" }]}>
                     Super Admin
                   </Text>
-                  <Text style={styles.roleBannerSub}>
+                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
                     Platform-wide overview
                   </Text>
                 </View>
@@ -1268,28 +1338,34 @@ export default function Home() {
                     label: "Tours",
                     value: adminStats?.tours ?? "—",
                     icon: "bus",
-                    color: "#FCA5A5",
+                    color: "#EF4444",
                   },
                   {
                     label: "Users",
                     value: adminStats?.users ?? "—",
                     icon: "people",
-                    color: "#93C5FD",
+                    color: "#2563EB",
                   },
                   {
                     label: "Operators",
                     value: adminStats?.operators ?? "—",
                     icon: "business",
-                    color: "#86EFAC",
+                    color: "#16A34A",
                   },
                   {
                     label: "Bookings",
                     value: adminStats?.bookings ?? "—",
                     icon: "ticket",
-                    color: "#FDE68A",
+                    color: "#D97706",
                   },
                 ].map((st) => (
-                  <View key={st.label} style={styles.adminStatCard}>
+                  <View
+                    key={st.label}
+                    style={[
+                      styles.adminStatCard,
+                      { backgroundColor: "#F5F3FF", borderColor: "#DDD6FE" },
+                    ]}
+                  >
                     <Ionicons name={st.icon} size={15} color={st.color} />
                     <Text style={[styles.adminStatValue, { color: st.color }]}>
                       {String(st.value)}
@@ -1304,25 +1380,25 @@ export default function Home() {
                     icon: "business",
                     label: "Operators",
                     route: "/admin/super/operators",
-                    color: "#C4B5FD",
+                    color: "#7C3AED",
                   },
                   {
                     icon: "person",
                     label: "Users",
                     route: "/admin/super/users",
-                    color: "#93C5FD",
+                    color: "#2563EB",
                   },
                   {
                     icon: "bus",
                     label: "All Tours",
                     route: "/admin/super/tours",
-                    color: "#86EFAC",
+                    color: "#16A34A",
                   },
                   {
                     icon: "ticket",
                     label: "Bookings",
                     route: "/admin/super/bookings",
-                    color: "#FCA5A5",
+                    color: "#D95D39",
                   },
                 ].map((a) => (
                   <TouchableOpacity
@@ -1338,14 +1414,14 @@ export default function Home() {
                   </TouchableOpacity>
                 ))}
               </View>
-            </LinearGradient>
+            </View>
           </View>
         )}
 
         {/* Quick actions — hide for volunteer and super_admin (they have dedicated sections) */}
         {userRole !== "volunteer" && (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>{t.quickAccess}</Text>
+            <Text style={styles.sectionLabel}>QUICK ACCESS</Text>
             <View style={styles.quickGrid}>
               {QUICK_ACTIONS.map((q, i) => (
                 <TouchableOpacity
@@ -1381,6 +1457,7 @@ export default function Home() {
               const visibleTours = isOp
                 ? upcoming
                 : upcoming.filter((t) => {
+                    if (t.isExternal) return true;
                     if (joinedOps.length === 0) return false;
                     const tid =
                       typeof t.operatorId === "object"
@@ -1394,7 +1471,10 @@ export default function Home() {
                     );
                   });
               const noOperatorSelected =
-                !isOp && authChecked && joinedOps.length === 0;
+                !isOp &&
+                authChecked &&
+                joinedOps.length === 0 &&
+                visibleTours.length === 0;
               return (
                 <View style={styles.section}>
                   <View style={styles.sectionHead}>
@@ -1450,7 +1530,10 @@ export default function Home() {
                         <TouchableOpacity
                           key={tour._id || tour.id || i}
                           activeOpacity={0.9}
-                          style={styles.tourCard}
+                          style={[
+                            styles.tourCard,
+                            tour.isExternal && styles.tourCardExternal,
+                          ]}
                           onPress={() =>
                             router.push(`/tour/${tour._id || tour.id}`)
                           }
@@ -1463,23 +1546,60 @@ export default function Home() {
                             style={styles.tourImg}
                           />
                           <LinearGradient
-                            colors={["transparent", "rgba(0,0,0,0.7)"]}
+                            colors={["transparent", "rgba(0,0,0,0.75)"]}
                             style={styles.tourGrad}
                           />
-                          <View style={styles.tourBadge}>
-                            <Text style={styles.tourBadgeText}>
-                              {formatDate(tour.startDate, tour.endDate)}
-                            </Text>
-                          </View>
-                          {/* Seats left urgency badge */}
-                          {tour.availableSeats != null && tour.availableSeats <= 10 && (
-                            <View style={[styles.seatsLeftBadge, tour.availableSeats <= 3 && { backgroundColor: "#EF4444" }]}>
-                              <Ionicons name="people" size={9} color="#fff" />
-                              <Text style={styles.seatsLeftTxt}>
-                                {tour.availableSeats === 0 ? "Full" : `${tour.availableSeats} left`}
+                          {/* Date badge — only for platform tours with dates */}
+                          {!tour.isExternal &&
+                          tour.startDate &&
+                          tour.endDate ? (
+                            <View style={styles.tourBadge}>
+                              <Text style={styles.tourBadgeText}>
+                                {formatDate(tour.startDate, tour.endDate)}
                               </Text>
                             </View>
-                          )}
+                          ) : tour.isExternal ? (
+                            <View
+                              style={[
+                                styles.tourBadge,
+                                { backgroundColor: "rgba(2,132,199,0.85)" },
+                              ]}
+                            >
+                              <Ionicons
+                                name="globe-outline"
+                                size={10}
+                                color="#fff"
+                              />
+                              <Text
+                                style={[
+                                  styles.tourBadgeText,
+                                  { marginLeft: 4, color: "#fff" },
+                                ]}
+                              >
+                                {tour.externalSource || "Partner Site"}
+                              </Text>
+                            </View>
+                          ) : null}
+                          {/* Seats left urgency badge — only for platform tours */}
+                          {!tour.isExternal &&
+                            tour.availableSeats != null &&
+                            tour.availableSeats <= 10 && (
+                              <View
+                                style={[
+                                  styles.seatsLeftBadge,
+                                  tour.availableSeats <= 3 && {
+                                    backgroundColor: "#EF4444",
+                                  },
+                                ]}
+                              >
+                                <Ionicons name="people" size={9} color="#fff" />
+                                <Text style={styles.seatsLeftTxt}>
+                                  {tour.availableSeats === 0
+                                    ? "Full"
+                                    : `${tour.availableSeats} left`}
+                                </Text>
+                              </View>
+                            )}
                           <View style={styles.tourCardContent}>
                             <Text style={styles.tourTitle} numberOfLines={1}>
                               {tour.title}
@@ -1494,16 +1614,44 @@ export default function Home() {
                                 {tour.source} → {tour.destination}
                               </Text>
                             </View>
+                            {tour.isExternal && tour.duration ? (
+                              <View style={styles.tourRow}>
+                                <Ionicons
+                                  name="time-outline"
+                                  size={12}
+                                  color="#BAE6FD"
+                                />
+                                <Text
+                                  style={[
+                                    styles.tourMeta,
+                                    { color: "#BAE6FD" },
+                                  ]}
+                                >
+                                  {tour.duration}
+                                </Text>
+                              </View>
+                            ) : null}
                             <View style={styles.tourFooter}>
                               <Text style={styles.tourPrice}>
                                 {tour.price || "₹—"}
                               </Text>
-                              <View style={styles.bookPill}>
+                              <View
+                                style={[
+                                  styles.bookPill,
+                                  tour.isExternal && {
+                                    backgroundColor: "#0284C7",
+                                  },
+                                ]}
+                              >
                                 <Text style={styles.bookPillText}>
-                                  {t.bookNow}
+                                  {tour.isExternal ? "View" : t.bookNow}
                                 </Text>
                                 <Ionicons
-                                  name="arrow-forward"
+                                  name={
+                                    tour.isExternal
+                                      ? "open-outline"
+                                      : "arrow-forward"
+                                  }
                                   size={12}
                                   color="#fff"
                                 />
@@ -1560,7 +1708,7 @@ export default function Home() {
               contentContainerStyle={{ paddingRight: 24 }}
             >
               {[1, 2, 3].map((k) => (
-                <ShimmerCard key={k} width={220} height={280} borderRadius={radius.xxl} />
+                <ShimmerCard key={k} width={220} height={280} borderRadius={24} />
               ))}
             </ScrollView>
           ) : trendingTours.length === 0 ? (
@@ -1596,7 +1744,7 @@ export default function Home() {
               contentContainerStyle={{ paddingRight: 24 }}
             >
               {[1, 2, 3].map((k) => (
-                <ShimmerCard key={k} width={220} height={280} borderRadius={radius.xxl} />
+                <ShimmerCard key={k} width={220} height={280} borderRadius={24} />
               ))}
             </ScrollView>
           ) : topRatedTours.length === 0 ? (
@@ -1652,7 +1800,7 @@ export default function Home() {
                   key={k}
                   width={260}
                   height={200}
-                  borderRadius={radius.xxl}
+                  borderRadius={24}
                 />
               ))}
             </ScrollView>
@@ -1743,924 +1891,938 @@ export default function Home() {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  announcementBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    backgroundColor: "#FEF3C7",
-    borderLeftWidth: 4,
-    borderLeftColor: "#F59E0B",
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: radius.md,
-    padding: 12,
-  },
-  announcementText: {
-    flex: 1,
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: "#92400E",
-    lineHeight: 19,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  greeting: {
-    fontSize: 24,
-    fontFamily: fonts.heading,
-    color: colors.secondary,
-    letterSpacing: -0.3,
-  },
-  greetSub: {
-    fontSize: 12,
-    fontFamily: fonts.accent,
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    marginTop: 2,
-  },
-  bell: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.pill,
-    ...shadow.soft,
-  },
-  walletHeaderBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-  },
-  walletHeaderBal: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: "#fff",
-    letterSpacing: 0.3,
-  },
-  langBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: colors.secondary,
-    borderRadius: radius.pill,
-  },
-  langText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: "#fff",
-    letterSpacing: 1,
-  },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    announcementBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+      backgroundColor: "#FEF3C7",
+      borderLeftWidth: 4,
+      borderLeftColor: "#F59E0B",
+      marginHorizontal: 16,
+      marginTop: 8,
+      borderRadius: 12,
+      padding: 12,
+    },
+    announcementText: {
+      flex: 1,
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: "#92400E",
+      lineHeight: 19,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 24,
+      paddingTop: 8,
+      paddingBottom: 16,
+    },
+    greeting: {
+      fontSize: 24,
+      fontFamily: fonts.heading,
+      color: "#111827",
+      letterSpacing: -0.3,
+    },
+    greetSub: {
+      fontSize: 12,
+      fontFamily: fonts.bodyMedium,
+      color: colors.textSecondary,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+      marginTop: 2,
+    },
+    bell: {
+      width: 44,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#fff",
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    walletHeaderBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: 11,
+      paddingVertical: 6,
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+    },
+    walletHeaderBal: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
+    langBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      backgroundColor: "#111827",
+      borderRadius: 999,
+    },
+    langText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+      color: "#fff",
+      letterSpacing: 1,
+    },
 
-  banner: {
-    marginHorizontal: 16,
-    height: 320,
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    backgroundColor: colors.secondary,
-    ...shadow.card,
-  },
-  bannerContent: { flex: 1, padding: 24, justifyContent: "flex-end" },
-  bannerAccent: {
-    color: "#FFE9C0",
-    fontFamily: fonts.accent,
-    fontSize: 11,
-    letterSpacing: 3,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  bannerTitle: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    fontFamily: fonts.heading,
-    letterSpacing: -0.5,
-    lineHeight: 36,
-  },
-  bannerSub: {
-    color: "#FFE9C0",
-    fontFamily: fonts.body,
-    fontSize: 13,
-    marginTop: 6,
-  },
-  bannerCta: {
-    marginTop: 16,
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    gap: 8,
-  },
-  bannerCtaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 13 },
-  dots: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 18,
-    right: 24,
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.4)",
-  },
-  dotActive: { backgroundColor: "#fff", width: 20 },
+    banner: {
+      marginHorizontal: 16,
+      height: 320,
+      borderRadius: 24,
+      overflow: "hidden",
+      backgroundColor: "#111827",
+    },
+    bannerContent: { flex: 1, padding: 24, justifyContent: "flex-end" },
+    bannerAccent: {
+      color: "#FFE9C0",
+      fontFamily: fonts.bodyMedium,
+      fontSize: 11,
+      letterSpacing: 3,
+      textTransform: "uppercase",
+      marginBottom: 6,
+    },
+    bannerTitle: {
+      color: "#FFFFFF",
+      fontSize: 32,
+      fontFamily: fonts.heading,
+      letterSpacing: -0.5,
+      lineHeight: 36,
+    },
+    bannerSub: {
+      color: "#FFE9C0",
+      fontFamily: fonts.body,
+      fontSize: 13,
+      marginTop: 6,
+    },
+    bannerCta: {
+      marginTop: 16,
+      alignSelf: "flex-start",
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.primary,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderRadius: 999,
+      gap: 8,
+    },
+    bannerCtaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 13 },
+    dots: {
+      flexDirection: "row",
+      position: "absolute",
+      bottom: 18,
+      right: 24,
+      gap: 6,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.4)",
+    },
+    dotActive: { backgroundColor: "#fff", width: 20 },
 
-  // ── Quick Stats ────────────────────────────────────────────────────────────
-  statsRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 4,
-    gap: 10,
-  },
-  statPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.surface,
-    borderRadius: radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    ...shadow.soft,
-  },
-  statIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statValue: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-  },
-  statLabel: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
+    // ── Quick Stats ────────────────────────────────────────────────────────────
+    statsRow: {
+      paddingHorizontal: 20,
+      paddingVertical: 4,
+      gap: 10,
+    },
+    statPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      backgroundColor: "#fff",
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderWidth: 1,
+    },
+    statValue: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+    },
+    statLabel: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
 
-  announce: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginHorizontal: 24,
-    marginTop: 16,
-    padding: 14,
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  announceText: {
-    flex: 1,
-    color: colors.secondary,
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-  },
+    announce: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginHorizontal: 24,
+      marginTop: 16,
+      padding: 14,
+      backgroundColor: colors.primaryLight,
+      borderRadius: 16,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+    },
+    announceText: {
+      flex: 1,
+      color: colors.secondary,
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+    },
 
-  section: { paddingHorizontal: 24, paddingTop: 32 },
-  sectionLabel: {
-    fontFamily: fonts.accent,
-    fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 3,
-    textTransform: "uppercase",
-    marginBottom: 12,
-  },
-  sectionHead: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  h2: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.secondary,
-    letterSpacing: -0.3,
-  },
-  h2Sub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  link: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
+    section: { paddingHorizontal: 24, paddingTop: 32 },
+    sectionLabel: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 11,
+      color: "#9CA3AF",
+      letterSpacing: 3,
+      textTransform: "uppercase",
+      marginBottom: 12,
+    },
+    sectionHead: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      marginBottom: 16,
+    },
+    h2: {
+      fontFamily: fonts.heading,
+      fontSize: 24,
+      color: "#111827",
+      letterSpacing: -0.3,
+    },
+    h2Sub: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    link: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
 
-  quickGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  quickCard: {
-    flex: 1,
-    minWidth: 130,
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: radius.xl,
-    ...shadow.soft,
-  },
-  quickIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  quickLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  quickSub: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
+    quickGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+    quickCard: {
+      flex: 1,
+      minWidth: 130,
+      backgroundColor: "#fff",
+      padding: 16,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    quickIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    quickLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    quickSub: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
 
-  empty: { alignItems: "center", paddingVertical: 32, gap: 6 },
-  emptyText: {
-    fontFamily: fonts.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: 8,
-  },
-  selectOpBtn: {
-    marginTop: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-  },
-  selectOpTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
+    empty: { alignItems: "center", paddingVertical: 32, gap: 6 },
+    emptyText: {
+      fontFamily: fonts.bodyMedium,
+      color: colors.textSecondary,
+      marginTop: 8,
+    },
+    selectOpBtn: {
+      marginTop: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+    },
+    selectOpTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
 
-  tourCard: {
-    width: width * 0.72,
-    height: 240,
-    marginRight: 16,
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    backgroundColor: colors.elevated,
-    ...shadow.card,
-  },
-  tourImg: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
-  tourGrad: { ...StyleSheet.absoluteFillObject },
-  tourBadge: {
-    position: "absolute",
-    top: 14,
-    left: 14,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  tourBadgeText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.secondary,
-  },
-  seatsLeftBadge: {
-    position: "absolute",
-    top: 14,
-    right: 14,
-    backgroundColor: "#F97316",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  seatsLeftTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 10,
-    color: "#fff",
-  },
-  tourCardContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-  },
-  tourTitle: { color: "#fff", fontFamily: fonts.heading, fontSize: 20 },
-  tourRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
-  tourMeta: { color: "#FFE9C0", fontFamily: fonts.body, fontSize: 12, flex: 1 },
-  tourFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  tourPrice: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 18 },
-  bookPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  bookPillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 11 },
+    tourCard: {
+      width: width * 0.72,
+      height: 240,
+      marginRight: 16,
+      borderRadius: 24,
+      overflow: "hidden",
+      backgroundColor: colors.elevated,
+    },
+    tourCardExternal: {
+      borderWidth: 2,
+      borderColor: "#0284C7",
+    },
+    tourImg: {
+      ...StyleSheet.absoluteFillObject,
+      width: "100%",
+      height: "100%",
+    },
+    tourGrad: { ...StyleSheet.absoluteFillObject },
+    tourBadge: {
+      position: "absolute",
+      top: 14,
+      left: 14,
+      backgroundColor: "rgba(255,255,255,0.92)",
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 999,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    tourBadgeText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+      color: "#111827",
+    },
+    seatsLeftBadge: {
+      position: "absolute",
+      top: 14,
+      right: 14,
+      backgroundColor: "#F97316",
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: 999,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+    },
+    seatsLeftTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 10,
+      color: "#fff",
+    },
+    tourCardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 16,
+    },
+    tourTitle: { color: "#fff", fontFamily: fonts.heading, fontSize: 20 },
+    tourRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 4,
+    },
+    tourMeta: {
+      color: "#FFE9C0",
+      fontFamily: fonts.body,
+      fontSize: 12,
+      flex: 1,
+    },
+    tourFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 10,
+    },
+    tourPrice: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 18 },
+    bookPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+    },
+    bookPillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 11 },
 
-  // ── Discover cards (Trending / Top Rated) ──────────────────────────────────
-  discoverCard: {
-    width: 220,
-    height: 280,
-    marginRight: 14,
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    backgroundColor: colors.elevated,
-    ...shadow.card,
-  },
-  heartBtn: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 2,
-  },
-  discoverBadge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    zIndex: 2,
-  },
-  trendingBadge: {
-    backgroundColor: "#EF4444",
-  },
-  topRatedBadge: {
-    backgroundColor: "#D97706",
-  },
-  discoverBadgeText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 9,
-    color: "#fff",
-    letterSpacing: 0.5,
-  },
-  discoverCardContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 14,
-  },
-  discoverTitle: {
-    color: "#fff",
-    fontFamily: fonts.heading,
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  discoverRoute: {
-    color: "#FFE9C0",
-    fontFamily: fonts.body,
-    fontSize: 10,
-    flex: 1,
-  },
-  discoverFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  discoverPrice: {
-    color: "#FCD34D",
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-  },
+    // ── Discover cards (Trending / Top Rated) ──────────────────────────────────
+    discoverCard: {
+      width: 220,
+      height: 280,
+      marginRight: 14,
+      borderRadius: 24,
+      overflow: "hidden",
+      backgroundColor: colors.elevated,
+    },
+    heartBtn: {
+      position: "absolute",
+      top: 12,
+      left: 12,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: "rgba(0,0,0,0.35)",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 2,
+    },
+    discoverBadge: {
+      position: "absolute",
+      top: 12,
+      right: 12,
+      paddingHorizontal: 9,
+      paddingVertical: 4,
+      borderRadius: 999,
+      zIndex: 2,
+    },
+    trendingBadge: {
+      backgroundColor: "#EF4444",
+    },
+    topRatedBadge: {
+      backgroundColor: "#D97706",
+    },
+    discoverBadgeText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 9,
+      color: "#fff",
+      letterSpacing: 0.5,
+    },
+    discoverCardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 14,
+    },
+    discoverTitle: {
+      color: "#fff",
+      fontFamily: fonts.heading,
+      fontSize: 16,
+      lineHeight: 20,
+    },
+    discoverRoute: {
+      color: "#FFE9C0",
+      fontFamily: fonts.body,
+      fontSize: 10,
+      flex: 1,
+    },
+    discoverFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 8,
+    },
+    discoverPrice: {
+      color: "#FCD34D",
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+    },
 
-  // ── Special Offer cards ───────────────────────────────────────────────────
-  offerCard: {
-    width: 260,
-    marginRight: 14,
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    ...shadow.card,
-  },
-  offerDiscountBadge: {
-    position: "absolute",
-    top: 14,
-    right: 14,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    zIndex: 2,
-  },
-  offerDiscountText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12,
-    color: "#fff",
-    letterSpacing: 0.3,
-  },
-  offerCardContent: {
-    padding: 18,
-    paddingTop: 52,
-    paddingBottom: 18,
-  },
-  offerTitle: {
-    color: "#fff",
-    fontFamily: fonts.heading,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  offerRoute: {
-    color: "rgba(255,255,255,0.8)",
-    fontFamily: fonts.body,
-    fontSize: 11,
-    flex: 1,
-  },
-  offerDate: {
-    color: "rgba(255,255,255,0.75)",
-    fontFamily: fonts.body,
-    fontSize: 11,
-    flex: 1,
-  },
-  offerPriceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 10,
-  },
-  offerOriginalPrice: {
-    color: "rgba(255,255,255,0.6)",
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    textDecorationLine: "line-through",
-  },
-  offerFinalPrice: {
-    color: "#fff",
-    fontFamily: fonts.bodyBold,
-    fontSize: 18,
-  },
-  offerBookBtn: {
-    marginTop: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderRadius: radius.pill,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.4)",
-  },
-  offerBookBtnText: {
-    color: "#fff",
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-  },
+    // ── Special Offer cards ───────────────────────────────────────────────────
+    offerCard: {
+      width: 260,
+      marginRight: 14,
+      borderRadius: 24,
+      overflow: "hidden",
+    },
+    offerDiscountBadge: {
+      position: "absolute",
+      top: 14,
+      right: 14,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 999,
+      zIndex: 2,
+    },
+    offerDiscountText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 12,
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
+    offerCardContent: {
+      padding: 18,
+      paddingTop: 52,
+      paddingBottom: 18,
+    },
+    offerTitle: {
+      color: "#fff",
+      fontFamily: fonts.heading,
+      fontSize: 17,
+      lineHeight: 22,
+    },
+    offerRoute: {
+      color: "rgba(255,255,255,0.8)",
+      fontFamily: fonts.body,
+      fontSize: 11,
+      flex: 1,
+    },
+    offerDate: {
+      color: "rgba(255,255,255,0.75)",
+      fontFamily: fonts.body,
+      fontSize: 11,
+      flex: 1,
+    },
+    offerPriceRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 10,
+    },
+    offerOriginalPrice: {
+      color: "rgba(255,255,255,0.6)",
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      textDecorationLine: "line-through",
+    },
+    offerFinalPrice: {
+      color: "#fff",
+      fontFamily: fonts.bodyBold,
+      fontSize: 18,
+    },
+    offerBookBtn: {
+      marginTop: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: "rgba(255,255,255,0.22)",
+      borderRadius: 999,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.4)",
+    },
+    offerBookBtnText: {
+      color: "#fff",
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+    },
 
-  whyGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 16 },
-  whyCard: {
-    flex: 1,
-    minWidth: 130,
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: radius.xl,
-    ...shadow.soft,
-  },
-  whyIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  whyLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
-    marginBottom: 3,
-  },
-  whySub: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-    lineHeight: 16,
-  },
+    whyGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 16 },
+    whyCard: {
+      flex: 1,
+      minWidth: 130,
+      backgroundColor: "#fff",
+      padding: 16,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    whyIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    whyLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+      marginBottom: 3,
+    },
+    whySub: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+      lineHeight: 16,
+    },
 
-  loginCta: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xxl,
-    padding: 28,
-    alignItems: "center",
-    ...shadow.soft,
-  },
-  loginCtaIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  loginCtaTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: colors.secondary,
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  loginCtaSub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 19,
-    marginBottom: 20,
-  },
-  loginCtaRow: { flexDirection: "row", gap: 12, width: "100%" },
-  loginBtn: {
-    flex: 1,
-    height: 48,
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loginBtnTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
-  registerBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  registerBtnTxt: {
-    color: colors.secondary,
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-  },
+    loginCta: {
+      backgroundColor: "#fff",
+      borderRadius: 24,
+      padding: 28,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    loginCtaIcon: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: "#FEE8E2",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 14,
+    },
+    loginCtaTitle: {
+      fontFamily: fonts.heading,
+      fontSize: 22,
+      color: "#111827",
+      textAlign: "center",
+      marginBottom: 6,
+    },
+    loginCtaSub: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 19,
+      marginBottom: 20,
+    },
+    loginCtaRow: { flexDirection: "row", gap: 12, width: "100%" },
+    loginBtn: {
+      flex: 1,
+      height: 48,
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    loginBtnTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
+    registerBtn: {
+      flex: 1,
+      height: 48,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: "#D1D5DB",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    registerBtnTxt: {
+      color: "#374151",
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+    },
 
-  feedbackCard: {
-    width: width * 0.75,
-    marginRight: 14,
-    backgroundColor: colors.surface,
-    padding: 18,
-    borderRadius: radius.xl,
-    ...shadow.soft,
-  },
-  feedbackHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { color: "#fff", fontFamily: fonts.bodyBold },
-  feedbackName: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  feedbackText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 19,
-    fontStyle: "italic",
-  },
+    feedbackCard: {
+      width: width * 0.75,
+      marginRight: 14,
+      backgroundColor: "#fff",
+      padding: 18,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    feedbackHead: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 12,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarText: { color: "#fff", fontFamily: fonts.bodyBold },
+    feedbackName: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    feedbackText: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 19,
+      fontStyle: "italic",
+    },
 
-  // ── Role-specific banner ──────────────────────────────────────────────────
-  roleBanner: {
-    borderRadius: radius.xxl,
-    padding: 20,
-    gap: 14,
-    ...shadow.card,
-  },
-  roleBannerTop: { flexDirection: "row", alignItems: "center", gap: 12 },
-  roleBannerIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: radius.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  roleBannerTitle: { fontFamily: fonts.bodyBold, fontSize: 16 },
-  roleBannerSub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
-    marginTop: 2,
-  },
-  roleBannerCta: { flexDirection: "row", alignItems: "center", gap: 4 },
-  roleBannerCtaTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12,
-    color: "#FFD700",
-  },
+    // ── Role-specific banner ──────────────────────────────────────────────────
+    roleBanner: {
+      borderRadius: 24,
+      padding: 20,
+      gap: 14,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      backgroundColor: "#fff",
+    },
+    roleBannerTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+    roleBannerIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    roleBannerTitle: { fontFamily: fonts.bodyBold, fontSize: 16 },
+    roleBannerSub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: "#6B7280",
+      marginTop: 2,
+    },
+    roleBannerCta: { flexDirection: "row", alignItems: "center", gap: 4 },
+    roleBannerCtaTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 12,
+    },
 
-  // Volunteer specific
-  todayTourCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: radius.lg,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "rgba(167,243,208,0.3)",
-  },
-  todayTourLabel: {
-    fontFamily: fonts.accent,
-    fontSize: 9,
-    color: "#6EE7B7",
-    letterSpacing: 2,
-    marginBottom: 2,
-  },
-  todayTourName: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
-  todayTourMeta: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: "rgba(255,255,255,0.65)",
-    marginTop: 2,
-  },
-  todayTourBtn: {
-    backgroundColor: "#065F46",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: "#6EE7B7",
-  },
-  todayTourBtnTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 12,
-    color: "#6EE7B7",
-  },
-  volActionsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  volActionBtn: {
-    flex: 1,
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingVertical: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-  },
-  volActionTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
+    // Volunteer specific
+    todayTourCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: "#F0FDF4",
+      borderRadius: 16,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: "#BBF7D0",
+    },
+    todayTourLabel: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 9,
+      color: "#16A34A",
+      letterSpacing: 2,
+      marginBottom: 2,
+    },
+    todayTourName: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: "#111827",
+    },
+    todayTourMeta: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: "#6B7280",
+      marginTop: 2,
+    },
+    todayTourBtn: {
+      backgroundColor: "#16A34A",
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "#BBF7D0",
+    },
+    todayTourBtnTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 12,
+      color: "#fff",
+    },
+    volActionsRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    volActionBtn: {
+      flex: 1,
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: "#F0FDF4",
+      paddingVertical: 12,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "#BBF7D0",
+    },
+    volActionTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
 
-  // Admin specific
-  adminStatsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  adminStatCard: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(255,255,255,0.07)",
-    paddingVertical: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  adminStatValue: { fontFamily: fonts.bodyBold, fontSize: 18 },
-  adminStatLabel: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: "rgba(255,255,255,0.5)",
-    letterSpacing: 0.5,
-  },
-  adminActionsGrid: { flexDirection: "row", gap: 8 },
-  adminActionBtn: {
-    flex: 1,
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    paddingVertical: 14,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  adminActionTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
+    // Admin specific
+    adminStatsRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    adminStatCard: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#FEF3F0",
+      paddingVertical: 12,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "#FECAB7",
+    },
+    adminStatValue: { fontFamily: fonts.bodyBold, fontSize: 18 },
+    adminStatLabel: {
+      fontFamily: fonts.body,
+      fontSize: 10,
+      color: "#6B7280",
+      letterSpacing: 0.5,
+    },
+    adminActionsGrid: { flexDirection: "row", gap: 8 },
+    adminActionBtn: {
+      flex: 1,
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: "#F9FAFB",
+      paddingVertical: 14,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+    },
+    adminActionTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
 
-  mantra: {
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 12,
-  },
-  mantraText: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: colors.secondary,
-    textAlign: "center",
-  },
-  mantraDivider: {
-    width: 36,
-    height: 2,
-    backgroundColor: colors.primary,
-    marginVertical: 12,
-  },
-  mantraEn: {
-    fontFamily: fonts.accent,
-    fontSize: 10,
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    textAlign: "center",
-  },
-  sosFab: {
-    position: "absolute",
-    bottom: 16,
-    right: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "#DC2626",
-    borderRadius: 28,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    shadowColor: "#DC2626",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  sosFabTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: "white",
-    letterSpacing: 1,
-  },
+    mantra: {
+      alignItems: "center",
+      paddingHorizontal: 24,
+      paddingTop: 40,
+      paddingBottom: 12,
+    },
+    mantraText: {
+      fontFamily: fonts.heading,
+      fontSize: 22,
+      color: "#D95D39",
+      textAlign: "center",
+    },
+    mantraDivider: {
+      width: 36,
+      height: 2,
+      backgroundColor: colors.primary,
+      marginVertical: 12,
+    },
+    mantraEn: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 10,
+      color: colors.textSecondary,
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      textAlign: "center",
+    },
+    sosFab: {
+      position: "absolute",
+      bottom: 16,
+      right: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      backgroundColor: "#DC2626",
+      borderRadius: 28,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      shadowColor: "#DC2626",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    sosFabTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+      color: "white",
+      letterSpacing: 1,
+    },
 
-  // ── Search card ────────────────────────────────────────────────────────────
-  searchCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  chipRow: {
-    paddingBottom: 4,
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1.5,
-  },
-  chipActive: {
-    backgroundColor: "#D95D39",
-    borderColor: "#D95D39",
-  },
-  chipInactive: {
-    backgroundColor: "#FFF8F5",
-    borderColor: "#E5C4B8",
-  },
-  chipText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-  },
-  chipTextActive: {
-    color: "#FFFFFF",
-  },
-  chipTextInactive: {
-    color: "#5C1615",
-  },
-  searchInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F8F7F4",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: "#EDE9E6",
-    gap: 10,
-  },
-  searchInputIconWrap: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: "#1F2937",
-    paddingVertical: 10,
-  },
-  swapRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  swapDivider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#EDE9E6",
-  },
-  swapIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFF8F5",
-    borderWidth: 1,
-    borderColor: "#E5C4B8",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F8F7F4",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#EDE9E6",
-    gap: 10,
-  },
-  dateText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: "#1F2937",
-  },
-  quickDateBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#E5C4B8",
-    backgroundColor: "#FFF8F5",
-  },
-  quickDateBtnActive: {
-    backgroundColor: "#D95D39",
-    borderColor: "#D95D39",
-  },
-  quickDateTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: "#5C1615",
-  },
-  quickDateTxtActive: {
-    color: "#FFFFFF",
-  },
-  searchBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#D95D39",
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginTop: 4,
-  },
-  searchBtnText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: "#FFFFFF",
-    letterSpacing: 0.3,
-  },
-});
+    // ── Search card ────────────────────────────────────────────────────────────
+    searchCard: {
+      marginHorizontal: 16,
+      marginBottom: 12,
+      backgroundColor: "#fff",
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: "#E5E7EB",
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    chipRow: {
+      paddingBottom: 4,
+      gap: 8,
+    },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1.5,
+    },
+    chipActive: {
+      backgroundColor: "#D95D39",
+      borderColor: "#D95D39",
+    },
+    chipInactive: {
+      backgroundColor: "#FFF8F5",
+      borderColor: "#E5C4B8",
+    },
+    chipText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+    },
+    chipTextActive: {
+      color: "#FFFFFF",
+    },
+    chipTextInactive: {
+      color: "#5C1615",
+    },
+    searchInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#F2F0ED",
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      gap: 10,
+    },
+    searchInputIconWrap: {
+      width: 32,
+      height: 32,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    searchInput: {
+      flex: 1,
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: "#1F2937",
+      paddingVertical: 10,
+    },
+    swapRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    swapDivider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: "#EDE9E6",
+    },
+    swapIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: "#FFF8F5",
+      borderWidth: 1,
+      borderColor: "#E5C4B8",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dateRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#F2F0ED",
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      gap: 10,
+    },
+    dateText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 14,
+      color: "#1F2937",
+    },
+    quickDateBtn: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: "#E5C4B8",
+      backgroundColor: "#FFF8F5",
+    },
+    quickDateBtnActive: {
+      backgroundColor: "#D95D39",
+      borderColor: "#D95D39",
+    },
+    quickDateTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 11,
+      color: "#5C1615",
+    },
+    quickDateTxtActive: {
+      color: "#FFFFFF",
+    },
+    searchBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: "#D95D39",
+      borderRadius: 14,
+      paddingVertical: 14,
+      marginTop: 4,
+    },
+    searchBtnText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: "#FFFFFF",
+      letterSpacing: 0.3,
+    },
+  });

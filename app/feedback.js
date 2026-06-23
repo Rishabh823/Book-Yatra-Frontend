@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, fonts, radius, shadow } from "../lib/theme";
+import { fonts } from "../lib/theme";
 import { feedback as feedbackApi, auth as authApi } from "../lib/api";
 import { useLang } from "../lib/LanguageContext";
 
@@ -91,51 +91,44 @@ export default function Feedback() {
   // ── Auth gate ──────────────────────────────────────────────────────────────
   if (authChecked && !authed) {
     return (
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: colors.bg }}
-        edges={["top"]}
-      >
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+            <Ionicons name="arrow-back" size={20} color="#374151" />
           </TouchableOpacity>
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
         </View>
+        <View style={s.grayBand} />
         <View style={s.gateWrap}>
-          <View style={s.gateIcon}>
-            <Ionicons
-              name="chatbubbles-outline"
-              size={36}
-              color={colors.primary}
-            />
+          <View style={s.gateCard}>
+            <View style={s.gateIcon}>
+              <Ionicons name="chatbubbles-outline" size={36} color="#D95D39" />
+            </View>
+            <Text style={s.gateTitle}>Sign in to share feedback</Text>
+            <Text style={s.gateSub}>
+              Your feedback helps us improve. Please sign in to continue.
+            </Text>
+            <TouchableOpacity
+              style={s.gateBtn}
+              onPress={() => router.push("/auth/login")}
+            >
+              <Text style={s.gateBtnTxt}>Sign In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/auth/register")}
+              style={{ marginTop: 14 }}
+            >
+              <Text style={s.gateLink}>Don't have an account? Create one</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={s.gateTitle}>Sign in to share feedback</Text>
-          <Text style={s.gateSub}>
-            Your feedback helps us improve. Please sign in to continue.
-          </Text>
-          <TouchableOpacity
-            style={s.gateBtn}
-            onPress={() => router.push("/auth/login")}
-          >
-            <Text style={s.gateBtnTxt}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/register")}
-            style={{ marginTop: 14 }}
-          >
-            <Text style={s.gateLink}>Don't have an account? Create one</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      edges={["top"]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -146,18 +139,19 @@ export default function Feedback() {
             style={s.iconBtn}
             testID="feedback-back"
           >
-            <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+            <Ionicons name="arrow-back" size={20} color="#374151" />
           </TouchableOpacity>
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
         </View>
+        <View style={s.grayBand} />
 
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Rating */}
-          <Text style={s.sectionLabel}>· Your Rating ·</Text>
+          <Text style={s.sectionLabel}>YOUR RATING</Text>
           <View style={s.stars}>
             {[1, 2, 3, 4, 5].map((n) => (
               <TouchableOpacity
@@ -168,14 +162,14 @@ export default function Feedback() {
                 <Ionicons
                   name="star"
                   size={36}
-                  color={n <= form.rating ? "#F59E0B" : colors.borderSubtle}
+                  color={n <= form.rating ? "#D97706" : "#E5E7EB"}
                 />
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Category */}
-          <Text style={[s.sectionLabel, { marginTop: 20 }]}>· Category ·</Text>
+          <Text style={[s.sectionLabel, { marginTop: 20 }]}>CATEGORY</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -226,16 +220,12 @@ export default function Feedback() {
             <View key={f.k} style={s.field}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputWrap}>
-                <Ionicons
-                  name={f.icon}
-                  size={18}
-                  color={colors.textSecondary}
-                />
+                <Ionicons name={f.icon} size={18} color="#6B7280" />
                 <TextInput
                   testID={`fb-${f.k}`}
                   style={s.input}
                   placeholder={f.label.replace(" *", "")}
-                  placeholderTextColor={colors.textDisabled}
+                  placeholderTextColor="#9CA3AF"
                   keyboardType={f.kb || "default"}
                   value={form[f.k]}
                   onChangeText={(v) => set(f.k, v)}
@@ -249,8 +239,8 @@ export default function Feedback() {
             <TextInput
               testID="fb-message"
               style={s.textarea}
-              placeholder="Share your experience with TripKart..."
-              placeholderTextColor={colors.textDisabled}
+              placeholder="Share your experience with us..."
+              placeholderTextColor="#9CA3AF"
               multiline
               numberOfLines={5}
               textAlignVertical="top"
@@ -292,9 +282,11 @@ const s = StyleSheet.create({
   head: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
   },
   iconBtn: {
     width: 40,
@@ -302,23 +294,38 @@ const s = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.surface,
-    ...shadow.soft,
+    backgroundColor: "#F4F4F4",
   },
-  title: { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary },
+  title: {
+    flex: 1,
+    textAlign: "center",
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: "#111827",
+  },
+  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
 
   // ── Auth gate ──────────────────────────────────
   gateWrap: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
+  },
+  gateCard: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 12,
+    padding: 28,
+    alignItems: "center",
+    width: "100%",
   },
   gateIcon: {
     width: 80,
     height: 80,
     borderRadius: 24,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "#FEE8E2",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
@@ -326,14 +333,14 @@ const s = StyleSheet.create({
   gateTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 20,
-    color: colors.textPrimary,
+    color: "#111827",
     textAlign: "center",
     marginBottom: 8,
   },
   gateSub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textSecondary,
+    color: "#6B7280",
     textAlign: "center",
     lineHeight: 21,
     marginBottom: 28,
@@ -341,76 +348,75 @@ const s = StyleSheet.create({
   gateBtn: {
     height: 52,
     paddingHorizontal: 40,
-    backgroundColor: colors.primary,
-    borderRadius: 999,
+    backgroundColor: "#D95D39",
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    ...shadow.card,
   },
   gateBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
-  gateLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
+  gateLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#D95D39" },
 
   // ── Form ──────────────────────────────────────
   sectionLabel: {
-    fontFamily: fonts.accent,
+    fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 3,
+    color: "#9CA3AF",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
     marginBottom: 14,
   },
-  stars: { flexDirection: "row", gap: 10, marginBottom: 4 },
+  stars: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 4,
+    justifyContent: "center",
+  },
   catChip: {
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderRadius: 50,
+    backgroundColor: "#F2F0ED",
   },
   catChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: "#D95D39",
   },
   catText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    color: colors.textPrimary,
+    color: "#111827",
   },
 
   field: { marginBottom: 16 },
   fieldLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: colors.textPrimary,
+    color: "#111827",
     marginBottom: 8,
   },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     height: 56,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
   },
   input: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: "#111827",
     height: 56,
   },
   textarea: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-    padding: 14,
+    backgroundColor: "#F2F0ED",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.textPrimary,
+    color: "#111827",
     minHeight: 120,
   },
 
@@ -419,11 +425,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    height: 56,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "#D95D39",
     marginTop: 8,
-    ...shadow.card,
   },
   ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 15 },
   note: {
@@ -431,6 +436,6 @@ const s = StyleSheet.create({
     marginTop: 20,
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: "#6B7280",
   },
 });
