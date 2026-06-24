@@ -210,13 +210,22 @@ export default function AdminTours() {
           onPress={() => router.push(`/admin/tour/${item._id}`)}
           activeOpacity={0.82}
         >
-          {item.coverPhotoUrl ? (
-            <Image source={{ uri: item.coverPhotoUrl }} style={s.thumb} />
-          ) : (
-            <View style={[s.thumbFallback, { backgroundColor: color + "18" }]}>
-              <Ionicons name="bus-outline" size={22} color={color} />
-            </View>
-          )}
+          <View style={{ position: "relative" }}>
+            {item.coverPhotoUrl ? (
+              <Image source={{ uri: item.coverPhotoUrl }} style={s.thumb} />
+            ) : (
+              <View style={[s.thumbFallback, { backgroundColor: color + "18" }]}>
+                <Ionicons name="bus-outline" size={22} color={color} />
+              </View>
+            )}
+            {(item.totalSeats || item.seats) ? (
+              <View style={s.seatBadge}>
+                <Text style={s.seatBadgeTxt}>
+                  {item.bookedSeats || 0}/{item.totalSeats || item.seats}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={s.cardTitle} numberOfLines={2}>
               {item.title}
@@ -654,6 +663,20 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  seatBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  seatBadgeTxt: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: "#FFFFFF",
   },
   cardTitle: {
     fontFamily: fonts.bodyBold,

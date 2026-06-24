@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, fonts } from "../../lib/theme";
 import { useTheme } from "../../lib/ThemeContext";
 import { publicSettings } from "../../lib/api";
+import { registerPushToken } from "../../lib/notifications";
 
 // Profile tab icon — shows user's photo when available, refreshes when focused or when photo changes
 function ProfileTabIcon({ color, focused }) {
@@ -153,6 +154,10 @@ export default function TabsLayout() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
+    // Re-register push token here — tabs only render when the user is authenticated,
+    // so this guarantees the FCM token is saved to the backend after every login.
+    registerPushToken().catch(() => {});
+
     const init = async () => {
       const role = await AsyncStorage.getItem("role").catch(() => null);
       setIsSuperAdmin(role === "super_admin");

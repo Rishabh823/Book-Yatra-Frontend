@@ -1,290 +1,341 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { AdminShell } from "../../../lib/AdminScreen";
-import { fonts } from "../../../lib/theme";
-import { useColors } from "../../../lib/ThemeContext";
+import { fonts, radius } from "../../../lib/theme";
+import { useColors, useTheme } from "../../../lib/ThemeContext";
 import { superAdmin as superApi } from "../../../lib/api";
-import ConfirmModal from "../../../components/ConfirmModal";
-import Toast from "../../../components/Toast";
-import { useToast } from "../../../lib/hooks/useToast";
 
-const TARGETS = [
-  { key: "all", label: "Everyone", icon: "people", color: "#0284C7" },
-  { key: "users", label: "Users Only", icon: "person", color: "#16A34A" },
-  { key: "admin", label: "Admins Only", icon: "shield", color: "#D97706" },
-  {
-    key: "volunteer",
-    label: "Volunteers",
-    icon: "people-circle",
-    color: "#7C3AED",
-  },
+const CAMPAIGN_TYPES = [
+  { key: "general", label: "General", icon: "notifications-outline", color: "#6B7280" },
+  { key: "coupon", label: "Coupon", icon: "pricetag-outline", color: "#D97706" },
+  { key: "flash_sale", label: "Flash Sale", icon: "flash-outline", color: "#DC2626" },
+  { key: "wallet_cashback", label: "Wallet", icon: "wallet-outline", color: "#16A34A" },
+  { key: "tour_promotion", label: "Tour Promo", icon: "bus-outline", color: null }, // uses colors.primary
+  { key: "emergency", label: "Emergency", icon: "warning-outline", color: "#9333EA" },
 ];
+
+const STATUS_COLORS = {
+  draft: "#6B7280",
+  scheduled: "#D97706",
+  sending: "#3B82F6",
+  sent: "#16A34A",
+  failed: "#DC2626",
+  active: "#8B5CF6",
+};
+
+function SkeletonBox({ width, height, style, colors }) {
+  return (
+    <View
+      style={[
+        {
+          width,
+          height,
+          borderRadius: 8,
+          backgroundColor: colors.elevated,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
+function AnalyticsCard({ label, value, loading, colors, s }) {
+  return (
+    <View style={s.analyticsCard}>
+      {loading ? (
+        <>
+          <SkeletonBox width={40} height={24} colors={colors} style={{ marginBottom: 6 }} />
+          <SkeletonBox width={70} height={11} colors={colors} />
+        </>
+      ) : (
+        <>
+          <Text style={s.analyticsValue}>{value ?? "—"}</Text>
+          <Text style={s.analyticsLabel}>{label}</Text>
+        </>
+      )}
+    </View>
+  );
+}
 
 export default function SuperNotifications() {
   const colors = useColors();
+  const { isDark } = useTheme();
+  const router = useRouter();
   const s = useMemo(() => makeStyles(colors), [colors]);
-  const { toast, showToast, hideToast } = useToast();
 
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [target, setTarget] = useState("all");
-  const [sending, setSending] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
-  const loadHistory = useCallback(async () => {
+  const loadData = useCallback(async () => {
+    setError(null);
     try {
-      const res = await superApi.notificationHistory(1);
-      const list = Array.isArray(res)
-        ? res
-        : res?.notifications || res?.data || [];
-      setHistory(list);
-    } catch {
-      setHistory([]);
-    } finally {
-      setLoadingHistory(false);
+      const [analyticsRes, campaignsRes] = await Promise.allSettled([
+        superApi.getCampaignAnalytics(),
+        superApi.getCampaigns(),
+      ]);
+
+      if (analyticsRes.status === "fulfilled") {
+        setAnalytics(analyticsRes.value);
+      }
+      setAnalyticsLoading(false);
+
+      if (campaignsRes.status === "fulfilled") {
+        const list = Array.isArray(campaignsRes.value)
+          ? campaignsRes.value
+          : campaignsRes.value?.campaigns || campaignsRes.value?.data || [];
+        setCampaigns(list.slice(0, 5));
+      }
+      setCampaignsLoading(false);
+    } catch (e) {
+      setError(e.message || "Failed to load data");
+      setAnalyticsLoading(false);
+      setCampaignsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+    loadData();
+  }, [loadData]);
 
-  const validate = () => {
-    if (!title.trim()) {
-      showToast("Please enter a notification title.");
-      return false;
-    }
-    if (!body.trim()) {
-      showToast("Please enter a message body.");
-      return false;
-    }
-    return true;
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setAnalyticsLoading(true);
+    setCampaignsLoading(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  const getTypeColor = (key) => {
+    const t = CAMPAIGN_TYPES.find((c) => c.key === key);
+    if (!t) return "#6B7280";
+    return t.color || colors.primary;
   };
 
-  const handleSendPress = () => {
-    if (validate()) setShowConfirm(true);
+  const getTypeLabel = (key) => {
+    const t = CAMPAIGN_TYPES.find((c) => c.key === key);
+    return t ? t.label : key || "General";
   };
 
-  const confirmSend = async () => {
-    setShowConfirm(false);
-    setSending(true);
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
     try {
-      const TARGET_ROLE_MAP = {
-        all: null,
-        users: "user",
-        admin: "admin",
-        volunteer: "volunteer",
-      };
-      const roleVal = TARGET_ROLE_MAP[target];
-      const payload = { title: title.trim(), body: body.trim() };
-      if (roleVal) payload.role = roleVal;
-      await superApi.broadcastNotification(payload);
-      showToast("Notification sent successfully!", "success");
-      setTitle("");
-      setBody("");
-      loadHistory();
-    } catch (e) {
-      showToast(e.message || "Failed to send notification.");
-    } finally {
-      setSending(false);
+      return new Date(dateStr).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return "";
     }
   };
-
-  const selectedTarget = TARGETS.find((t) => t.key === target);
 
   return (
-    <AdminShell
-      title="Broadcast Notification"
-      subtitle="Send push alerts to users"
-    >
+    <AdminShell title="Marketing Hub" subtitle="Campaigns & Notifications">
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
-        {/* ── Compose ─────────────────────────────── */}
-        <SectionLabel
-          icon="create-outline"
-          title="Compose"
-          colors={colors}
-          s={s}
-        />
+        {/* ── Analytics Overview ───────────────────── */}
+        <SectionLabel icon="bar-chart-outline" title="Overview" colors={colors} s={s} />
 
-        <View style={s.card}>
-          <Text style={s.fieldLabel}>Title</Text>
-          <TextInput
-            style={s.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="e.g. Tour Update: Kedarnath Yatra"
-            placeholderTextColor={colors.textDisabled}
-            maxLength={80}
+        <View style={s.analyticsGrid}>
+          <AnalyticsCard
+            label="Total Campaigns"
+            value={analytics?.totalCampaigns}
+            loading={analyticsLoading}
+            colors={colors}
+            s={s}
           />
-          <Text style={s.charCount}>{title.length}/80</Text>
-        </View>
-
-        <View style={s.card}>
-          <Text style={s.fieldLabel}>Message</Text>
-          <TextInput
-            style={[s.input, s.textarea]}
-            value={body}
-            onChangeText={setBody}
-            placeholder="Enter your message here..."
-            placeholderTextColor={colors.textDisabled}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            maxLength={300}
+          <AnalyticsCard
+            label="Sent Today"
+            value={analytics?.sentToday}
+            loading={analyticsLoading}
+            colors={colors}
+            s={s}
           />
-          <Text style={s.charCount}>{body.length}/300</Text>
+          <AnalyticsCard
+            label="Scheduled"
+            value={analytics?.scheduled}
+            loading={analyticsLoading}
+            colors={colors}
+            s={s}
+          />
+          <AnalyticsCard
+            label="Total Opened"
+            value={analytics?.totalOpened}
+            loading={analyticsLoading}
+            colors={colors}
+            s={s}
+          />
         </View>
 
-        {/* ── Target Audience ──────────────────────── */}
-        <SectionLabel
-          icon="funnel-outline"
-          title="Target Audience"
-          colors={colors}
-          s={s}
-        />
-        <View style={s.targetGrid}>
-          {TARGETS.map((t) => (
-            <TouchableOpacity
-              key={t.key}
-              style={[
-                s.targetCard,
-                target === t.key && {
-                  borderColor: t.color,
-                  backgroundColor: t.color + "18",
-                },
-              ]}
-              onPress={() => setTarget(t.key)}
-              activeOpacity={0.8}
-            >
-              <View style={[s.targetIcon, { backgroundColor: t.color + "20" }]}>
-                <Ionicons name={t.icon} size={20} color={t.color} />
-              </View>
-              <Text
-                style={[
-                  s.targetLabel,
-                  target === t.key && {
-                    color: t.color,
-                    fontFamily: fonts.bodyBold,
-                  },
-                ]}
-              >
-                {t.label}
-              </Text>
-              {target === t.key && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={16}
-                  color={t.color}
-                  style={{ position: "absolute", top: 8, right: 8 }}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
+        {/* ── Quick Actions ────────────────────────── */}
+        <SectionLabel icon="flash-outline" title="Quick Actions" colors={colors} s={s} />
+
+        <View style={s.quickActionsRow}>
+          <TouchableOpacity
+            style={[s.quickActionBtn, { backgroundColor: colors.primary }]}
+            onPress={() => router.push("/admin/super/campaign/create")}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="megaphone-outline" size={20} color="#fff" />
+            <Text style={s.quickActionTxt}>Create Campaign</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[s.quickActionBtn, s.quickActionBtnSecondary]}
+            onPress={() => router.push("/admin/super/campaigns")}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="list-outline" size={20} color={colors.textPrimary} />
+            <Text style={[s.quickActionTxt, { color: colors.textPrimary }]}>View All</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* ── Send Button ──────────────────────────── */}
-        <TouchableOpacity
-          style={[s.sendBtn, sending && { opacity: 0.6 }]}
-          onPress={handleSendPress}
-          disabled={sending}
-          activeOpacity={0.85}
+        {/* ── Campaign Type Quick Launch ───────────── */}
+        <SectionLabel icon="apps-outline" title="Campaign Type" colors={colors} s={s} />
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.typeChipsRow}
         >
-          {sending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="send" size={18} color="#fff" />
-              <Text style={s.sendTxt}>Send Notification</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          {CAMPAIGN_TYPES.map((type) => {
+            const chipColor = type.color || colors.primary;
+            return (
+              <TouchableOpacity
+                key={type.key}
+                style={[s.typeChip, { borderColor: chipColor + "40", backgroundColor: chipColor + "15" }]}
+                onPress={() =>
+                  router.push("/admin/super/campaign/create?type=" + type.key)
+                }
+                activeOpacity={0.8}
+              >
+                <Ionicons name={type.icon} size={16} color={chipColor} />
+                <Text style={[s.typeChipLabel, { color: chipColor }]}>{type.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
-        {/* ── History ──────────────────────────────── */}
-        <SectionLabel
-          icon="time-outline"
-          title="Recent Broadcasts"
-          colors={colors}
-          s={s}
-        />
+        {/* ── Recent Campaigns ─────────────────────── */}
+        <SectionLabel icon="time-outline" title="Recent Campaigns" colors={colors} s={s} />
 
-        {loadingHistory ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
-        ) : history.length === 0 ? (
+        {campaignsLoading ? (
+          <ActivityIndicator
+            color={colors.primary}
+            size="large"
+            style={{ marginTop: 24 }}
+          />
+        ) : error && campaigns.length === 0 ? (
+          <View style={s.errorCard}>
+            <Ionicons name="alert-circle-outline" size={28} color="#DC2626" />
+            <Text style={s.errorTxt}>{error}</Text>
+            <TouchableOpacity style={s.retryBtn} onPress={loadData} activeOpacity={0.8}>
+              <Text style={[s.retryTxt, { color: colors.primary }]}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : campaigns.length === 0 ? (
           <View style={s.emptyCard}>
             <Ionicons
-              name="notifications-off-outline"
-              size={32}
-              color={colors.textDisabled}
+              name="megaphone-outline"
+              size={36}
+              color={colors.textSecondary}
             />
-            <Text style={s.emptyTxt}>No notifications sent yet</Text>
+            <Text style={s.emptyTitle}>No campaigns yet</Text>
+            <Text style={s.emptySubtitle}>
+              Create your first campaign to get started
+            </Text>
+            <TouchableOpacity
+              style={[s.emptyBtn, { backgroundColor: colors.primary }]}
+              onPress={() => router.push("/admin/super/campaign/create")}
+              activeOpacity={0.85}
+            >
+              <Text style={s.emptyBtnTxt}>Create Campaign</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          history.map((n, i) => (
-            <View key={i} style={s.historyCard}>
-              <View style={s.historyTop}>
-                <Text style={s.historyTitle} numberOfLines={1}>
-                  {n.title || n.notification?.title || "Untitled"}
-                </Text>
-                <View
-                  style={[
-                    s.targetBadge,
-                    { backgroundColor: colors.primary + "18" },
-                  ]}
-                >
-                  <Text style={[s.targetBadgeTxt, { color: colors.primary }]}>
-                    {TARGETS.find((t) => t.key === n.target)?.label ||
-                      n.target ||
-                      "All"}
+          campaigns.map((item) => {
+            const typeColor = getTypeColor(item.type);
+            const statusColor = STATUS_COLORS[item.status] || "#6B7280";
+            return (
+              <TouchableOpacity
+                key={item._id}
+                style={s.campaignCard}
+                onPress={() => router.push("/admin/super/campaign/" + item._id)}
+                activeOpacity={0.8}
+              >
+                <View style={s.campaignTop}>
+                  <Text style={s.campaignTitle} numberOfLines={1}>
+                    {item.title || item.name || "Untitled Campaign"}
                   </Text>
+                  <View style={[s.badge, { backgroundColor: statusColor + "20" }]}>
+                    <Text style={[s.badgeTxt, { color: statusColor }]}>
+                      {item.status
+                        ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                        : "Draft"}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={s.historyBody} numberOfLines={2}>
-                {n.body || n.notification?.body || ""}
-              </Text>
-              {n.createdAt && (
-                <Text style={s.historyTime}>
-                  {new Date(n.createdAt).toLocaleString()}
-                </Text>
-              )}
-            </View>
-          ))
+
+                <View style={s.campaignMeta}>
+                  <View style={[s.typeBadge, { backgroundColor: typeColor + "18", borderColor: typeColor + "30" }]}>
+                    <Text style={[s.typeBadgeTxt, { color: typeColor }]}>
+                      {getTypeLabel(item.type)}
+                    </Text>
+                  </View>
+
+                  <View style={s.campaignStats}>
+                    <Ionicons name="send-outline" size={12} color={colors.textSecondary} />
+                    <Text style={s.campaignStatTxt}>
+                      {item.sentCount ?? item.sent ?? 0} sent
+                    </Text>
+                    {item.createdAt && (
+                      <>
+                        <Text style={s.dot}>·</Text>
+                        <Text style={s.campaignStatTxt}>
+                          {formatDate(item.createdAt)}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.textSecondary}
+                  style={s.campaignChevron}
+                />
+              </TouchableOpacity>
+            );
+          })
         )}
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
-
-      <ConfirmModal
-        visible={showConfirm}
-        icon="send-outline"
-        title="Send Notification?"
-        message={`Send "${title}" to ${selectedTarget?.label || "Everyone"}?`}
-        confirmText="Send"
-        cancelText="Cancel"
-        onConfirm={confirmSend}
-        onCancel={() => setShowConfirm(false)}
-        onDismiss={() => setShowConfirm(false)}
-      />
-
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onHide={hideToast}
-      />
     </AdminShell>
   );
 }
@@ -307,7 +358,7 @@ const makeStyles = (colors) =>
       alignItems: "center",
       gap: 6,
       marginTop: 20,
-      marginBottom: 8,
+      marginBottom: 10,
     },
     sectionLabel: {
       fontFamily: fonts.bodyBold,
@@ -317,135 +368,207 @@ const makeStyles = (colors) =>
       textTransform: "uppercase",
     },
 
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 20,
-      padding: 16,
-      marginBottom: 10,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-    },
-    fieldLabel: {
-      fontFamily: fonts.bodyBold,
-      fontSize: 13,
-      color: colors.textPrimary,
-      marginBottom: 8,
-    },
-    input: {
-      backgroundColor: colors.bg,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontFamily: fonts.body,
-      fontSize: 14,
-      color: colors.textPrimary,
-    },
-    textarea: { height: 96, paddingTop: 12, textAlignVertical: "top" },
-    charCount: {
-      fontFamily: fonts.body,
-      fontSize: 11,
-      color: colors.textDisabled,
-      textAlign: "right",
-      marginTop: 4,
-    },
-
-    targetGrid: {
+    // Analytics
+    analyticsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 10,
-      marginBottom: 4,
     },
-    targetCard: {
+    analyticsCard: {
       flex: 1,
       minWidth: "45%",
       backgroundColor: colors.surface,
-      borderRadius: 20,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       padding: 14,
       alignItems: "center",
-      gap: 8,
-    },
-    targetIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: "center",
       justifyContent: "center",
+      minHeight: 70,
     },
-    targetLabel: {
-      fontFamily: fonts.body,
-      fontSize: 12,
+    analyticsValue: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 24,
       color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    analyticsLabel: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
       textAlign: "center",
     },
 
-    sendBtn: {
+    // Quick Actions
+    quickActionsRow: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    quickActionBtn: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 10,
-      marginTop: 20,
-      height: 56,
-      borderRadius: 999,
-      backgroundColor: colors.primary,
+      gap: 8,
+      height: 52,
+      borderRadius: 14,
     },
-    sendTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#fff" },
-
-    emptyCard: {
+    quickActionBtnSecondary: {
       backgroundColor: colors.surface,
-      borderRadius: 20,
-      padding: 32,
-      alignItems: "center",
-      gap: 10,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
     },
-    emptyTxt: {
-      fontFamily: fonts.body,
+    quickActionTxt: {
+      fontFamily: fonts.bodyBold,
       fontSize: 14,
-      color: colors.textDisabled,
+      color: "#fff",
     },
 
-    historyCard: {
+    // Type chips
+    typeChipsRow: {
+      paddingRight: 16,
+      gap: 8,
+      flexDirection: "row",
+    },
+    typeChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 999,
+      borderWidth: 1,
+    },
+    typeChipLabel: {
+      fontFamily: fonts.bodyMedium || fonts.bodyBold,
+      fontSize: 13,
+    },
+
+    // Campaign cards
+    campaignCard: {
       backgroundColor: colors.surface,
-      borderRadius: 20,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
       padding: 14,
       marginBottom: 10,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
+      position: "relative",
     },
-    historyTop: {
+    campaignTop: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 6,
+      marginBottom: 8,
+      paddingRight: 20,
     },
-    historyTitle: {
+    campaignTitle: {
       fontFamily: fonts.bodyBold,
       fontSize: 14,
       color: colors.textPrimary,
       flex: 1,
+      marginRight: 8,
     },
-    historyBody: {
+    badge: {
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    badgeTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+    },
+    campaignMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap",
+    },
+    typeBadge: {
+      borderRadius: 6,
+      borderWidth: 1,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    typeBadgeTxt: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+    },
+    campaignStats: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    campaignStatTxt: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
+    dot: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
+    campaignChevron: {
+      position: "absolute",
+      right: 14,
+      top: "50%",
+    },
+
+    // Empty / Error
+    emptyCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      padding: 32,
+      alignItems: "center",
+      gap: 8,
+    },
+    emptyTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 16,
+      color: colors.textPrimary,
+      marginTop: 4,
+    },
+    emptySubtitle: {
       fontFamily: fonts.body,
       fontSize: 13,
       color: colors.textSecondary,
-      lineHeight: 18,
+      textAlign: "center",
     },
-    historyTime: {
+    emptyBtn: {
+      marginTop: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 999,
+    },
+    emptyBtnTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: "#fff",
+    },
+    errorCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      padding: 24,
+      alignItems: "center",
+      gap: 8,
+    },
+    errorTxt: {
       fontFamily: fonts.body,
-      fontSize: 11,
-      color: colors.textDisabled,
-      marginTop: 6,
+      fontSize: 13,
+      color: colors.textSecondary,
+      textAlign: "center",
     },
-    targetBadge: {
-      borderRadius: 20,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      marginLeft: 8,
+    retryBtn: {
+      marginTop: 4,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
     },
-    targetBadgeTxt: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+    retryTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+    },
   });

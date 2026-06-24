@@ -236,6 +236,13 @@ const SUPER_ADMIN_GRID = [
     bg: "#ECFEFF",
   },
   {
+    icon: "megaphone",
+    label: "Marketing",
+    action: "admin-marketing",
+    color: "#8B5CF6",
+    bg: "#F5F3FF",
+  },
+  {
     icon: "refresh-circle",
     label: "Refunds",
     action: "super-refunds",
@@ -371,6 +378,13 @@ const ADMIN_GRID = [
     color: "#F59E0B",
     bg: "#FFFBEB",
   },
+  {
+    icon: "megaphone",
+    label: "Marketing",
+    action: "admin-marketing",
+    color: "#8B5CF6",
+    bg: "#F5F3FF",
+  },
 ];
 
 const VOLUNTEER_MENU = [
@@ -426,6 +440,7 @@ const ROLE_ADMIN_ROUTES = {
   "admin-volunteer-mgmt": "/admin/volunteer-management",
   "admin-coupons": "/admin/coupons",
   "admin-reviews": "/admin/reviews",
+  "admin-marketing": "/admin/marketing",
   "super-crawl": "/admin/crawl",
   "super-dashboard": "/admin/super/dashboard",
   "super-operators": "/admin/super/operators",

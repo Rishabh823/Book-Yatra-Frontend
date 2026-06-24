@@ -74,13 +74,20 @@ export default function SuperTours() {
         onPress={() => router.push(`/admin/tour/${item._id}`)}
         activeOpacity={0.85}
       >
-        {item.coverPhotoUrl ? (
-          <Image source={{ uri: item.coverPhotoUrl }} style={s.thumb} />
-        ) : (
-          <View style={[s.thumbFallback, { backgroundColor: color + '18' }]}>
-            <Ionicons name="bus-outline" size={28} color={color} />
-          </View>
-        )}
+        <View style={{ position: 'relative' }}>
+          {item.coverPhotoUrl ? (
+            <Image source={{ uri: item.coverPhotoUrl }} style={s.thumb} />
+          ) : (
+            <View style={[s.thumbFallback, { backgroundColor: color + '18' }]}>
+              <Ionicons name="bus-outline" size={28} color={color} />
+            </View>
+          )}
+          {item.totalSeats ? (
+            <View style={s.seatBadge}>
+              <Text style={s.seatBadgeTxt}>{item.bookedSeats || 0}/{item.totalSeats}</Text>
+            </View>
+          ) : null}
+        </View>
         <View style={s.cardBody}>
           <View style={s.cardTop}>
             <Text style={s.title} numberOfLines={2}>{item.title}</Text>
@@ -169,6 +176,8 @@ const makeStyles = (colors) => StyleSheet.create({
   card:       { backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSubtle },
   thumb:      { width: '100%', height: 130, resizeMode: 'cover' },
   thumbFallback: { width: '100%', height: 90, alignItems: 'center', justifyContent: 'center' },
+  seatBadge:  { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 },
+  seatBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: '#FFFFFF' },
   cardBody:   { padding: 12 },
   cardTop:    { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 4 },
   title:      { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
