@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell, StatCard } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { donations as donationsApi } from '../../lib/api';
 import { fmtDate, fmtCurrency } from '../../lib/utils';
 
@@ -23,11 +24,14 @@ const STATUS_META = {
 };
 
 export default function AdminDonations() {
+  const colors = useColors();
   const [donations, setDonations] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -158,7 +162,7 @@ export default function AdminDonations() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 6,
@@ -174,7 +178,7 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 12,
     backgroundColor: colors.surface, borderRadius: 16,
-    padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB",
+    padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSubtle,
   },
   iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   donorName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },

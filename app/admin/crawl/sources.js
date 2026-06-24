@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput,
   RefreshControl, useWindowDimensions, Modal, Switch, ActivityIndicator,
@@ -9,6 +9,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell, SectionHeader } from '../../../lib/AdminScreen';
 import { colors, fonts } from '../../../lib/theme';
 import { crawlApi } from '../../../lib/api';
+import { useColors } from '../../../lib/ThemeContext';
 
 const STATUS_COLOR = {
   active: { bg: '#F0FDF4', text: '#16A34A' },
@@ -29,6 +30,8 @@ export default function CrawlSources() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 24 : 16;
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,8 +175,8 @@ export default function CrawlSources() {
               return (
                 <View key={src._id} style={s.card}>
                   <View style={s.cardHead}>
-                    <View style={[s.cardIcon, { backgroundColor: src.enabled ? '#F5F3FF' : '#F3F4F6' }]}>
-                      <Ionicons name="globe-outline" size={20} color={src.enabled ? '#7C3AED' : '#9CA3AF'} />
+                    <View style={[s.cardIcon, { backgroundColor: src.enabled ? '#F5F3FF' : themeColors.elevated }]}>
+                      <Ionicons name="globe-outline" size={20} color={src.enabled ? '#7C3AED' : themeColors.textDisabled} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.cardName} numberOfLines={1}>{src.name}</Text>
@@ -243,11 +246,11 @@ export default function CrawlSources() {
 
       {/* Add / Edit Modal */}
       <Modal visible={modal} animationType="slide" presentationStyle="pageSheet">
-        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: themeColors.surface }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           {/* Modal Header */}
           <View style={s.mHeader}>
             <TouchableOpacity onPress={() => setModal(false)} style={s.mClose}>
-              <Ionicons name="close" size={22} color="#111827" />
+              <Ionicons name="close" size={22} color={themeColors.textPrimary} />
             </TouchableOpacity>
             <Text style={s.mTitle}>{editId ? 'Edit Source' : 'Add Source'}</Text>
             <TouchableOpacity style={s.mSave} onPress={save} disabled={saving}>
@@ -333,6 +336,8 @@ export default function CrawlSources() {
 }
 
 function Field({ label, value, onChangeText, placeholder, keyboardType, multiline, mono }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={s.fieldLabel}>{label}</Text>
@@ -341,7 +346,7 @@ function Field({ label, value, onChangeText, placeholder, keyboardType, multilin
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={themeColors.textDisabled}
         keyboardType={keyboardType}
         multiline={multiline}
         autoCapitalize="none"
@@ -352,70 +357,72 @@ function Field({ label, value, onChangeText, placeholder, keyboardType, multilin
 }
 
 function StatChip({ icon, label }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   return (
     <View style={s.chip2}>
-      <Ionicons name={icon} size={11} color="#6B7280" />
+      <Ionicons name={icon} size={11} color={themeColors.textSecondary} />
       <Text style={s.chip2Txt}>{label}</Text>
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   center: { paddingTop: 80, alignItems: 'center' },
   empty:  { paddingTop: 80, alignItems: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#111827', marginTop: 16 },
-  emptySub:   { fontFamily: fonts.body, fontSize: 13, color: '#6B7280', textAlign: 'center', marginTop: 6, lineHeight: 20 },
+  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary, marginTop: 16 },
+  emptySub:   { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginTop: 6, lineHeight: 20 },
   addBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, backgroundColor: '#D95D39', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
   addBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 14, color: '#fff' },
 
-  card:       { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12, padding: 14 },
+  card:       { backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 12, padding: 14 },
   cardHead:   { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   cardIcon:   { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  cardName:   { fontFamily: fonts.bodyBold, fontSize: 14, color: '#111827' },
-  cardUrl:    { fontFamily: fonts.body, fontSize: 11, color: '#6B7280', marginTop: 1 },
+  cardName:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  cardUrl:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   statusBadge:{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   statusTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   cardStats:  { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
-  chip2:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  chip2Txt:   { fontFamily: fonts.body, fontSize: 10, color: '#6B7280' },
+  chip2:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.elevated, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  chip2Txt:   { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary },
 
-  lastCrawled:{ fontFamily: fonts.body, fontSize: 10, color: '#9CA3AF', marginBottom: 4 },
+  lastCrawled:{ fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled, marginBottom: 4 },
   errRow:     { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
   errTxt:     { fontFamily: fonts.body, fontSize: 10, color: '#DC2626', flex: 1 },
 
-  cardActions:{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: '#F2F2F2', paddingTop: 10, marginTop: 4 },
+  cardActions:{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: colors.borderSubtle, paddingTop: 10, marginTop: 4 },
   actionBtn:  { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   actionTxt:  { fontFamily: fonts.bodyBold, fontSize: 11 },
 
   // Modal
-  mHeader:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  mClose:   { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
-  mTitle:   { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: '#111827', marginLeft: 12 },
+  mHeader:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  mClose:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
+  mTitle:   { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginLeft: 12 },
   mSave:    { backgroundColor: '#D95D39', paddingHorizontal: 18, paddingVertical: 9, borderRadius: 10 },
   mSaveTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },
 
-  tabRow:    { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  tabRow:    { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
   tab:       { flex: 1, paddingVertical: 12, alignItems: 'center' },
   tabActive: { borderBottomWidth: 2, borderBottomColor: '#D95D39' },
-  tabTxt:    { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#6B7280' },
+  tabTxt:    { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   tabTxtActive:{ color: '#D95D39', fontFamily: fonts.bodyBold },
 
-  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: '#374151', marginBottom: 6, letterSpacing: 0.3 },
-  input:      { backgroundColor: '#F2F0ED', borderRadius: 10, paddingHorizontal: 14, height: 48, fontFamily: fonts.body, fontSize: 14, color: '#111827' },
+  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, marginBottom: 6, letterSpacing: 0.3 },
+  input:      { backgroundColor: colors.elevated, borderRadius: 10, paddingHorizontal: 14, height: 48, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   rowFields:  { flexDirection: 'row', gap: 10 },
-  switchRow:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F2F2F2', marginTop: 4 },
-  switchLabel:{ fontFamily: fonts.bodyBold, fontSize: 14, color: '#111827' },
+  switchRow:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.borderSubtle, marginTop: 4 },
+  switchLabel:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
 
   segRow:   { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  seg:      { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center', backgroundColor: '#fff' },
+  seg:      { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: 'center', backgroundColor: colors.surface },
   segActive:{ backgroundColor: '#FEF3F0', borderColor: '#D95D39' },
-  segTxt:   { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6B7280' },
+  segTxt:   { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
   segTxtActive:{ color: '#D95D39', fontFamily: fonts.bodyBold },
 
-  chip:     { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
+  chip:     { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
   chipActive:{ backgroundColor: '#FEF3F0', borderColor: '#D95D39' },
-  chipTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6B7280', textTransform: 'capitalize' },
+  chipTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive:{ color: '#D95D39', fontFamily: fonts.bodyBold },
 
   selectorInfo:  { flexDirection: 'row', gap: 8, backgroundColor: '#EFF6FF', borderRadius: 10, padding: 12, marginBottom: 16 },

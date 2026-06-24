@@ -20,7 +20,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
-    "babel-preset-expo": "^56.0.15",
+    "babel-preset-expo": "~54.0.10",
     "expo": "^54.0.0",
     "expo-application": "~7.0.8",
     "expo-av": "~16.0.8",
@@ -63,5 +63,10 @@
     "@types/react": "~19.1.10",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": ["react-native-worklets", "react-native-reanimated", "react-native"]
+    }
+  }
 }

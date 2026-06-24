@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,
   RefreshControl, useWindowDimensions, ActivityIndicator, Modal, TextInput,
@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { AdminShell, SectionHeader } from '../../../lib/AdminScreen';
 import { colors, fonts } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { crawlApi } from '../../../lib/api';
 
 const STATUS_OPTS = ['pending_review', 'approved', 'rejected', 'imported'];
@@ -21,6 +22,8 @@ const STATUS_COLOR = {
 export default function ImportedTours() {
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 24 : 16;
+  const themeColors = useColors();
+  const fl = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const [tours, setTours] = useState([]);
   const [total, setTotal] = useState(0);
@@ -93,7 +96,7 @@ export default function ImportedTours() {
         {/* Change Alert Filter */}
         <View style={{ paddingHorizontal: px, marginBottom: 8 }}>
           <TouchableOpacity style={[fl.toggleRow, changeOnly && { backgroundColor: '#FFFBEB', borderColor: '#D97706' }]} onPress={() => setChangeOnly(v => !v)}>
-            <Ionicons name={changeOnly ? 'checkmark-circle' : 'ellipse-outline'} size={16} color={changeOnly ? '#D97706' : '#9CA3AF'} />
+            <Ionicons name={changeOnly ? 'checkmark-circle' : 'ellipse-outline'} size={16} color={changeOnly ? '#D97706' : themeColors.textDisabled} />
             <Text style={[fl.toggleTxt, changeOnly && { color: '#D97706' }]}>Show only changed tours</Text>
           </TouchableOpacity>
         </View>
@@ -117,7 +120,7 @@ export default function ImportedTours() {
                   {tour.images?.[0] ? (
                     <Image source={{ uri: tour.images[0] }} style={fl.thumb} resizeMode="cover" />
                   ) : (
-                    <View style={[fl.thumb, { backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }]}>
+                    <View style={[fl.thumb, { backgroundColor: themeColors.elevated, alignItems: 'center', justifyContent: 'center' }]}>
                       <Ionicons name="image-outline" size={24} color="#D1D5DB" />
                     </View>
                   )}
@@ -126,7 +129,7 @@ export default function ImportedTours() {
                     {/* Source + Change Badge */}
                     <View style={fl.cardMeta}>
                       <View style={fl.sourceBadge}>
-                        <Ionicons name="globe-outline" size={10} color="#6B7280" />
+                        <Ionicons name="globe-outline" size={10} color={themeColors.textSecondary} />
                         <Text style={fl.sourceText}>{tour.externalSource || tour.sourceId?.name || 'External'}</Text>
                       </View>
                       {tour.changeDetected && (
@@ -145,7 +148,7 @@ export default function ImportedTours() {
                     <View style={fl.detailRow}>
                       {tour.fromLocation ? (
                         <View style={fl.detailChip}>
-                          <Ionicons name="location-outline" size={11} color="#6B7280" />
+                          <Ionicons name="location-outline" size={11} color={themeColors.textSecondary} />
                           <Text style={fl.detailTxt}>{tour.fromLocation}</Text>
                         </View>
                       ) : null}
@@ -157,7 +160,7 @@ export default function ImportedTours() {
                       ) : null}
                       {tour.duration ? (
                         <View style={fl.detailChip}>
-                          <Ionicons name="time-outline" size={11} color="#6B7280" />
+                          <Ionicons name="time-outline" size={11} color={themeColors.textSecondary} />
                           <Text style={fl.detailTxt}>{tour.duration}</Text>
                         </View>
                       ) : null}
@@ -198,10 +201,10 @@ export default function ImportedTours() {
 
       {/* Review Modal */}
       <Modal visible={!!reviewModal} animationType="slide" presentationStyle="formSheet">
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={{ flex: 1, backgroundColor: themeColors.surface }}>
           <View style={fl.mHeader}>
             <TouchableOpacity onPress={() => setReviewModal(null)} style={fl.mClose}>
-              <Ionicons name="close" size={22} color="#111827" />
+              <Ionicons name="close" size={22} color={themeColors.textPrimary} />
             </TouchableOpacity>
             <Text style={fl.mTitle}>Review Tour</Text>
           </View>
@@ -213,7 +216,7 @@ export default function ImportedTours() {
 
                 <View style={fl.mInfoRow}>
                   <View style={fl.mInfoChip}>
-                    <Ionicons name="globe-outline" size={12} color="#6B7280" />
+                    <Ionicons name="globe-outline" size={12} color={themeColors.textSecondary} />
                     <Text style={fl.mInfoTxt}>{reviewModal.externalSource || 'External source'}</Text>
                   </View>
                   {reviewModal.price ? (
@@ -231,7 +234,7 @@ export default function ImportedTours() {
                       <View key={f} style={fl.changeRow}>
                         <Text style={fl.changeField}>{f}</Text>
                         <Text style={fl.changePrev}>{String(reviewModal.previousData?.[f] ?? '—')}</Text>
-                        <Ionicons name="arrow-forward" size={12} color="#6B7280" />
+                        <Ionicons name="arrow-forward" size={12} color={themeColors.textSecondary} />
                         <Text style={fl.changeNew}>{String(reviewModal[f] ?? '—')}</Text>
                       </View>
                     ))}
@@ -251,7 +254,7 @@ export default function ImportedTours() {
                   value={notes}
                   onChangeText={setNotes}
                   placeholder="Add a note for this review..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={themeColors.textDisabled}
                   multiline
                 />
 
@@ -290,32 +293,32 @@ export default function ImportedTours() {
   );
 }
 
-const fl = StyleSheet.create({
-  chip:       { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
-  chipTxt:    { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6B7280' },
+const makeStyles = (colors) => StyleSheet.create({
+  chip:       { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
+  chipTxt:    { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
 
-  toggleRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff', alignSelf: 'flex-start' },
-  toggleTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#9CA3AF' },
+  toggleRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface, alignSelf: 'flex-start' },
+  toggleTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textDisabled },
 
   empty:      { paddingTop: 60, alignItems: 'center', gap: 12 },
-  emptyTxt:   { fontFamily: fonts.body, fontSize: 14, color: '#9CA3AF' },
+  emptyTxt:   { fontFamily: fonts.body, fontSize: 14, color: colors.textDisabled },
 
-  card:       { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12, overflow: 'hidden', flexDirection: 'row' },
+  card:       { backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, marginBottom: 12, overflow: 'hidden', flexDirection: 'row' },
   thumb:      { width: 88, height: undefined, minHeight: 120 },
   cardBody:   { flex: 1, padding: 12 },
   cardMeta:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' },
 
-  sourceBadge:{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#F3F4F6', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
-  sourceText: { fontFamily: fonts.body, fontSize: 9, color: '#6B7280' },
+  sourceBadge:{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: colors.elevated, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
+  sourceText: { fontFamily: fonts.body, fontSize: 9, color: colors.textSecondary },
   changeBadge:{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FFFBEB', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   changeTxt:  { fontFamily: fonts.bodyBold, fontSize: 9, color: '#D97706' },
   statusBadge:{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
   statusTxt:  { fontFamily: fonts.bodyBold, fontSize: 9 },
 
-  title:      { fontFamily: fonts.bodyBold, fontSize: 13, color: '#111827', marginBottom: 6, lineHeight: 18 },
+  title:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 6, lineHeight: 18 },
   detailRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 6 },
   detailChip: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  detailTxt:  { fontFamily: fonts.body, fontSize: 10, color: '#6B7280' },
+  detailTxt:  { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary },
 
   extLink:    { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
   extLinkTxt: { fontFamily: fonts.body, fontSize: 10, color: '#0284C7', flex: 1, textDecorationLine: 'underline' },
@@ -330,26 +333,26 @@ const fl = StyleSheet.create({
   loadMoreTxt:{ fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
 
   // Modal
-  mHeader:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  mClose:    { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
-  mTitle:    { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: '#111827', marginLeft: 12 },
-  mTourTitle:{ fontFamily: fonts.heading, fontSize: 18, color: '#111827', marginBottom: 10, lineHeight: 24 },
+  mHeader:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  mClose:    { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
+  mTitle:    { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginLeft: 12 },
+  mTourTitle:{ fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginBottom: 10, lineHeight: 24 },
   mInfoRow:  { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  mInfoChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  mInfoTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6B7280' },
+  mInfoChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.elevated, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  mInfoTxt:  { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
 
   changeCard: { backgroundColor: '#FFFBEB', borderRadius: 10, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: '#FDE68A' },
   changeCardTitle:{ fontFamily: fonts.bodyBold, fontSize: 11, color: '#92400E', letterSpacing: 0.5, marginBottom: 8, textTransform: 'uppercase' },
   changeRow:  { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  changeField:{ fontFamily: fonts.bodyBold, fontSize: 11, color: '#374151', width: 80 },
-  changePrev: { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF', flex: 1 },
+  changeField:{ fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, width: 80 },
+  changePrev: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, flex: 1 },
   changeNew:  { fontFamily: fonts.bodyBold, fontSize: 11, color: '#D97706', flex: 1 },
 
   extLinkFull: { flexDirection: 'row', gap: 8, backgroundColor: '#EFF6FF', borderRadius: 10, padding: 12, marginBottom: 14 },
   extLinkFullTxt:{ flex: 1, fontFamily: fonts.body, fontSize: 12, color: '#1E40AF', lineHeight: 18 },
 
-  mLabel:    { fontFamily: fonts.bodyBold, fontSize: 11, color: '#374151', marginBottom: 6 },
-  mInput:    { backgroundColor: '#F2F0ED', borderRadius: 10, padding: 12, fontFamily: fonts.body, fontSize: 13, color: '#111827', minHeight: 80, textAlignVertical: 'top', marginBottom: 20 },
+  mLabel:    { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, marginBottom: 6 },
+  mInput:    { backgroundColor: colors.elevated, borderRadius: 10, padding: 12, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, minHeight: 80, textAlignVertical: 'top', marginBottom: 20 },
 
   mActions:  { gap: 10, marginBottom: 14 },
   mApprove:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#D95D39', borderRadius: 12, height: 52 },
@@ -357,5 +360,5 @@ const fl = StyleSheet.create({
   mReject:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FEF2F2', borderRadius: 12, height: 46 },
   mRejectTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: '#DC2626' },
 
-  mNotice:   { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 },
+  mNotice:   { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, textAlign: 'center', lineHeight: 16 },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../lib/api";
-import { colors, fonts } from "../lib/theme";
+import { fonts } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 import { resolveImageUrl } from "../lib/utils";
 
 const PRIMARY = "#D95D39";
@@ -32,6 +33,7 @@ const fmtDate = (d) =>
 export default function Favorites() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,6 +41,8 @@ export default function Favorites() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [total, setTotal] = useState(0);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(
     async (reset = false) => {
@@ -126,7 +130,7 @@ export default function Favorites() {
             </Text>
           </View>
           <View style={s.row}>
-            <Ionicons name="calendar-outline" size={12} color="#9CA3AF" />
+            <Ionicons name="calendar-outline" size={12} color={colors.textDisabled} />
             <Text style={s.meta}>{fmtDate(item.startDate)}</Text>
           </View>
           <View style={s.footer}>
@@ -139,11 +143,11 @@ export default function Favorites() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: insets.top }}>
-      {/* Clean white header */}
+    <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
+      {/* Clean header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#374151" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>My favorites</Text>
@@ -211,16 +215,16 @@ export default function Favorites() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     // borderBottomWidth: StyleSheet.hairlineWidth,
-    // borderBottomColor: "#E5E7EB",
+    // borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
@@ -228,26 +232,26 @@ const s = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
   },
   headerTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   headerSub: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     marginTop: 1,
   },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.textDisabled,
   },
   imgWrap: { height: 160, position: "relative" },
   img: { width: "100%", height: "100%" },
@@ -281,14 +285,14 @@ const s = StyleSheet.create({
   cardTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
     marginBottom: 2,
   },
   row: { flexDirection: "row", alignItems: "center", gap: 5 },
   meta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     flex: 1,
   },
   footer: {
@@ -305,17 +309,17 @@ const s = StyleSheet.create({
   favDate: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: "#D1D5DB",
+    color: colors.textDisabled,
   },
 
   emptyCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 40,
     alignItems: "center",
     gap: 12,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.textDisabled,
   },
   emptyIconCircle: {
     width: 72,
@@ -329,12 +333,12 @@ const s = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     textAlign: "center",
     paddingHorizontal: 16,
   },

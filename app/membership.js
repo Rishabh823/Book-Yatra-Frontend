@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -9,7 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { fonts, radius, shadow } from '../lib/theme';
+import { useColors } from '../lib/ThemeContext';
 import { members as membersApi } from '../lib/api';
 import { useLang } from '../lib/LanguageContext';
 
@@ -24,6 +25,7 @@ const BENEFITS = [
 
 export default function Membership() {
   const router = useRouter();
+  const colors = useColors();
   const { t } = useLang();
   const [form, setForm] = useState({
     fullName: '', phone: '', email: '', address: '',
@@ -32,6 +34,8 @@ export default function Membership() {
   const [loading, setLoading] = useState(false);
   const [applied, setApplied] = useState(false);
   const { toast, showToast, hideToast } = useToast();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -153,7 +157,7 @@ export default function Membership() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12 },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, ...shadow.soft },
   title: { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary },

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { fonts, radius, shadow } from "../../lib/theme";
 import { colors as themeColors } from "../../lib/theme";
-import { useTheme } from "../../lib/ThemeContext";
+import { useTheme, useColors } from "../../lib/ThemeContext";
 import {
   bookings as bookingsApi,
   auth as authApi,
@@ -77,6 +77,8 @@ export default function Bookings() {
   const router = useRouter();
   useLang();
   const { theme } = useTheme();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -163,7 +165,7 @@ export default function Bookings() {
   if (!authed) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+        style={{ flex: 1, backgroundColor: colors.bg }}
         edges={["top"]}
       >
         <View style={s.header}>
@@ -196,7 +198,7 @@ export default function Bookings() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top"]}
     >
       {/* ── Header ──────────────────────────────────────────────────────────── */}
@@ -274,7 +276,7 @@ export default function Bookings() {
                 style={[
                   s.filterTabTxt,
                   {
-                    color: statusFilter === "all" ? "#fff" : "#374151",
+                    color: statusFilter === "all" ? "#fff" : colors.textPrimary,
                     fontFamily:
                       statusFilter === "all"
                         ? fonts.bodyBold
@@ -397,6 +399,8 @@ export default function Bookings() {
 }
 
 function BookingCard({ item, router, isVolunteer }) {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const status = (item.status || "pending").toLowerCase();
   const cfg = STATUS_CFG[status] || STATUS_CFG.pending;
   const seats = item.numberOfSeats || item.seats || 1;
@@ -438,8 +442,8 @@ function BookingCard({ item, router, isVolunteer }) {
       <View style={s.cardBody}>
         {/* Header row: icon + title/id + status */}
         <View style={s.cardHeader}>
-          <View style={[s.busIcon, { backgroundColor: "#F3F4F6" }]}>
-            <Ionicons name="bus-outline" size={20} color="#6B7280" />
+          <View style={[s.busIcon, { backgroundColor: colors.elevated }]}>
+            <Ionicons name="bus-outline" size={20} color={colors.textSecondary} />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={s.cardTitle} numberOfLines={1}>
@@ -472,7 +476,7 @@ function BookingCard({ item, router, isVolunteer }) {
             <Ionicons
               name="arrow-forward"
               size={16}
-              color="#9CA3AF"
+              color={colors.textDisabled}
               style={{ marginHorizontal: 8, marginTop: 14 }}
             />
             <View style={{ flex: 1, alignItems: "flex-end" }}>
@@ -493,12 +497,12 @@ function BookingCard({ item, router, isVolunteer }) {
             <View style={{ flexDirection: "row", gap: 8 }}>
               {date ? (
                 <View style={s.infoChip}>
-                  <Ionicons name="calendar-outline" size={11} color="#6B7280" />
+                  <Ionicons name="calendar-outline" size={11} color={colors.textSecondary} />
                   <Text style={s.infoChipTxt}>{date}</Text>
                 </View>
               ) : null}
               <View style={s.infoChip}>
-                <Ionicons name="people-outline" size={11} color="#6B7280" />
+                <Ionicons name="people-outline" size={11} color={colors.textSecondary} />
                 <Text style={s.infoChipTxt}>
                   {seats} seat{seats > 1 ? "s" : ""}
                 </Text>
@@ -521,307 +525,315 @@ function BookingCard({ item, router, isVolunteer }) {
   );
 }
 
-const s = StyleSheet.create({
-  // Header
-  header: {
-    backgroundColor: "#fff",
-    paddingTop: 14,
-    paddingHorizontal: 18,
-    paddingBottom: 14,
-  },
-  headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  headerTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 26,
-    color: "#1A1A1A",
-    letterSpacing: -0.3,
-  },
-  headerSub: {
-    fontFamily: fonts.body,
-    fontSize: 13, // sub text level — matches menuSub in profile
-    color: "#9CA3AF",
-    marginTop: 2,
-  },
-  countBadge: {
-    alignItems: "center",
-    backgroundColor: "#FFF0EB",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minWidth: 56,
-  },
-  countBadgeNum: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: "#D95D39",
-  },
-  countBadgeLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11, // small badge level — matches sectionLabel in profile
-    color: "#D95D39",
-    marginTop: 1,
-  },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    // Header
+    header: {
+      backgroundColor: colors.surface,
+      paddingTop: 14,
+      paddingHorizontal: 18,
+      paddingBottom: 14,
+    },
+    headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+    headerTitle: {
+      fontFamily: fonts.heading,
+      fontSize: 26,
+      color: colors.textPrimary,
+      letterSpacing: -0.3,
+    },
+    headerSub: {
+      fontFamily: fonts.body,
+      fontSize: 13, // sub text level — matches menuSub in profile
+      color: colors.textDisabled,
+      marginTop: 2,
+    },
+    countBadge: {
+      alignItems: "center",
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      minWidth: 56,
+    },
+    countBadgeNum: {
+      fontFamily: fonts.heading,
+      fontSize: 22,
+      color: "#D95D39",
+    },
+    countBadgeLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11, // small badge level — matches sectionLabel in profile
+      color: "#D95D39",
+      marginTop: 1,
+    },
 
-  // Filter tabs
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  filterTab: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 50,
-    backgroundColor: "#DCFCE7",
-  },
-  filterTabActive: {
-    backgroundColor: "#16A34A",
-  },
-  filterTabPending: {
-    backgroundColor: "#FEF3C7",
-  },
-  filterTabPendingActive: {
-    backgroundColor: "#D97706",
-  },
-  filterTabAll: {
-    backgroundColor: "#F3F4F6",
-    flex: 1,
-    justifyContent: "center",
-  },
-  filterTabAllActive: {
-    backgroundColor: "#D95D39",
-  },
-  filterDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  filterTabTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12, // meta level — matches chip/meta in profile
-    color: "#374151",
-  },
-  filterTabTxtActive: {
-    color: "#fff",
-    fontFamily: fonts.bodyBold,
-  },
-  filterTabTxtPendingActive: {
-    color: "#fff",
-    fontFamily: fonts.bodyBold,
-  },
-  filterTabTxtAllActive: {
-    color: "#fff",
-    fontFamily: fonts.bodyBold,
-  },
+    // Filter tabs
+    filterRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    filterTab: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 50,
+      backgroundColor: colors.elevated,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    filterTabActive: {
+      backgroundColor: "#16A34A",
+      borderColor: "#16A34A",
+    },
+    filterTabPending: {
+      backgroundColor: colors.elevated,
+      borderColor: "#D97706",
+    },
+    filterTabPendingActive: {
+      backgroundColor: "#D97706",
+      borderColor: "#D97706",
+    },
+    filterTabAll: {
+      backgroundColor: colors.elevated,
+      borderColor: colors.borderSubtle,
+      flex: 1,
+      justifyContent: "center",
+    },
+    filterTabAllActive: {
+      backgroundColor: "#D95D39",
+      borderColor: "#D95D39",
+    },
+    filterDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+    },
+    filterTabTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.textPrimary,
+    },
+    filterTabTxtActive: {
+      color: "#fff",
+      fontFamily: fonts.bodyBold,
+    },
+    filterTabTxtPendingActive: {
+      color: "#fff",
+      fontFamily: fonts.bodyBold,
+    },
+    filterTabTxtAllActive: {
+      color: "#fff",
+      fontFamily: fonts.bodyBold,
+    },
 
-  // Auth gate
-  gateBody: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 36,
-    gap: 10,
-    paddingTop: 40,
-  },
-  gateIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#FEE9E3",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gateTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: "#5C1615",
-    textAlign: "center",
-    marginTop: 8,
-  },
-  gateSub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "#9CA3AF",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  loginBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 20,
-    backgroundColor: "#D95D39",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 50,
-  },
-  loginBtnText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
+    // Auth gate
+    gateBody: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 36,
+      gap: 10,
+      paddingTop: 40,
+    },
+    gateIconWrap: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    gateTitle: {
+      fontFamily: fonts.heading,
+      fontSize: 22,
+      color: "#5C1615",
+      textAlign: "center",
+      marginTop: 8,
+    },
+    gateSub: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textDisabled,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    loginBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 20,
+      backgroundColor: "#D95D39",
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      borderRadius: 50,
+    },
+    loginBtnText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
 
-  // Empty
-  empty: {
-    alignItems: "center",
-    paddingTop: 60,
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  emptyIconBg: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FEE9E3",
-  },
-  emptyTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: "#5C1615",
-    marginTop: 4,
-  },
-  emptySub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "#9CA3AF",
-    textAlign: "center",
-  },
-  cta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 16,
-    backgroundColor: "#D95D39",
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 50,
-  },
-  ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
+    // Empty
+    empty: {
+      alignItems: "center",
+      paddingTop: 60,
+      paddingHorizontal: 32,
+      gap: 12,
+    },
+    emptyIconBg: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.elevated,
+    },
+    emptyTitle: {
+      fontFamily: fonts.heading,
+      fontSize: 22,
+      color: "#5C1615",
+      marginTop: 4,
+    },
+    emptySub: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textDisabled,
+      textAlign: "center",
+    },
+    cta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 16,
+      backgroundColor: "#D95D39",
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      borderRadius: 50,
+    },
+    ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
 
-  // Gray band between header and cards (iOS Settings style)
-  grayBand: {
-    height: 10,
-    backgroundColor: "#F2F2F2",
-  },
+    // Gray band between header and cards (iOS Settings style)
+    grayBand: {
+      height: 10,
+      backgroundColor: colors.bg,
+    },
 
-  // Booking card
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    flexDirection: "row",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  cardStrip: { width: 4 },
-  cardBody: { flex: 1, padding: 14 },
+    // Booking card
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      flexDirection: "row",
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    cardStrip: { width: 4 },
+    cardBody: { flex: 1, padding: 14 },
 
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  busIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1A1A1A" }, // primary label
-  cardSubTitle: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "#9CA3AF",
-    marginTop: 1,
-  }, // sub text
-  bookingId: {
-    fontFamily: fonts.accent,
-    fontSize: 10,
-    color: "#D1D5DB",
-    letterSpacing: 1,
-    marginTop: 2,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginLeft: 6,
-  },
-  statusBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11 }, // small badge level
+    cardHeader: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginBottom: 12,
+    },
+    busIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cardTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary }, // primary label
+    cardSubTitle: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textDisabled,
+      marginTop: 1,
+    }, // sub text
+    bookingId: {
+      fontFamily: fonts.accent,
+      fontSize: 10,
+      color: colors.textDisabled,
+      letterSpacing: 1,
+      marginTop: 2,
+    },
+    statusBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+      borderRadius: 20,
+      marginLeft: 6,
+    },
+    statusBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11 }, // small badge level
 
-  routeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 12,
-  },
-  routeLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 10,
-    color: "#9CA3AF",
-    letterSpacing: 1.5,
-    marginBottom: 2,
-  }, // small badge level
-  routeCity: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1A1A1A" }, // primary label
+    routeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      marginBottom: 12,
+    },
+    routeLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 10,
+      color: colors.textDisabled,
+      letterSpacing: 1.5,
+      marginBottom: 2,
+    }, // small badge level
+    routeCity: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary }, // primary label
 
-  footerRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  infoChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  infoChipTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: "#6B7280" }, // meta level
-  amountTxt: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 22,
-    color: "#1A1A1A",
-    marginTop: 4,
-  }, // same as statNum
+    footerRow: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+    },
+    infoChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: colors.elevated,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 20,
+    },
+    infoChipTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary }, // meta level
+    amountTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 22,
+      color: colors.textPrimary,
+      marginTop: 4,
+    }, // same as statNum
 
-  viewBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: "#D95D39",
-    borderRadius: 50,
-  },
-  viewBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" }, // button level
+    viewBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      backgroundColor: "#D95D39",
+      borderRadius: 50,
+    },
+    viewBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" }, // button level
 
-  // Volunteer tour filter
-  tourChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  tourChipActive: { backgroundColor: "#D95D39", borderColor: "#D95D39" },
-  tourChipTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: "#6B7280",
-    maxWidth: 120,
-  }, // meta level
-  tourChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
-});
+    // Volunteer tour filter
+    tourChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    tourChipActive: { backgroundColor: "#D95D39", borderColor: "#D95D39" },
+    tourChipTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.textSecondary,
+      maxWidth: 120,
+    }, // meta level
+    tourChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
+  });

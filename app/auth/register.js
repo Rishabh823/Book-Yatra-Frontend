@@ -58,6 +58,7 @@ export default function Register() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  const returnTo = params.returnTo || null;
   const [regType, setRegType] = useState(params.type || null); // 'user' | 'manager' | null
   const [step, setStep] = useState(1);    // 1=email, 2=otp, 3=details
   const [loading, setLoading] = useState(false);
@@ -152,7 +153,9 @@ export default function Register() {
 
       // Small delay so toast is visible, then navigate
       setTimeout(() => {
-        if (loginRes?.user?.role === 'user' && !(loginRes?.user?.joinedOperators?.length > 0)) {
+        if (returnTo) {
+          router.replace(returnTo);
+        } else if (loginRes?.user?.role === 'user' && !(loginRes?.user?.joinedOperators?.length > 0)) {
           router.replace('/select-operators');
         } else {
           router.replace('/(tabs)');

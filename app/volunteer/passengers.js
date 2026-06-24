@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { volunteerApi } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 function fmtDate(d) {
   if (!d) return "";
@@ -25,6 +26,8 @@ function fmtDate(d) {
 }
 
 function TourPickerScreen({ onSelect }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [tours, setTours] = useState([]);
@@ -93,6 +96,8 @@ function TourPickerScreen({ onSelect }) {
 
 export default function PassengersScreen() {
   const { tourId: paramTourId } = useLocalSearchParams();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
@@ -174,7 +179,7 @@ export default function PassengersScreen() {
 
   const renderItem = ({ item }) => (
     <View style={[styles.passengerRow, shadow.soft]}>
-      <View style={[styles.seatBadge, { backgroundColor: item.isCheckedIn ? "#DCFCE7" : "#F3F4F6" }]}>
+      <View style={[styles.seatBadge, { backgroundColor: item.isCheckedIn ? "#DCFCE7" : colors.elevated }]}>
         <Text style={[styles.seatNum, { color: item.isCheckedIn ? "#16A34A" : colors.textSecondary }]}>
           {item.seatNumber || "—"}
         </Text>
@@ -305,7 +310,7 @@ export default function PassengersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 20,
@@ -341,7 +346,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: colors.surface,
   },
-  progressBg: { flex: 1, height: 8, backgroundColor: "#F3F4F6", borderRadius: 4, overflow: "hidden" },
+  progressBg: { flex: 1, height: 8, backgroundColor: colors.elevated, borderRadius: 4, overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: "#16A34A", borderRadius: 4 },
   progressText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#16A34A", width: 36 },
   controls: {
@@ -349,10 +354,10 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.borderSubtle,
   },
   searchInput: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     borderRadius: radius.lg,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -365,7 +370,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.pill,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
   },
   filterActive: { backgroundColor: colors.primary },
   filterText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },

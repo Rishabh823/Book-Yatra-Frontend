@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { walletApi } from "../../lib/api";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -20,6 +21,8 @@ import RazorpayCheckout from "../../components/RazorpayCheckout";
 const PRESETS = [100, 200, 500, 1000, 2000, 5000];
 
 export default function AddMoneyScreen() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
   const [amount, setAmount] = useState("");
@@ -196,7 +199,7 @@ export default function AddMoneyScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   head: {
     flexDirection: "row",

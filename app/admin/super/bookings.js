@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
   RefreshControl, TextInput, ScrollView, useWindowDimensions,
@@ -6,7 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../../lib/theme';
+import { fonts, radius } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const STATUSES = ['all', 'pending', 'confirmed', 'checked_in', 'cancelled'];
@@ -18,6 +19,7 @@ const STATUS_COLORS = {
 
 export default function SuperBookings() {
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 20 : 12;
 
@@ -27,6 +29,8 @@ export default function SuperBookings() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -61,7 +65,7 @@ export default function SuperBookings() {
   };
 
   const renderItem = useCallback(({ item }) => {
-    const sc = STATUS_COLORS[item.status] || { bg: '#F3F4F6', text: '#6B7280' };
+    const sc = STATUS_COLORS[item.status] || { bg: colors.elevated, text: colors.textSecondary };
     const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN') : '—';
     return (
       <TouchableOpacity
@@ -104,7 +108,7 @@ export default function SuperBookings() {
         )}
       </TouchableOpacity>
     );
-  }, [px, router]);
+  }, [px, router, s, colors]);
 
   return (
     <AdminShell title="All Bookings" subtitle={`${filtered.length} of ${items.length}`}>
@@ -165,7 +169,7 @@ export default function SuperBookings() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   statsRow:   { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, marginTop: 4, borderWidth: 1, borderColor: colors.borderSubtle },
   statItem:   { flex: 1, alignItems: 'center' },
   statValue:  { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
@@ -178,7 +182,7 @@ const s = StyleSheet.create({
   chipTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   cardRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   idBadge:    { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + '14', alignItems: 'center', justifyContent: 'center' },
   idText:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },

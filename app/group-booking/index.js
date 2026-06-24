@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../lib/api';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -23,6 +24,8 @@ export default function GroupBookingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const [step, setStep] = useState(0);
   const [showSuccessConfirm, setShowSuccessConfirm] = useState(false);
@@ -283,56 +286,56 @@ export default function GroupBookingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F7F4' },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: 'white' },
   subtitle: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.7)' },
-  stepRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF' },
-  stepDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' },
+  stepRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: colors.surface },
+  stepDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.borderSubtle, alignItems: 'center', justifyContent: 'center' },
   stepDotActive: { backgroundColor: '#D95D39' },
-  stepNum: { fontFamily: 'Manrope_700Bold', fontSize: 11, color: '#6B7280' },
-  stepLine: { flex: 1, height: 2, backgroundColor: '#E5E7EB' },
+  stepNum: { fontFamily: 'Manrope_700Bold', fontSize: 11, color: colors.textSecondary },
+  stepLine: { flex: 1, height: 2, backgroundColor: colors.borderSubtle },
   stepLineActive: { backgroundColor: '#D95D39' },
-  stepTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: '#1A1A1A' },
-  typeCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1.5, borderColor: '#E5E7EB' },
+  stepTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 20, color: colors.textPrimary },
+  typeCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1.5, borderColor: colors.borderSubtle },
   typeCardActive: { borderColor: '#D95D39', backgroundColor: '#FEE8E2' },
   typeEmoji: { fontSize: 32 },
-  typeLabel: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: '#1A1A1A' },
-  typeDesc: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#6B7280', marginTop: 2 },
-  fieldLabel: { fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#6B7280', marginBottom: 8 },
-  input: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#1A1A1A', borderWidth: 1, borderColor: '#E5E7EB' },
+  typeLabel: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: colors.textPrimary },
+  typeDesc: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  fieldLabel: { fontFamily: 'Manrope_500Medium', fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
+  input: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontFamily: 'Manrope_400Regular', fontSize: 14, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
   passengerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   addPassBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#D95D39', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   addPassText: { fontFamily: 'Manrope_700Bold', fontSize: 13, color: 'white' },
-  passengerCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, gap: 10 },
+  passengerCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, gap: 10 },
   passengerCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   passengerNum: { fontFamily: 'Manrope_700Bold', fontSize: 13, color: '#D95D39' },
   removeBtn: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center' },
   row2: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   genderRow: { flexDirection: 'row', gap: 4 },
-  genderBtn: { width: 32, height: 38, borderRadius: 8, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
+  genderBtn: { width: 32, height: 38, borderRadius: 8, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   genderBtnActive: { backgroundColor: '#D95D39', borderColor: '#D95D39' },
-  genderText: { fontFamily: 'Manrope_700Bold', fontSize: 12, color: '#6B7280' },
+  genderText: { fontFamily: 'Manrope_700Bold', fontSize: 12, color: colors.textSecondary },
   genderTextActive: { color: 'white' },
-  reviewCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, gap: 4 },
-  reviewLabel: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#6B7280' },
-  reviewValue: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: '#1A1A1A' },
-  reviewSub: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#6B7280' },
-  passengerLine: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: '#1A1A1A', marginTop: 2 },
+  reviewCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 14, gap: 4 },
+  reviewLabel: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: colors.textSecondary },
+  reviewValue: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: colors.textPrimary },
+  reviewSub: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: colors.textSecondary },
+  passengerLine: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: colors.textPrimary, marginTop: 2 },
   priceCard: { backgroundColor: '#FFFBEB', borderRadius: 16, padding: 16, alignItems: 'center', gap: 4 },
-  priceLabel: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: '#1A1A1A' },
+  priceLabel: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: colors.textPrimary },
   priceValue: { fontFamily: 'Philosopher_700Bold', fontSize: 32, color: '#D95D39' },
-  priceSub: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#6B7280' },
+  priceSub: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: colors.textSecondary },
   confirmIcon: { width: 88, height: 88, borderRadius: 24, backgroundColor: '#FEE8E2', alignItems: 'center', justifyContent: 'center' },
-  confirmTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 24, color: '#1A1A1A' },
-  confirmSub: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20 },
-  bottomBar: { backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6', flexDirection: 'row', gap: 10 },
-  backNavBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: '#F3F4F6' },
-  backNavText: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: '#1A1A1A' },
+  confirmTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 24, color: colors.textPrimary },
+  confirmSub: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: colors.textSecondary, textAlign: 'center', paddingHorizontal: 20, lineHeight: 20 },
+  bottomBar: { backgroundColor: colors.surface, paddingHorizontal: 20, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.borderSubtle, flexDirection: 'row', gap: 10 },
+  backNavBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: colors.elevated },
+  backNavText: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: colors.textPrimary },
   nextBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#D95D39', borderRadius: 12, paddingVertical: 14 },
-  nextBtnDisabled: { backgroundColor: '#E5E7EB' },
+  nextBtnDisabled: { backgroundColor: colors.borderSubtle },
   nextBtnText: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: 'white' },
   submitBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#16A34A', borderRadius: 12, paddingVertical: 14 },
   submitBtnText: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: 'white' },

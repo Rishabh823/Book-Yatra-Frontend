@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { api, volunteerApi } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 function TourPickerForScan({ onSelect }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [tours, setTours] = useState([]);
@@ -96,6 +99,9 @@ export default function CheckInScreen() {
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState(null);
+
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // Show tour picker if no tour is selected
   if (!activeTourId) {
@@ -259,7 +265,7 @@ export default function CheckInScreen() {
 }
 
 const CORNER = 24;
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: "black" },
   center: {
     flex: 1,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -62,6 +63,8 @@ const getExpiryStatus = (expiresAt) => {
 export default function DocumentVaultScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
   const { toast, showToast, hideToast } = useToast();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +142,7 @@ export default function DocumentVaultScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Document Vault</Text>
@@ -151,7 +154,7 @@ export default function DocumentVaultScreen() {
           style={styles.addBtn}
           onPress={() => router.push("/document-vault/add")}
         >
-          <Ionicons name="add" size={22} color="#374151" />
+          <Ionicons name="add" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -186,7 +189,7 @@ export default function DocumentVaultScreen() {
                 <Ionicons
                   name="lock-closed-outline"
                   size={40}
-                  color="#9CA3AF"
+                  color={themeColors.textDisabled}
                 />
               </View>
               <Text style={styles.emptyTitle}>Your vault is empty</Text>
@@ -219,55 +222,55 @@ export default function DocumentVaultScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
     gap: 12,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     fontFamily: "Philosopher_700Bold",
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   addBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
   grayBand: {
     height: 10,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: colors.elevated,
   },
   docCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 14,
   },
@@ -282,7 +285,7 @@ const styles = StyleSheet.create({
   docTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
     flex: 1,
   },
   verifiedBadge: {
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
   docType: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
     textTransform: "capitalize",
   },
   docExpiry: { fontFamily: fonts.bodyMedium, fontSize: 11 },
@@ -315,19 +318,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.textSecondary,
     textAlign: "center",
     paddingHorizontal: 32,
   },

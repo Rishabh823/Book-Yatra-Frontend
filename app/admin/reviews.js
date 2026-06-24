@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { colors, fonts } from '../../lib/theme';
 import { reviews as reviewsApi, auth as authApi } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
+import { useColors } from '../../lib/ThemeContext';
 
 const FILTERS = ['all', 'pending', 'approved', 'rejected'];
 
@@ -22,6 +23,7 @@ const STATUS_CONFIG = {
 // ─── Utility helpers ──────────────────────────────────────────────────────────
 
 function StarRow({ rating, size = 13 }) {
+  const starColors = useColors();
   return (
     <View style={{ flexDirection: 'row', gap: 2 }}>
       {[1, 2, 3, 4, 5].map(n => (
@@ -29,7 +31,7 @@ function StarRow({ rating, size = 13 }) {
           key={n}
           name="star"
           size={size}
-          color={n <= (rating || 0) ? '#F59E0B' : '#E5E7EB'}
+          color={n <= (rating || 0) ? '#F59E0B' : starColors.borderSubtle}
         />
       ))}
     </View>
@@ -37,7 +39,9 @@ function StarRow({ rating, size = 13 }) {
 }
 
 function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || { color: colors.textSecondary, bg: colors.surface, label: status || '—' };
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
+  const cfg = STATUS_CONFIG[status] || { color: colors.textSecondary, bg: themeColors.surface, label: status || '—' };
   return (
     <View style={[s.statusBadge, { backgroundColor: cfg.bg }]}>
       <View style={[s.statusDot, { backgroundColor: cfg.color }]} />
@@ -49,6 +53,8 @@ function StatusBadge({ status }) {
 // ─── Review Card ──────────────────────────────────────────────────────────────
 
 function ReviewCard({ item, onApprove, onReject, onViewTour }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -204,6 +210,8 @@ function ReviewCard({ item, onApprove, onReject, onViewTour }) {
 
 export default function AdminReviews() {
   const router = useRouter();
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [role, setRole]           = useState('user');
   const [items, setItems]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -284,7 +292,7 @@ export default function AdminReviews() {
   // ── Access denied ─────────────────────────────────────────────────────────
   if (!loading && !isAdmin) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 32 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg, alignItems: 'center', justifyContent: 'center', padding: 32 }} edges={['top']}>
         <View style={s.lockIcon}>
           <Ionicons name="lock-closed-outline" size={32} color={colors.primary} />
         </View>
@@ -367,7 +375,7 @@ export default function AdminReviews() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }} edges={['top']}>
       {headerEl}
 
       {loading ? (
@@ -421,7 +429,7 @@ export default function AdminReviews() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // Access denied
   lockIcon:    { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
   lockTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary, marginTop: 14, marginBottom: 8 },
@@ -430,27 +438,27 @@ const s = StyleSheet.create({
   lockBackTxt: { color: '#fff', fontFamily: fonts.bodyBold },
 
   // Header
-  header:        { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  backBtn:       { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
+  header:        { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 8, paddingBottom: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  backBtn:       { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
   headerTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, letterSpacing: -0.3 },
   headerSubtitle:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   headerBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFBEB', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: '#F59E0B30' },
   headerBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: '#F59E0B', letterSpacing: 0.5 },
 
   // Stats banner
-  statsBanner: { flexDirection: 'row', marginHorizontal: 16, marginVertical: 12, backgroundColor: '#fff', borderRadius: 20, paddingVertical: 14, borderWidth: 1, borderColor: '#E5E7EB' },
+  statsBanner: { flexDirection: 'row', marginHorizontal: 16, marginVertical: 12, backgroundColor: colors.surface, borderRadius: 20, paddingVertical: 14, borderWidth: 1, borderColor: colors.borderSubtle },
   statItem:    { flex: 1, alignItems: 'center' },
   statValue:   { fontFamily: fonts.heading, fontSize: 22, letterSpacing: -0.5 },
   statLabel:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 
   // Filter pills
-  filterPill:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB' },
+  filterPill:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   filterTxt:       { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary },
   filterCount:     { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999 },
   filterCountTxt:  { fontFamily: fonts.bodyBold, fontSize: 11 },
 
   // Review card
-  card:           { backgroundColor: '#fff', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
+  card:           { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
 
   cardTourRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   tourIconWrap:   { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.secondary + '15', alignItems: 'center', justifyContent: 'center' },
@@ -480,7 +488,7 @@ const s = StyleSheet.create({
   rejectExpand:   { overflow: 'hidden' },
   noteInput:      { borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, padding: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, backgroundColor: '#FFF5F5', marginTop: 10, minHeight: 60, textAlignVertical: 'top' },
   rejectConfirmRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  cancelBtn:      { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 16, backgroundColor: '#E5E7EB' },
+  cancelBtn:      { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 16, backgroundColor: colors.borderSubtle },
   cancelBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
   confirmRejectBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 16, backgroundColor: '#DC2626' },
   confirmRejectTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#fff' },

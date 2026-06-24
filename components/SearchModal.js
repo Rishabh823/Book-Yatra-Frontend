@@ -12,11 +12,12 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
-import { colors, fonts, radius, shadow } from "../lib/theme";
+import { fonts, radius, shadow } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 import { tours as toursApi, search as searchApi } from "../lib/api";
 import {
   MAPBOX_TOKEN,
@@ -89,6 +90,7 @@ async function reverseGeocode(lat, lng) {
 
 // ── Skeleton loader row ───────────────────────────────────────────────────────
 function SkeletonRow() {
+  const colors = useColors();
   const anim = useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
     Animated.loop(
@@ -107,86 +109,111 @@ function SkeletonRow() {
     ).start();
   }, []);
   return (
-    <Animated.View style={[sk.row, { opacity: anim }]}>
-      <View style={sk.icon} />
+    <Animated.View
+      style={[
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+        },
+        { opacity: anim },
+      ]}
+    >
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: colors.borderSubtle,
+        }}
+      />
       <View style={{ flex: 1, gap: 6 }}>
-        <View style={sk.line1} />
-        <View style={sk.line2} />
+        <View
+          style={{
+            height: 13,
+            borderRadius: 6,
+            backgroundColor: colors.borderSubtle,
+            width: "70%",
+          }}
+        />
+        <View
+          style={{
+            height: 11,
+            borderRadius: 5,
+            backgroundColor: colors.elevated,
+            width: "50%",
+          }}
+        />
       </View>
     </Animated.View>
   );
 }
-const sk = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
-  icon: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#E5E7EB" },
-  line1: {
-    height: 13,
-    borderRadius: 6,
-    backgroundColor: "#E5E7EB",
-    width: "70%",
-  },
-  line2: {
-    height: 11,
-    borderRadius: 5,
-    backgroundColor: "#F3F4F6",
-    width: "50%",
-  },
-});
 
 // ── Section header ────────────────────────────────────────────────────────────
 function SectionHeader({ icon, color, label, count }) {
+  const colors = useColors();
   return (
-    <View style={sh.row}>
-      <View style={[sh.dot, { backgroundColor: color + "22" }]}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+        paddingBottom: 6,
+      }}
+    >
+      <View
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: color + "22",
+        }}
+      >
         <Ionicons name={icon} size={12} color={color} />
       </View>
-      <Text style={sh.label}>{label}</Text>
-      {count > 0 && <Text style={sh.count}>{count}</Text>}
+      <Text
+        style={{
+          flex: 1,
+          fontFamily: fonts.bodySemiBold,
+          fontSize: 12,
+          color: colors.textSecondary,
+          letterSpacing: 0.4,
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </Text>
+      {count > 0 && (
+        <Text
+          style={{
+            fontFamily: fonts.body,
+            fontSize: 12,
+            color: colors.textDisabled,
+          }}
+        >
+          {count}
+        </Text>
+      )}
     </View>
   );
 }
-const sh = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 6,
-  },
-  dot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  label: {
-    flex: 1,
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 12,
-    color: colors.textSecondary,
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  count: { fontFamily: fonts.body, fontSize: 12, color: colors.textDisabled },
-});
 
 // ── Result row ────────────────────────────────────────────────────────────────
 const TYPE_CONFIG = {
   place: { bg: "#EFF6FF", icon: "location-outline", color: "#3B82F6" },
-  tour: { bg: "#FFF4EC", icon: "bus-outline", color: colors.primary },
+  tour: { bg: "#FFF4EC", icon: "bus-outline", color: "#D95D39" },
   pickup: { bg: "#ECFDF5", icon: "location-sharp", color: "#16A34A" },
   operator: { bg: "#F5F3FF", icon: "business-outline", color: "#7C3AED" },
 };
 
 function ResultRow({ type, title, subtitle, onPress, highlight }) {
+  const colors = useColors();
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.tour;
   const parts = highlight
     ? (title || "").split(
@@ -197,16 +224,45 @@ function ResultRow({ type, title, subtitle, onPress, highlight }) {
       )
     : null;
   return (
-    <TouchableOpacity style={rr.row} onPress={onPress} activeOpacity={0.7}>
-      <View style={[rr.icon, { backgroundColor: cfg.bg }]}>
+    <TouchableOpacity
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+      }}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: cfg.bg,
+        }}
+      >
         <Ionicons name={cfg.icon} size={18} color={cfg.color} />
       </View>
-      <View style={rr.text}>
-        <Text style={rr.title} numberOfLines={1}>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontFamily: fonts.bodyMedium,
+            fontSize: 14,
+            color: colors.textPrimary,
+          }}
+          numberOfLines={1}
+        >
           {parts
             ? parts.map((part, i) =>
                 part.toLowerCase() === highlight.toLowerCase() ? (
-                  <Text key={i} style={rr.hl}>
+                  <Text
+                    key={i}
+                    style={{ fontFamily: fonts.bodyBold, color: "#D95D39" }}
+                  >
                     {part}
                   </Text>
                 ) : (
@@ -216,7 +272,15 @@ function ResultRow({ type, title, subtitle, onPress, highlight }) {
             : title}
         </Text>
         {subtitle ? (
-          <Text style={rr.sub} numberOfLines={1}>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 12,
+              color: colors.textSecondary,
+              marginTop: 1,
+            }}
+            numberOfLines={1}
+          >
             {subtitle}
           </Text>
         ) : null}
@@ -225,41 +289,14 @@ function ResultRow({ type, title, subtitle, onPress, highlight }) {
     </TouchableOpacity>
   );
 }
-const rr = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: { flex: 1 },
-  title: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  hl: { fontFamily: fonts.bodyBold, color: colors.primary },
-  sub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-});
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function SearchModal({ visible, onClose }) {
   const router = useRouter();
+  const colors = useColors();
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
+  const doSearchRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(SCREEN_H)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -331,14 +368,17 @@ export default function SearchModal({ visible, onClose }) {
     }
   }, [isListening]);
 
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
   // ── Voice listeners ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!Voice) return;
     Voice.onSpeechResults = (e) => {
-      const text = e.value?.[0] || "";
+      const text = (e.value?.[0] || "").trim();
       if (text) {
         setQuery(text);
-        doSearch(text);
+        // Defer search so React commits setQuery first, then run search
+        setTimeout(() => doSearchRef.current?.(text), 100);
       }
       setIsListening(false);
     };
@@ -418,6 +458,9 @@ export default function SearchModal({ visible, onClose }) {
       setLoading(false);
     }
   };
+
+  // Always keep ref pointing to the latest doSearch (safe to call from stale voice callbacks)
+  doSearchRef.current = doSearch;
 
   // ── Save to history ─────────────────────────────────────────────────────────
   const saveHistory = async (term) => {
@@ -500,7 +543,9 @@ export default function SearchModal({ visible, onClose }) {
     // Native voice (works in bare React Native builds)
     if (Voice) {
       if (isListening) {
-        try { await Voice.stop(); } catch {}
+        try {
+          await Voice.stop();
+        } catch {}
         setIsListening(false);
       } else {
         try {
@@ -515,7 +560,8 @@ export default function SearchModal({ visible, onClose }) {
 
     // Web Speech API (works in browser / Expo web)
     if (typeof window !== "undefined") {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         if (isListening) {
           webRecognitionRef.current?.stop();
@@ -528,11 +574,11 @@ export default function SearchModal({ visible, onClose }) {
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.onresult = (e) => {
-          const transcript = e.results[0]?.[0]?.transcript || "";
+          const transcript = (e.results[0]?.[0]?.transcript || "").trim();
           if (transcript) {
             setQuery(transcript);
             setIsListening(false);
-            handleApiSearch(transcript);
+            setTimeout(() => doSearchRef.current?.(transcript), 100);
           }
         };
         recognition.onerror = () => setIsListening(false);
@@ -917,222 +963,230 @@ export default function SearchModal({ visible, onClose }) {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const s = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-  sheet: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.bg,
-    paddingTop: Platform.OS === "ios" ? 54 : 36,
-  },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.45)",
+    },
+    sheet: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: colors.bg,
+      paddingTop: Platform.OS === "ios" ? 54 : 36,
+    },
 
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-  },
-  inputWrap: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-    paddingHorizontal: 14,
-    height: 44,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    height: 44,
-    padding: 0,
-  },
-  voiceBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-  },
-  voiceBtnActive: { borderColor: "#EF4444", backgroundColor: "#FEF2F2" },
-  voicePulse: {
-    position: "absolute",
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(239,68,68,0.18)",
-  },
+    // Header
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingHorizontal: 14,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderSubtle,
+    },
+    backBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+    },
+    inputWrap: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+      paddingHorizontal: 14,
+      height: 44,
+    },
+    input: {
+      flex: 1,
+      fontFamily: fonts.body,
+      fontSize: 15,
+      color: colors.textPrimary,
+      height: 44,
+      padding: 0,
+    },
+    voiceBtn: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+    },
+    voiceBtnActive: { borderColor: "#EF4444", backgroundColor: "#FEF2F2" },
+    voicePulse: {
+      position: "absolute",
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: "rgba(239,68,68,0.18)",
+    },
 
-  // Filter chips
-  filterScroll: { maxHeight: 50 },
-  filterRow: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 8,
-    flexDirection: "row",
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-  },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  chipTxtActive: { color: "#fff", fontFamily: fonts.bodySemiBold },
+    // Filter chips
+    filterScroll: { maxHeight: 50 },
+    filterRow: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      gap: 8,
+      flexDirection: "row",
+    },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+    },
+    chipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    chipTxtActive: { color: "#fff", fontFamily: fonts.bodySemiBold },
 
-  // Content
-  scroll: { flex: 1 },
+    // Content
+    scroll: { flex: 1 },
 
-  // Near Me
-  nearMeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: colors.surface,
-    margin: 14,
-    borderRadius: radius.xl,
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-    ...shadow.soft,
-  },
-  nearMeIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nearMeTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  nearMeSub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
+    // Near Me
+    nearMeCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: colors.surface,
+      margin: 14,
+      borderRadius: radius.xl,
+      padding: 14,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+      ...shadow.soft,
+    },
+    nearMeIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.lg,
+      backgroundColor: colors.primaryLight,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    nearMeTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    nearMeSub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
 
-  // Section headers
-  secHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 6,
-  },
-  secLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-  secTitle: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 12,
-    color: colors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-  },
-  clearAll: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
+    // Section headers
+    secHead: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 6,
+    },
+    secLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
+    secTitle: {
+      fontFamily: fonts.bodySemiBold,
+      fontSize: 12,
+      color: colors.textSecondary,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    clearAll: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 12,
+      color: colors.primary,
+    },
 
-  // Recent rows
-  recentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
-  },
-  recentDot: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  recentTxt: {
-    flex: 1,
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
+    // Recent rows
+    recentRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingVertical: 11,
+      paddingHorizontal: 16,
+    },
+    recentDot: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    recentTxt: {
+      flex: 1,
+      fontFamily: fonts.bodyMedium,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
 
-  // Trending
-  trendGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 12,
-    gap: 8,
-    marginTop: 4,
-  },
-  trendChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-  },
-  trendTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: colors.textPrimary,
-  },
+    // Trending
+    trendGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 12,
+      gap: 8,
+      marginTop: 4,
+    },
+    trendChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+    },
+    trendTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
 
-  // Empty
-  empty: {
-    alignItems: "center",
-    paddingTop: 60,
-    paddingHorizontal: 32,
-    gap: 10,
-  },
-  emptyTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 17,
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
-  emptySub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-});
+    // Empty
+    empty: {
+      alignItems: "center",
+      paddingTop: 60,
+      paddingHorizontal: 32,
+      gap: 10,
+    },
+    emptyTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 17,
+      color: colors.textPrimary,
+      textAlign: "center",
+    },
+    emptySub: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+  });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal,
   Dimensions, ActivityIndicator, RefreshControl
@@ -6,9 +6,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { fonts, radius, shadow } from '../lib/theme';
 import { gallery as galleryApi } from '../lib/api';
 import { useLang } from '../lib/LanguageContext';
+import { useColors } from '../lib/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const COL = 2;
@@ -27,10 +28,13 @@ const FALLBACK = [
 export default function Gallery() {
   const router = useRouter();
   const { t } = useLang();
+  const colors = useColors();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState(null);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -49,7 +53,7 @@ export default function Gallery() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       <View style={s.head}>
-        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="gallery-back"><Ionicons name="arrow-back" size={20} color={colors.secondary} /></TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="gallery-back"><Ionicons name="arrow-back" size={20} color={colors.textSecondary} /></TouchableOpacity>
         <View>
           <Text style={s.title}>Gallery</Text>
           <Text style={s.sub}>{t.gallerySub}</Text>
@@ -112,10 +116,10 @@ export default function Gallery() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, ...shadow.soft },
-  title: { fontFamily: fonts.heading, fontSize: 24, color: colors.secondary, textAlign: 'center' },
+  title: { fontFamily: fonts.heading, fontSize: 24, color: colors.textSecondary, textAlign: 'center' },
   sub: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textAlign: 'center' },
 
   tile: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colors.elevated, ...shadow.soft },

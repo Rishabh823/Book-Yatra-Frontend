@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, ActivityIndicator, useWindowDimensions,
@@ -6,7 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { api } from '../../lib/api';
 
 const MODULES = [
@@ -23,6 +24,7 @@ const MODULES = [
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 24 : 16;
   const cardW = (width - px * 2 - 12 * 3) / 4;
@@ -31,6 +33,8 @@ export default function AdminDashboard() {
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -60,11 +64,11 @@ export default function AdminDashboard() {
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const fmt = (n) => n >= 1000 ? `₹${(n / 1000).toFixed(1)}k` : `₹${n}`;
-  const statusColor = (s) => ({
+  const statusColor = (st) => ({
     confirmed: { bg: '#DCFCE7', text: '#16A34A' },
     pending:   { bg: '#FEF9C3', text: '#CA8A04' },
     cancelled: { bg: '#FEE2E2', text: '#DC2626' },
-  }[s] || { bg: '#F3F4F6', text: '#6B7280' });
+  }[st] || { bg: colors.elevated, text: colors.textSecondary });
 
   return (
     <AdminShell title="Admin Dashboard" subtitle="Your operator overview">
@@ -82,11 +86,11 @@ export default function AdminDashboard() {
 
             {!loading && stats && (
               <View style={s.heroStrip}>
-                <HeroStat label="Confirmed" value={stats.confirmed} color="#16A34A" />
+                <HeroStat label="Confirmed" value={stats.confirmed} color="#16A34A" s={s} />
                 <View style={s.heroDivider} />
-                <HeroStat label="Pending" value={stats.pending} color="#D97706" />
+                <HeroStat label="Pending" value={stats.pending} color="#D97706" s={s} />
                 <View style={s.heroDivider} />
-                <HeroStat label="Revenue" value={fmt(stats.revenue)} color="#0284C7" />
+                <HeroStat label="Revenue" value={fmt(stats.revenue)} color="#0284C7" s={s} />
               </View>
             )}
           </View>
@@ -117,9 +121,9 @@ export default function AdminDashboard() {
           <View style={{ paddingHorizontal: px, marginTop: 8 }}>
             <Text style={[s.sectionLabel, { marginTop: 8 }]}>· Booking Summary ·</Text>
             <View style={s.statsRow}>
-              <StatPill icon="checkmark-circle" label="Confirmed" value={stats.confirmed} color="#16A34A" bg="#F0FDF4" />
-              <StatPill icon="time"             label="Pending"   value={stats.pending}   color="#D97706" bg="#FFFBEB" />
-              <StatPill icon="close-circle"     label="Cancelled" value={stats.cancelled} color="#DC2626" bg="#FEF2F2" />
+              <StatPill icon="checkmark-circle" label="Confirmed" value={stats.confirmed} color="#16A34A" bg="#F0FDF4" s={s} colors={colors} />
+              <StatPill icon="time"             label="Pending"   value={stats.pending}   color="#D97706" bg="#FFFBEB" s={s} colors={colors} />
+              <StatPill icon="close-circle"     label="Cancelled" value={stats.cancelled} color="#DC2626" bg="#FEF2F2" s={s} colors={colors} />
             </View>
           </View>
         )}
@@ -185,7 +189,7 @@ export default function AdminDashboard() {
   );
 }
 
-function HeroStat({ label, value, color }) {
+function HeroStat({ label, value, color, s }) {
   return (
     <View style={{ alignItems: 'center', flex: 1 }}>
       <Text style={[s.heroStatValue, { color }]}>{value}</Text>
@@ -194,9 +198,9 @@ function HeroStat({ label, value, color }) {
   );
 }
 
-function StatPill({ icon, label, value, color, bg }) {
+function StatPill({ icon, label, value, color, bg, s, colors }) {
   return (
-    <View style={[s.statPill, { backgroundColor: bg, borderWidth: 1, borderColor: '#E5E7EB' }]}>
+    <View style={[s.statPill, { backgroundColor: bg, borderWidth: 1, borderColor: colors.borderSubtle }]}>
       <View style={[s.statPillIcon, { backgroundColor: color + '20' }]}>
         <Ionicons name={icon} size={16} color={color} />
       </View>
@@ -206,31 +210,31 @@ function StatPill({ icon, label, value, color, bg }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // Hero
   heroBanner:  {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
     borderRadius: 16,
     padding: 20,
   },
-  heroLabel:   { fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
-  heroValue:   { fontFamily: fonts.heading, fontSize: 48, color: '#111827', letterSpacing: -1 },
-  heroSub:     { fontFamily: fonts.body, fontSize: 12, color: '#6B7280', marginTop: 2, marginBottom: 0 },
-  heroStrip:   { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F2F2F2', paddingTop: 14, marginTop: 14 },
-  heroDivider: { width: 1, backgroundColor: '#E5E7EB' },
+  heroLabel:   { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
+  heroValue:   { fontFamily: fonts.heading, fontSize: 48, color: colors.textPrimary, letterSpacing: -1 },
+  heroSub:     { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2, marginBottom: 0 },
+  heroStrip:   { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.borderSubtle, paddingTop: 14, marginTop: 14 },
+  heroDivider: { width: 1, backgroundColor: colors.borderSubtle },
   heroStatValue:{ fontFamily: fonts.heading, fontSize: 18 },
-  heroStatLabel:{ fontFamily: fonts.body, fontSize: 10, color: '#9CA3AF', marginTop: 1 },
+  heroStatLabel:{ fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled, marginTop: 1 },
 
   // Section
-  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+  sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
   sectionHead:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   viewAll:      { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
 
   // Module grid
   moduleGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 4 },
-  moduleCard:  { alignItems: 'center', gap: 8, backgroundColor: '#fff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  moduleCard:  { alignItems: 'center', gap: 8, backgroundColor: colors.surface, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   moduleIcon:  { width: 48, height: 48, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   moduleLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textPrimary, textAlign: 'center' },
 
@@ -242,7 +246,7 @@ const s = StyleSheet.create({
   statPillLabel: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary },
 
   // Recent bookings
-  bookingRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, marginBottom: 8 },
+  bookingRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, padding: 12, marginBottom: 8 },
   bookingIdBadge:{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#D95D39' + '14', alignItems: 'center', justifyContent: 'center' },
   bookingIdTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: '#D95D39' },
   bookingName:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
@@ -252,7 +256,7 @@ const s = StyleSheet.create({
   sBadgeTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
   // List
-  listRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', gap: 14, marginBottom: 8 },
+  listRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, gap: 14, marginBottom: 8 },
   listRowIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   listRowLabel:{ flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
 });

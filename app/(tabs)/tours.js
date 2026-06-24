@@ -290,7 +290,7 @@ export default function Tours() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top"]}
     >
       {/* Clean white header */}
@@ -313,16 +313,33 @@ export default function Tours() {
             activeOpacity={0.7}
             onPress={() => setShowSearchModal(true)}
           >
-            <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+            <Ionicons
+              name="search-outline"
+              size={16}
+              color={colors.textDisabled}
+              style={{ marginRight: 8 }}
+            />
             <Text
-              style={{ fontFamily: fonts.body, fontSize: 14, color: q ? "#111827" : "#9CA3AF", flex: 1 }}
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 14,
+                color: q ? colors.textPrimary : colors.textDisabled,
+                flex: 1,
+              }}
               numberOfLines={1}
             >
               {q || "Search destination, tour..."}
             </Text>
             {q ? (
-              <TouchableOpacity onPress={() => setQ("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+              <TouchableOpacity
+                onPress={() => setQ("")}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={16}
+                  color={colors.textDisabled}
+                />
               </TouchableOpacity>
             ) : null}
           </TouchableOpacity>
@@ -335,7 +352,7 @@ export default function Tours() {
             <Ionicons
               name="options-outline"
               size={18}
-              color={activeFilterCount > 0 ? "#D95D39" : "#9CA3AF"}
+              color={activeFilterCount > 0 ? "#D95D39" : colors.textDisabled}
             />
             {activeFilterCount > 0 && <View style={s.filterDot} />}
           </TouchableOpacity>
@@ -371,7 +388,7 @@ export default function Tours() {
       </View>
 
       {/* Gray band separator — same as profile/bookings */}
-      <View style={s.grayBand} />
+      {/* <View style={s.grayBand} /> */}
 
       <FilterSheet
         visible={showFilters}
@@ -400,9 +417,9 @@ export default function Tours() {
           style={[
             s.opRow,
             {
-              backgroundColor: "#F2F2F2",
+              backgroundColor: colors.elevated,
               borderBottomWidth: StyleSheet.hairlineWidth,
-              borderBottomColor: "#E5E7EB",
+              borderBottomColor: colors.borderSubtle,
             },
           ]}
         >
@@ -679,7 +696,10 @@ export default function Tours() {
                 >
                   {/* Left image strip */}
                   <View style={s.extImgWrap}>
-                    <FallbackImage source={{ uri: item.coverPhotoUrl }} style={s.extImg} />
+                    <FallbackImage
+                      source={{ uri: item.coverPhotoUrl }}
+                      style={s.extImg}
+                    />
                     <LinearGradient
                       colors={["transparent", "rgba(0,0,0,0.45)"]}
                       style={StyleSheet.absoluteFillObject}
@@ -690,26 +710,38 @@ export default function Tours() {
                   <View style={s.extInfo}>
                     {/* Source badge */}
                     <View style={s.extSourceBadge}>
-                      <Ionicons name="globe-outline" size={9} color="#0284C7" />
+                      <Ionicons name="globe-outline" size={9} color="#fff" />
                       <Text style={s.extSourceTxt} numberOfLines={1}>
                         {item.externalSource || "Partner Site"}
                       </Text>
                     </View>
 
-                    <Text style={s.extTitle} numberOfLines={2}>{item.title}</Text>
+                    <Text style={s.extTitle} numberOfLines={2}>
+                      {item.title}
+                    </Text>
 
                     {(item.source || item.destination) && (
                       <View style={s.routeRow}>
-                        <Ionicons name="location" size={11} color={colors.primary} />
+                        <Ionicons
+                          name="location"
+                          size={11}
+                          color={colors.primary}
+                        />
                         <Text style={s.routeTxt} numberOfLines={1}>
-                          {[item.source, item.destination].filter(Boolean).join(" → ")}
+                          {[item.source, item.destination]
+                            .filter(Boolean)
+                            .join(" → ")}
                         </Text>
                       </View>
                     )}
 
                     {item.duration ? (
                       <View style={s.routeRow}>
-                        <Ionicons name="time-outline" size={11} color="#6B7280" />
+                        <Ionicons
+                          name="time-outline"
+                          size={11}
+                          color={colors.textSecondary}
+                        />
                         <Text style={s.routeTxt}>{item.duration}</Text>
                       </View>
                     ) : null}
@@ -718,10 +750,12 @@ export default function Tours() {
                       <Text style={s.price}>{item.price || "₹—"}</Text>
                       <TouchableOpacity
                         style={s.extPill}
-                        onPress={() => router.push(`/tour/${item._id || item.id}`)}
+                        onPress={() =>
+                          router.push(`/tour/${item._id || item.id}`)
+                        }
                         activeOpacity={0.85}
                       >
-                        <Ionicons name="open-outline" size={12} color="#0284C7" />
+                        <Ionicons name="open-outline" size={12} color="#fff" />
                         <Text style={s.extPillTxt}>View</Text>
                       </TouchableOpacity>
                     </View>
@@ -757,13 +791,28 @@ export default function Tours() {
                   {/* Top badges */}
                   <View style={s.badgeRow}>
                     <View style={s.badge}>
-                      <Ionicons name="calendar-outline" size={10} color={colors.secondary} />
-                      <Text style={s.badgeText}>{fmt(item.startDate, item.endDate)}</Text>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={10}
+                        color={colors.secondary}
+                      />
+                      <Text style={s.badgeText}>
+                        {fmt(item.startDate, item.endDate)}
+                      </Text>
                     </View>
                     {item.tourType && item.tourType !== "other" && (
                       <View style={[s.badge, s.typeBadge]}>
-                        <Text style={[s.badgeText, { color: colors.primary, fontFamily: fonts.bodyBold }]}>
-                          {item.tourType.charAt(0).toUpperCase() + item.tourType.slice(1)}
+                        <Text
+                          style={[
+                            s.badgeText,
+                            {
+                              color: colors.primary,
+                              fontFamily: fonts.bodyBold,
+                            },
+                          ]}
+                        >
+                          {item.tourType.charAt(0).toUpperCase() +
+                            item.tourType.slice(1)}
                         </Text>
                       </View>
                     )}
@@ -772,18 +821,28 @@ export default function Tours() {
                   {isLoggedIn && (
                     <TouchableOpacity
                       style={s.heartBtn}
-                      onPress={(e) => { e.stopPropagation?.(); toggleFav(item._id); }}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        toggleFav(item._id);
+                      }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Ionicons
                         name={isFav(item._id) ? "heart" : "heart-outline"}
                         size={18}
-                        color={isFav(item._id) ? "#EF4444" : colors.textSecondary}
+                        color={
+                          isFav(item._id) ? "#EF4444" : colors.textSecondary
+                        }
                       />
                     </TouchableOpacity>
                   )}
                   {seatsLeft != null && (
-                    <View style={[s.seatBadge, seatsLeft < 5 && { backgroundColor: "#EF444490" }]}>
+                    <View
+                      style={[
+                        s.seatBadge,
+                        seatsLeft < 5 && { backgroundColor: "#EF444490" },
+                      ]}
+                    >
                       <Ionicons name="people" size={10} color="#fff" />
                       <Text style={s.seatBadgeTxt}>{seatsLeft} left</Text>
                     </View>
@@ -792,17 +851,29 @@ export default function Tours() {
 
                 {/* Info section */}
                 <View style={s.cardInfo}>
-                  <Text style={s.cardTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={s.cardTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
                   <View style={s.routeRow}>
-                    <Ionicons name="location" size={12} color={colors.primary} />
+                    <Ionicons
+                      name="location"
+                      size={12}
+                      color={colors.primary}
+                    />
                     <Text style={s.routeTxt} numberOfLines={1}>
                       {item.source} → {item.destination}
                     </Text>
                   </View>
                   {opName && (
                     <View style={s.routeRow}>
-                      <Ionicons name="business-outline" size={11} color={colors.textSecondary} />
-                      <Text style={s.routeTxt} numberOfLines={1}>{opName}</Text>
+                      <Ionicons
+                        name="business-outline"
+                        size={11}
+                        color={colors.textSecondary}
+                      />
+                      <Text style={s.routeTxt} numberOfLines={1}>
+                        {opName}
+                      </Text>
                     </View>
                   )}
                   <View style={s.cardFooter}>
@@ -812,7 +883,9 @@ export default function Tours() {
                     </View>
                     <TouchableOpacity
                       style={s.pill}
-                      onPress={() => router.push(`/tour/${item._id || item.id}`)}
+                      onPress={() =>
+                        router.push(`/tour/${item._id || item.id}`)
+                      }
                       activeOpacity={0.85}
                     >
                       <Text style={s.pillText}>Book now</Text>
@@ -829,442 +902,457 @@ export default function Tours() {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
-  // Clean white header
-  header: {
-    paddingTop: 12,
-    paddingBottom: 4,
-    paddingHorizontal: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 0,
-    zIndex: 100,
-  },
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  title: {
-    fontFamily: fonts.heading,
-    fontSize: 26,
-    color: colors.textPrimary,
-    letterSpacing: -0.3,
-  },
-  sub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  filterCountBadge: {
-    backgroundColor: "#FEE9E3",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#D95D3940",
-  },
-  filterCountTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
-  searchBarMerged: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F4F4F4",
-    borderRadius: 12,
-    paddingLeft: 14,
-    paddingRight: 10,
-    height: 46,
-    marginBottom: 10,
-  },
-  searchDivider: {
-    width: 1,
-    height: 22,
-    backgroundColor: "#D1D5DB",
-    marginHorizontal: 10,
-  },
-  searchFilterBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    paddingHorizontal: 4,
-  },
-  filterDot: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#FCD34D",
-  },
-  heartBtn: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  seatBadge: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(22,163,74,0.9)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  seatBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    grayBand: { height: 10, backgroundColor: colors.elevated },
+    // Clean white header
+    header: {
+      paddingTop: 12,
+      paddingBottom: 4,
+      paddingHorizontal: 16,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 0,
+      zIndex: 100,
+    },
+    headerTop: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 10,
+    },
+    title: {
+      fontFamily: fonts.heading,
+      fontSize: 26,
+      color: colors.textPrimary,
+      letterSpacing: -0.3,
+    },
+    sub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
+    filterCountBadge: {
+      backgroundColor: "#FEE9E3",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#D95D3940",
+    },
+    filterCountTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+      color: colors.primary,
+    },
+    searchBarMerged: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      paddingLeft: 14,
+      paddingRight: 10,
+      height: 46,
+      marginBottom: 10,
+    },
+    searchDivider: {
+      width: 1,
+      height: 22,
+      backgroundColor: colors.borderStrong,
+      marginHorizontal: 10,
+    },
+    searchFilterBtn: {
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      paddingHorizontal: 4,
+    },
+    filterDot: {
+      position: "absolute",
+      top: -2,
+      right: -2,
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: "#FCD34D",
+    },
+    heartBtn: {
+      position: "absolute",
+      top: 10,
+      right: 10,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: "rgba(255,255,255,0.92)",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+    },
+    seatBadge: {
+      position: "absolute",
+      bottom: 10,
+      left: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(22,163,74,0.9)",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    },
+    seatBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
 
-  opRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  opChip: {
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 50,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginRight: 6,
-  },
-  opChipActive: {
-    backgroundColor: "#D95D39",
-    borderColor: "#D95D39",
-  },
-  opChipTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: "#6B7280",
-    maxWidth: 120,
-  },
-  opChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
+    opRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    opChip: {
+      paddingHorizontal: 11,
+      paddingVertical: 5,
+      borderRadius: 50,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      marginRight: 6,
+    },
+    opChipActive: {
+      backgroundColor: "#D95D39",
+      borderColor: "#D95D39",
+    },
+    opChipTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.textSecondary,
+      maxWidth: 120,
+    },
+    opChipTxtActive: { color: "#fff", fontFamily: fonts.bodyBold },
 
-  typeRow: {
-    marginBottom: 12,
-  },
-  typeChip: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 50,
-    backgroundColor: "#F3F4F6",
-  },
-  typeChipActive: {
-    backgroundColor: "#D95D39",
-  },
-  typeText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  typeTextActive: { color: "#fff", fontFamily: fonts.bodyBold },
+    typeRow: {
+      marginBottom: 12,
+    },
+    typeChip: {
+      alignSelf: "flex-start",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 50,
+      backgroundColor: colors.elevated,
+    },
+    typeChipActive: {
+      backgroundColor: "#D95D39",
+    },
+    typeText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    typeTextActive: { color: "#fff", fontFamily: fonts.bodyBold },
 
-  // Modern tour card
-  card: {
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardImgWrap: {
-    height: 200,
-    position: "relative",
-  },
-  img: { width: "100%", height: "100%" },
-  badgeRow: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    flexDirection: "row",
-    gap: 6,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(255,255,255,0.97)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-  },
-  typeBadge: {
-    backgroundColor: "#FEE9E3",
-  },
-  badgeText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 10,
-    color: colors.secondary,
-  },
-  // Card info section (white/surface)
-  cardInfo: {
-    padding: 14,
-    paddingBottom: 16,
-    gap: 5,
-  },
-  cardTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: "#111827",
-    marginBottom: 3,
-  },
-  routeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  routeTxt: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "#9CA3AF",
-    flex: 1,
-  },
-  extBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    marginBottom: 6,
-  },
-  extBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 9, color: '#0284C7' },
+    // Modern tour card
+    card: {
+      borderRadius: 10,
+      overflow: "hidden",
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    cardImgWrap: {
+      height: 200,
+      position: "relative",
+    },
+    img: { width: "100%", height: "100%" },
+    badgeRow: {
+      position: "absolute",
+      top: 12,
+      left: 12,
+      flexDirection: "row",
+      gap: 6,
+    },
+    badge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(255,255,255,0.97)",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.12,
+      shadowRadius: 4,
+    },
+    typeBadge: {
+      backgroundColor: "#FEE9E3",
+    },
+    badgeText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 10,
+      color: colors.secondary,
+    },
+    // Card info section (white/surface)
+    cardInfo: {
+      padding: 14,
+      paddingBottom: 16,
+      gap: 5,
+    },
+    cardTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+      marginBottom: 3,
+    },
+    routeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+    routeTxt: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textDisabled,
+      flex: 1,
+    },
+    extBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#EFF6FF",
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
+      alignSelf: "flex-start",
+      marginBottom: 6,
+    },
+    extBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#0284C7" },
 
-  // ── External tour card (horizontal layout) ─────────────────────────────────
-  extCard: {
-    flexDirection: "row",
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    borderWidth: 1.5,
-    borderColor: "#BFDBFE",
-    shadowColor: "#0284C7",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  extImgWrap: { width: 110, position: "relative" },
-  extImg: { width: 110, height: "100%" },
-  extInfo: { flex: 1, padding: 12, gap: 4 },
-  extSourceBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#EFF6FF",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    alignSelf: "flex-start",
-    marginBottom: 2,
-  },
-  extSourceTxt: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#0284C7", maxWidth: 120 },
-  extTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#111827", lineHeight: 19 },
-  extFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#BFDBFE",
-  },
-  extPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#EFF6FF",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-  },
-  extPillTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#0284C7" },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E7EB",
-  },
-  priceLabel: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: "#9CA3AF",
-    marginBottom: 2,
-  },
-  price: { color: "#D95D39", fontFamily: fonts.bodyBold, fontSize: 22 },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#D95D39",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
-  empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
-  emptyText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
+    // ── External tour card (horizontal layout) ─────────────────────────────────
+    extCard: {
+      flexDirection: "row",
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: colors.surface,
+      borderWidth: 1.5,
+      // borderColor: "#BFDBFE",
+      shadowColor: "#0284C7",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    extImgWrap: { width: 110, position: "relative" },
+    extImg: { width: 110, height: "100%" },
+    extInfo: { flex: 1, padding: 12, gap: 4 },
+    extSourceBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#B94929",
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
+      alignSelf: "flex-start",
+      marginBottom: 2,
+    },
+    extSourceTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 9,
+      color: "#fff",
+      maxWidth: 120,
+    },
+    extTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+      lineHeight: 19,
+    },
+    extFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 6,
+      paddingTop: 6,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "#B94929",
+    },
+    extPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#B94929",
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#B94929",
+    },
+    extPillTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#fff" },
+    cardFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 10,
+      paddingTop: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderSubtle,
+    },
+    priceLabel: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textDisabled,
+      marginBottom: 2,
+    },
+    price: { color: "#D95D39", fontFamily: fonts.bodyBold, fontSize: 22 },
+    pill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: "#D95D39",
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    pillText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
+    empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
+    emptyText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
 
-  guest: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-start",
-    paddingHorizontal: 36,
-    paddingTop: 60,
-    gap: 0,
-    backgroundColor: "#FFFFFF",
-  },
-  guestIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#FEE9E3",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: colors.primary + "30",
-  },
-  guestTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 26,
-    color: colors.textPrimary,
-    textAlign: "center",
-    marginBottom: 10,
-    letterSpacing: -0.3,
-  },
-  guestSub: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 32,
-  },
-  guestLoginBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    width: "100%",
-    height: 54,
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    justifyContent: "center",
-    marginBottom: 14,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  guestLoginTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 16 },
-  guestRegBtn: {
-    width: "100%",
-    height: 54,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.surface,
-  },
-  guestRegTxt: {
-    color: colors.textPrimary,
-    fontFamily: fonts.bodyBold,
-    fontSize: 16,
-  },
+    guest: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "flex-start",
+      paddingHorizontal: 36,
+      paddingTop: 60,
+      gap: 0,
+      backgroundColor: colors.bg,
+    },
+    guestIcon: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: "#FEE9E3",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 24,
+      borderWidth: 2,
+      borderColor: colors.primary + "30",
+    },
+    guestTitle: {
+      fontFamily: fonts.heading,
+      fontSize: 26,
+      color: colors.textPrimary,
+      textAlign: "center",
+      marginBottom: 10,
+      letterSpacing: -0.3,
+    },
+    guestSub: {
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 22,
+      marginBottom: 32,
+    },
+    guestLoginBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      width: "100%",
+      height: 54,
+      backgroundColor: colors.primary,
+      borderRadius: radius.pill,
+      justifyContent: "center",
+      marginBottom: 14,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    guestLoginTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 16 },
+    guestRegBtn: {
+      width: "100%",
+      height: 54,
+      borderRadius: radius.pill,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+    },
+    guestRegTxt: {
+      color: colors.textPrimary,
+      fontFamily: fonts.bodyBold,
+      fontSize: 16,
+    },
 
-  // Volunteer assigned tour cards
-  volCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-  },
-  volCardTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    gap: 12,
-  },
-  volCardTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 16,
-    color: colors.textPrimary,
-    marginBottom: 6,
-  },
-  volCardMeta: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  volCardDate: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.primary,
-    flex: 1,
-  },
-  volBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#DCFCE7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  volBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: "#16A34A" },
-  volActions: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-  },
-  volBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    paddingVertical: 9,
-    borderRadius: radius.lg,
-  },
-  volBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  row: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-});
+    // Volunteer assigned tour cards
+    volCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xxl,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    volCardTop: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      padding: 16,
+      gap: 12,
+    },
+    volCardTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 16,
+      color: colors.textPrimary,
+      marginBottom: 6,
+    },
+    volCardMeta: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    volCardDate: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.primary,
+      flex: 1,
+    },
+    volBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#DCFCE7",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+    },
+    volBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: "#16A34A" },
+    volActions: {
+      flexDirection: "row",
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingBottom: 14,
+    },
+    volBtn: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 5,
+      paddingVertical: 9,
+      borderRadius: radius.lg,
+    },
+    volBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12 },
+    row: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
   ScrollView, Switch, Platform, DeviceEventEmitter,
@@ -6,10 +6,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
 import { api } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
+import { useColors } from "../../lib/ThemeContext";
 
 const DEFAULTS = {
   bookingRestrictionPeriod: 0,
@@ -23,6 +24,8 @@ const DEFAULTS = {
 };
 
 export default function AdminSettings() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [cfg, setCfg]         = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
@@ -33,8 +36,8 @@ export default function AdminSettings() {
   useEffect(() => {
     AsyncStorage.getItem('role').then(r => setIsSuperAdmin(r === 'super_admin')).catch(() => {});
     api.get('/settings').then(res => {
-      const s = res?.data || res || {};
-      setCfg({ ...DEFAULTS, ...s });
+      const data = res?.data || res || {};
+      setCfg({ ...DEFAULTS, ...data });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -77,7 +80,7 @@ export default function AdminSettings() {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Platform Control ─────────────────────────────── */}
-        <SectionLabel icon="shield-outline" title="Platform Control" />
+        <SectionLabel icon="shield-outline" title="Platform Control" s={s} colors={colors} />
 
         {isSuperAdmin && (
           <View style={s.card}>
@@ -88,6 +91,8 @@ export default function AdminSettings() {
               value={cfg.maintenanceMode}
               onChange={v => set('maintenanceMode', v)}
               danger
+              s={s}
+              colors={colors}
             />
           </View>
         )}
@@ -99,6 +104,8 @@ export default function AdminSettings() {
             hint="When disabled, new users cannot sign up for an account."
             value={cfg.allowNewRegistrations}
             onChange={v => set('allowNewRegistrations', v)}
+            s={s}
+            colors={colors}
           />
         </View>
 
@@ -109,11 +116,13 @@ export default function AdminSettings() {
             hint="Enable or disable Razorpay online payments. Cash payments still work."
             value={cfg.paymentGatewayEnabled}
             onChange={v => set('paymentGatewayEnabled', v)}
+            s={s}
+            colors={colors}
           />
         </View>
 
         {/* ── Announcement Banner ──────────────────────────── */}
-        <SectionLabel icon="megaphone-outline" title="Announcement Banner" />
+        <SectionLabel icon="megaphone-outline" title="Announcement Banner" s={s} colors={colors} />
 
         <View style={s.card}>
           <Text style={s.fieldLabel}>Banner Message</Text>
@@ -131,7 +140,7 @@ export default function AdminSettings() {
         </View>
 
         {/* ── Booking Rules ────────────────────────────────── */}
-        <SectionLabel icon="ticket-outline" title="Booking Rules" />
+        <SectionLabel icon="ticket-outline" title="Booking Rules" s={s} colors={colors} />
 
         <View style={s.card}>
           <Text style={s.fieldLabel}>Booking Restriction Period</Text>
@@ -166,7 +175,7 @@ export default function AdminSettings() {
         </View>
 
         {/* ── Contact Info ─────────────────────────────────── */}
-        <SectionLabel icon="call-outline" title="Contact Information" />
+        <SectionLabel icon="call-outline" title="Contact Information" s={s} colors={colors} />
 
         <View style={s.card}>
           <Text style={s.fieldLabel}>Support Phone</Text>
@@ -222,7 +231,7 @@ export default function AdminSettings() {
   );
 }
 
-function SectionLabel({ icon, title }) {
+function SectionLabel({ icon, title, s, colors }) {
   return (
     <View style={s.sectionRow}>
       <Ionicons name={icon} size={13} color={colors.textSecondary} />
@@ -231,7 +240,7 @@ function SectionLabel({ icon, title }) {
   );
 }
 
-function ToggleRow({ icon, label, hint, value, onChange, danger }) {
+function ToggleRow({ icon, label, hint, value, onChange, danger, s, colors }) {
   return (
     <View>
       <View style={s.toggleTop}>
@@ -245,8 +254,8 @@ function ToggleRow({ icon, label, hint, value, onChange, danger }) {
         <Switch
           value={value}
           onValueChange={onChange}
-          trackColor={{ false: '#E5E7EB', true: danger ? '#FCA5A5' : '#86EFAC' }}
-          thumbColor={value ? (danger ? '#DC2626' : '#16A34A') : '#9CA3AF'}
+          trackColor={{ false: colors.borderSubtle, true: danger ? '#FCA5A5' : '#86EFAC' }}
+          thumbColor={value ? (danger ? '#DC2626' : '#16A34A') : colors.textDisabled}
         />
       </View>
       {danger && value && (
@@ -259,13 +268,13 @@ function ToggleRow({ icon, label, hint, value, onChange, danger }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
 
   sectionRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, marginBottom: 8 },
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
 
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: colors.borderSubtle },
 
   toggleTop:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
   toggleIcon:   { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

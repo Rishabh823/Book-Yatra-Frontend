@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   ActivityIndicator, RefreshControl, Image, TextInput, Modal, ScrollView,
@@ -6,13 +6,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
 import { gallery as galleryApi, api } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useColors } from "../../lib/ThemeContext";
 
 export default function AdminGallery() {
+  const colors = useColors();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,6 +25,8 @@ export default function AdminGallery() {
   const { toast, showToast, hideToast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -277,7 +281,7 @@ export default function AdminGallery() {
 }
 
 const GRID_W = 160;
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 14 },
   filterRow: { flexDirection: 'row', gap: 8 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
@@ -289,7 +293,7 @@ const s = StyleSheet.create({
   emptyBtn: { marginTop: 16, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 999 },
   emptyBtnText: { color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 },
 
-  gridItem: { flex: 1, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: "#E5E7EB", backgroundColor: colors.borderSubtle },
+  gridItem: { flex: 1, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.borderSubtle },
   gridImg: { width: '100%', aspectRatio: 1 },
   videoPlaceholder: { backgroundColor: '#1E1B4B', alignItems: 'center', justifyContent: 'center' },
   gridOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 8, paddingVertical: 6 },

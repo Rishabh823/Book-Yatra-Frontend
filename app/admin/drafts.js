@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { colors, fonts } from "../../lib/theme";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useColors } from "../../lib/ThemeContext";
 
 const fmtDate = (d) =>
   d
@@ -30,6 +31,8 @@ const stepLabel = (n) => {
 export default function DraftsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -261,8 +264,8 @@ export default function DraftsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 18,
@@ -270,30 +273,30 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center", justifyContent: "center",
   },
-  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
+  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: colors.textPrimary },
   subtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   newBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: colors.borderSubtle,
   },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   cardTop: {
     flexDirection: "row",
@@ -306,7 +309,7 @@ const s = StyleSheet.create({
     backgroundColor: "#FEE8E2",
     alignItems: "center", justifyContent: "center",
   },
-  tourTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1F2937" },
+  tourTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   tourRoute: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.primary, marginTop: 2 },
   tourRouteDim: { fontFamily: fonts.body, fontSize: 12, color: colors.textDisabled, marginTop: 2 },
   tourDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
@@ -323,7 +326,7 @@ const s = StyleSheet.create({
   progressLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   progressPct: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   progressTrack: {
-    height: 5, backgroundColor: "#F3F4F6", borderRadius: 3, overflow: "hidden",
+    height: 5, backgroundColor: colors.elevated, borderRadius: 3, overflow: "hidden",
   },
   progressFill: {
     height: "100%", backgroundColor: colors.primary, borderRadius: 3,
@@ -336,7 +339,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.borderSubtle,
   },
   savedDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled },
   actionBtns: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -354,7 +357,7 @@ const s = StyleSheet.create({
   },
 
   empty: { alignItems: "center", paddingVertical: 60, gap: 10, paddingHorizontal: 24 },
-  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 18, color: "#374151" },
+  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.textPrimary },
   emptySub: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: "center" },
   emptyBtn: {
     flexDirection: "row", alignItems: "center", gap: 8,

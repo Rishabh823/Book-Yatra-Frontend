@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api, volunteerApi } from "../../lib/api";
-import { colors, fonts } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -38,6 +39,7 @@ const STATUS_COLOR = {
 export default function VolunteerManagementScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [volunteers, setVolunteers] = useState([]);
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,8 @@ export default function VolunteerManagementScreen() {
   const [removeTourTarget, setRemoveTourTarget] = useState(null); // { volunteerId, tourId }
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
   const [suspendTarget, setSuspendTarget] = useState(null); // volunteer item
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -250,7 +254,7 @@ export default function VolunteerManagementScreen() {
             <View
               style={[
                 s.avatar,
-                { backgroundColor: status === "suspended" ? "#9CA3AF" : colors.primary },
+                { backgroundColor: status === "suspended" ? colors.textDisabled : colors.primary },
               ]}
             >
               <Text style={s.avatarText}>
@@ -608,7 +612,7 @@ export default function VolunteerManagementScreen() {
               <TouchableOpacity
                 style={[
                   s.assignConfirmBtn,
-                  { flex: 1, backgroundColor: "#F3F4F6" },
+                  { flex: 1, backgroundColor: colors.elevated },
                 ]}
                 onPress={() => setCreateModal(false)}
                 disabled={creating}
@@ -804,7 +808,7 @@ export default function VolunteerManagementScreen() {
 
             <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
               <TouchableOpacity
-                style={[s.assignConfirmBtn, { flex: 1, backgroundColor: "#F3F4F6" }]}
+                style={[s.assignConfirmBtn, { flex: 1, backgroundColor: colors.elevated }]}
                 onPress={() => setPwdModal(null)}
                 disabled={savingPwd}
               >
@@ -867,8 +871,8 @@ export default function VolunteerManagementScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.elevated },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 18,
@@ -876,19 +880,19 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
+  title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: colors.textPrimary },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
@@ -900,15 +904,15 @@ const s = StyleSheet.create({
     flexDirection: "row",
     padding: 12,
     gap: 8,
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.elevated,
   },
   statCard: {
     flex: 1,
     alignItems: "center",
     paddingVertical: 10,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.elevated,
     borderRadius: 16,
   },
   statCount: { fontFamily: fonts.bodyBold, fontSize: 20 },
@@ -925,16 +929,16 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.elevated,
     minHeight: 52,
   },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignSelf: "center",
     height: 34,
     alignItems: "center",
@@ -950,12 +954,12 @@ const s = StyleSheet.create({
   tabTextActive: { color: "white" },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   cardRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   avatar: {
@@ -967,7 +971,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontFamily: fonts.bodyBold, fontSize: 18, color: "white" },
-  volName: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1F2937" },
+  volName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   volEmail: {
     fontFamily: fonts.body,
     fontSize: 12,
@@ -998,7 +1002,7 @@ const s = StyleSheet.create({
   },
 
   toursSection: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.elevated,
     borderRadius: 16,
     padding: 10,
     gap: 8,
@@ -1016,7 +1020,7 @@ const s = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.primary,
   },
-  tourTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#1F2937" },
+  tourTitle: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
   tourMeta: {
     fontFamily: fonts.body,
     fontSize: 11,
@@ -1070,7 +1074,7 @@ const s = StyleSheet.create({
   actionBtnText: { fontFamily: fonts.bodyBold, fontSize: 13 },
 
   empty: { alignItems: "center", paddingVertical: 60, gap: 8 },
-  emptyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#374151" },
+  emptyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 13,
@@ -1084,7 +1088,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalSheet: {
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -1095,7 +1099,7 @@ const s = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.borderSubtle,
     alignSelf: "center",
     marginBottom: 4,
   },
@@ -1107,7 +1111,7 @@ const s = StyleSheet.create({
   modalTitle: {
     fontFamily: "Philosopher_700Bold",
     fontSize: 20,
-    color: "#1F2937",
+    color: colors.textPrimary,
   },
   modalVolName: {
     fontFamily: fonts.body,
@@ -1126,7 +1130,7 @@ const s = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
     marginBottom: 8,
     gap: 10,
   },
@@ -1140,7 +1144,7 @@ const s = StyleSheet.create({
   tourOptionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: "#1F2937",
+    color: colors.textPrimary,
   },
   tourOptionMeta: {
     fontFamily: fonts.body,
@@ -1167,12 +1171,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   createHeaderBtnTxt: {
     fontFamily: fonts.bodyBold,
@@ -1183,7 +1187,7 @@ const s = StyleSheet.create({
   createLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     textTransform: "uppercase",
     letterSpacing: 1.5,
     marginBottom: 6,
@@ -1192,17 +1196,17 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.elevated,
   },
   createInput: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#1F2937",
+    color: colors.textPrimary,
   },
 
   // Segmented tabs — compact chip style
@@ -1212,9 +1216,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     gap: 6,
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.elevated,
   },
   segment: {
     flexDirection: "row",
@@ -1223,9 +1227,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   segmentActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   segmentText: {
@@ -1263,12 +1267,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.elevated,
     borderRadius: 999,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   docsText: { fontFamily: fonts.bodyBold, fontSize: 10 },
   tourCountRow: {
@@ -1295,7 +1299,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.elevated,
     paddingTop: 10,
     marginTop: 2,
   },
@@ -1308,5 +1312,5 @@ const s = StyleSheet.create({
     paddingVertical: 4,
   },
   stripBtnTxt: { fontFamily: fonts.bodyMedium, fontSize: 12 },
-  stripDivider: { width: 1, height: 20, backgroundColor: "#E5E7EB" },
+  stripDivider: { width: 1, height: 20, backgroundColor: colors.borderSubtle },
 });

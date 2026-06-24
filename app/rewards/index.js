@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -53,6 +54,7 @@ const TIER_MINS = { bronze: 0, silver: 1000, gold: 5000, platinum: 10000 };
 export default function RewardsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const { toast, showToast, hideToast } = useToast();
   const [loyalty, setLoyalty] = useState(null);
   const [badges, setBadges] = useState([]);
@@ -61,6 +63,8 @@ export default function RewardsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [claimingDaily, setClaimingDaily] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -143,17 +147,17 @@ export default function RewardsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Flat white header */}
+      {/* Flat header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Rewards & Points</Text>
         <TouchableOpacity
           onPress={() => router.push("/rewards/leaderboard")}
           style={styles.leaderBtn}
         >
-          <Ionicons name="trophy-outline" size={20} color="#111827" />
+          <Ionicons name="trophy-outline" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -278,7 +282,7 @@ export default function RewardsScreen() {
                 <Text
                   style={[
                     styles.badgeName,
-                    !b.earned && { color: "#9CA3AF" },
+                    !b.earned && { color: colors.textDisabled },
                   ]}
                   numberOfLines={1}
                 >
@@ -302,7 +306,7 @@ export default function RewardsScreen() {
               onChangeText={setRedeemPoints}
               placeholder="Points to redeem"
               keyboardType="numeric"
-              placeholderTextColor="#6B7280"
+              placeholderTextColor={colors.textSecondary}
             />
             {redeemPoints ? (
               <Text style={styles.redeemValue}>
@@ -351,9 +355,9 @@ export default function RewardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
 
   // Header
   header: {
@@ -361,15 +365,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -377,37 +381,37 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: "Philosopher_700Bold",
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
     marginLeft: 10,
   },
   leaderBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
 
   // Gray band
-  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
+  grayBand: { height: 10, backgroundColor: colors.elevated },
 
   // Tier card
   tierCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 16,
     padding: 16,
     gap: 12,
   },
   tierRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   tierIcon: { fontSize: 36 },
-  tierName: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
+  tierName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   tierProgress: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
     marginTop: 2,
   },
   pointsDisplay: { alignItems: "flex-end" },
@@ -415,23 +419,23 @@ const styles = StyleSheet.create({
   pointsLabel: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
   },
   progressBg: {
     height: 6,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: colors.elevated,
     borderRadius: 4,
     overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: "#D95D39", borderRadius: 4 },
   statsDividerRow: { flexDirection: "row", justifyContent: "space-around", alignItems: "center" },
   stat: { alignItems: "center", flex: 1 },
-  statDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
-  statVal: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
+  statDivider: { width: 1, height: 32, backgroundColor: colors.borderSubtle },
+  statVal: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   statLbl: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     marginTop: 2,
   },
 
@@ -447,27 +451,27 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   dailyCardClaimed: {
-    backgroundColor: "#fff",
-    borderColor: "#E5E7EB",
+    backgroundColor: colors.surface,
+    borderColor: colors.borderSubtle,
     opacity: 0.7,
   },
   dailyIcon: {
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   dailyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   dailySub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
     marginTop: 2,
   },
   claimBtn: {
@@ -480,9 +484,9 @@ const styles = StyleSheet.create({
 
   // Section cards
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -495,7 +499,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   seeAll: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#D95D39" },
 
@@ -508,14 +512,14 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#fff",
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
   },
   badgeItemLocked: { opacity: 0.5 },
   badgeName: {
     fontFamily: fonts.bodyMedium,
     fontSize: 10,
-    color: "#111827",
+    color: colors.textPrimary,
     textAlign: "center",
   },
 
@@ -523,18 +527,18 @@ const styles = StyleSheet.create({
   redeemInfo: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   redeemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   redeemInput: {
     flex: 1,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 14,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   redeemValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#16A34A" },
   redeemBtn: {
@@ -544,14 +548,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  redeemBtnDisabled: { backgroundColor: "#E5E7EB" },
+  redeemBtnDisabled: { backgroundColor: colors.borderSubtle },
   redeemBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "white" },
 
   // Referral
   referralCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -569,12 +573,12 @@ const styles = StyleSheet.create({
   referralTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   referralSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
     marginTop: 2,
   },
   shareBtn: {

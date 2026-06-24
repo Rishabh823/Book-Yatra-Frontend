@@ -5,19 +5,24 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { feedback as feedbackApi } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 
 const STAR_FILTERS = ['all', 5, 4, 3, 2, 1];
-const CATEGORY_COLORS = {
-  tour:    colors.primary,
-  service: '#7C3AED',
-  app:     '#0284C7',
-  general: '#6B7280',
-};
 
 export default function AdminFeedback() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
+  const CATEGORY_COLORS = {
+    tour:    colors.primary,
+    service: '#7C3AED',
+    app:     '#0284C7',
+    general: colors.textSecondary,
+  };
+
   const [items, setItems]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -115,7 +120,7 @@ export default function AdminFeedback() {
           }
           renderItem={({ item }) => {
             const rating   = item.rating || 5;
-            const catColor = CATEGORY_COLORS[item.category?.split('-')[0]] || '#6B7280';
+            const catColor = CATEGORY_COLORS[item.category?.split('-')[0]] || colors.textSecondary;
             return (
               <View style={s.card}>
                 <View style={s.cardTop}>
@@ -151,9 +156,9 @@ export default function AdminFeedback() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // Rating hero
-  ratingHero:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 16, borderWidth: 1, borderColor: "#E5E7EB" },
+  ratingHero:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 16, borderWidth: 1, borderColor: colors.borderSubtle },
   ratingLeft:  { alignItems: 'center', justifyContent: 'center', width: 80 },
   bigRating:   { fontFamily: fonts.heading, fontSize: 40, color: colors.textPrimary, letterSpacing: -1 },
   starsRow:    { flexDirection: 'row', gap: 2 },
@@ -172,7 +177,7 @@ const s = StyleSheet.create({
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
   // Cards
-  card:       { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:       { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
   cardTop:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   initials:   { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
   initialTxt: { fontFamily: fonts.heading, fontSize: 16, color: colors.secondary },

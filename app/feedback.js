@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fonts } from "../lib/theme";
 import { feedback as feedbackApi, auth as authApi } from "../lib/api";
 import { useLang } from "../lib/LanguageContext";
+import { useColors } from "../lib/ThemeContext";
 
 const CATEGORIES = [
   { id: "service-quality", label: "Service Quality" },
@@ -31,6 +32,7 @@ const CATEGORIES = [
 export default function Feedback() {
   const router = useRouter();
   const { t } = useLang();
+  const colors = useColors();
   const [authed, setAuthed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [form, setForm] = useState({
@@ -44,6 +46,8 @@ export default function Feedback() {
   });
   const [loading, setLoading] = useState(false);
   const { toast, showToast, hideToast } = useToast();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   // ── Auth check + pre-fill ──────────────────────────────────────────────────
   useEffect(() => {
@@ -91,10 +95,10 @@ export default function Feedback() {
   // ── Auth gate ──────────────────────────────────────────────────────────────
   if (authChecked && !authed) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
@@ -128,7 +132,7 @@ export default function Feedback() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -139,7 +143,7 @@ export default function Feedback() {
             style={s.iconBtn}
             testID="feedback-back"
           >
-            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
@@ -162,7 +166,7 @@ export default function Feedback() {
                 <Ionicons
                   name="star"
                   size={36}
-                  color={n <= form.rating ? "#D97706" : "#E5E7EB"}
+                  color={n <= form.rating ? "#D97706" : colors.borderSubtle}
                 />
               </TouchableOpacity>
             ))}
@@ -220,12 +224,12 @@ export default function Feedback() {
             <View key={f.k} style={s.field}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputWrap}>
-                <Ionicons name={f.icon} size={18} color="#6B7280" />
+                <Ionicons name={f.icon} size={18} color={colors.textSecondary} />
                 <TextInput
                   testID={`fb-${f.k}`}
                   style={s.input}
                   placeholder={f.label.replace(" *", "")}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textDisabled}
                   keyboardType={f.kb || "default"}
                   value={form[f.k]}
                   onChangeText={(v) => set(f.k, v)}
@@ -240,7 +244,7 @@ export default function Feedback() {
               testID="fb-message"
               style={s.textarea}
               placeholder="Share your experience with us..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textDisabled}
               multiline
               numberOfLines={5}
               textAlignVertical="top"
@@ -278,15 +282,15 @@ export default function Feedback() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   head: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   iconBtn: {
     width: 40,
@@ -294,16 +298,16 @@ const s = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
   },
   title: {
     flex: 1,
     textAlign: "center",
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
   },
-  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
+  grayBand: { height: 10, backgroundColor: colors.elevated },
 
   // ── Auth gate ──────────────────────────────────
   gateWrap: {
@@ -313,9 +317,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 24,
   },
   gateCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 28,
     alignItems: "center",
@@ -333,14 +337,14 @@ const s = StyleSheet.create({
   gateTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
     textAlign: "center",
     marginBottom: 8,
   },
   gateSub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 21,
     marginBottom: 28,
@@ -360,7 +364,7 @@ const s = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     letterSpacing: 1.5,
     textTransform: "uppercase",
     marginBottom: 14,
@@ -375,7 +379,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 50,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
   },
   catChipActive: {
     backgroundColor: "#D95D39",
@@ -383,14 +387,14 @@ const s = StyleSheet.create({
   catText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    color: "#111827",
+    color: colors.textPrimary,
   },
 
   field: { marginBottom: 16 },
   fieldLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   inputWrap: {
@@ -399,24 +403,24 @@ const s = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 14,
     height: 56,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
   },
   input: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
     height: 56,
   },
   textarea: {
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#111827",
+    color: colors.textPrimary,
     minHeight: 120,
   },
 
@@ -436,6 +440,6 @@ const s = StyleSheet.create({
     marginTop: 20,
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
 });

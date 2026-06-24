@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { api, volunteerApi } from "../../lib/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, fonts, radius } from "../../lib/theme";
+import { fonts, radius } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 const DOCS = [
   {
@@ -39,6 +40,8 @@ const DOCS = [
 
 export default function VolunteerOnboardingScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
   const { toast, showToast, hideToast } = useToast();
@@ -299,8 +302,8 @@ export default function VolunteerOnboardingScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 24,
     paddingBottom: 28,
@@ -349,12 +352,12 @@ const s = StyleSheet.create({
   },
 
   docCard: {
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     borderRadius: radius.xl,
     padding: 16,
     gap: 12,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   docCardDone: { borderColor: "#86EFAC", backgroundColor: "#F0FDF4" },
   docCardTop: { flexDirection: "row", alignItems: "flex-start" },
@@ -371,7 +374,7 @@ const s = StyleSheet.create({
     gap: 8,
     flexWrap: "wrap",
   },
-  docLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1F2937" },
+  docLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   requiredBadge: {
     backgroundColor: "#FEE2E2",
     borderRadius: radius.pill,

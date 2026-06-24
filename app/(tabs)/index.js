@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { fonts } from "../../lib/theme";
+import { getProfileCompletion } from "../../lib/onboarding";
 import {
   tours as toursApi,
   feedback as feedbackApi,
@@ -54,7 +55,9 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
   return (
     <View style={sectionHeaderStyles.container}>
       <View style={{ flex: 1 }}>
-        <Text style={[sectionHeaderStyles.title, { color: "#111827" }]}>
+        <Text
+          style={[sectionHeaderStyles.title, { color: colors.textPrimary }]}
+        >
           {title}
         </Text>
         {subtitle ? (
@@ -95,13 +98,11 @@ const sectionHeaderStyles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: "#111827",
     letterSpacing: -0.3,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
     marginTop: 2,
   },
   seeAllBtn: {
@@ -168,7 +169,7 @@ function StarRow({ rating = 0, count, size = 11, color = "#F59E0B" }) {
             key={s}
             name={filled ? "star" : half ? "star-half" : "star-outline"}
             size={size}
-            color={filled || half ? color : "#D1D5DB"}
+            color={filled || half ? color : "#9B8F85"}
           />
         );
       })}
@@ -177,7 +178,7 @@ function StarRow({ rating = 0, count, size = 11, color = "#F59E0B" }) {
           style={{
             fontFamily: fonts.body,
             fontSize: size - 1,
-            color: "#6B7280",
+            color: "#9B8F85",
             marginLeft: 3,
           }}
         >
@@ -257,6 +258,8 @@ export default function Home() {
   const [joinedOps, setJoinedOps] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
   const fade = useRef(new Animated.Value(0)).current;
+
+  const [profileCompletion, setProfileCompletion] = useState(null);
 
   // New section states
   const [trendingTours, setTrendingTours] = useState([]);
@@ -645,6 +648,13 @@ export default function Home() {
     return () => clearInterval(i);
   }, []);
 
+  // Reload profile completion every time the tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      getProfileCompletion().then(setProfileCompletion);
+    }, []),
+  );
+
   // Immediately reflect admin settings changes (maintenance mode / announcement)
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener("appSettingsChanged", (cfg) => {
@@ -882,7 +892,7 @@ export default function Home() {
       <SafeAreaView
         style={{
           flex: 1,
-          backgroundColor: "#fff",
+          backgroundColor: colors.bg,
           alignItems: "center",
           justifyContent: "center",
           padding: 32,
@@ -919,7 +929,10 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      edges={["top"]}
+    >
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
@@ -1002,21 +1015,25 @@ export default function Home() {
           <Ionicons
             name="search-outline"
             size={18}
-            color="#9CA3AF"
+            color={colors.textDisabled}
             style={{ marginRight: 10 }}
           />
           <Text
             style={{
               fontFamily: fonts.body,
               fontSize: 14,
-              color: "#9CA3AF",
+              color: colors.textDisabled,
               flex: 1,
             }}
           >
             Search tours, destinations...
           </Text>
           <View
-            style={{ backgroundColor: "#FEE9E3", borderRadius: 8, padding: 6 }}
+            style={{
+              backgroundColor: colors.elevated,
+              borderRadius: 8,
+              padding: 6,
+            }}
           >
             <Ionicons name="options-outline" size={16} color="#D95D39" />
           </View>
@@ -1102,6 +1119,97 @@ export default function Home() {
           ))}
         </ScrollView>
 
+        {/* ── Profile Completion Card ──────────────────────────────────── */}
+        {isLoggedIn &&
+          userRole !== "volunteer" &&
+          userRole !== "super_admin" &&
+          profileCompletion &&
+          profileCompletion.percentage < 100 && (
+            <View
+              style={{ paddingHorizontal: 16, marginTop: 16, marginBottom: 4 }}
+            >
+              <View style={styles.profileCard}>
+                {/* Header row */}
+                <View style={styles.profileCardHeader}>
+                  <View style={styles.profileCardIconWrap}>
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={26}
+                      color="#D95D39"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.profileCardTitle}>
+                      Complete Your Profile
+                    </Text>
+                    <Text style={styles.profileCardSub}>
+                      {profileCompletion.completed}/{profileCompletion.total}{" "}
+                      steps done
+                    </Text>
+                  </View>
+                  <View style={styles.profilePctWrap}>
+                    <Text style={styles.profilePct}>
+                      {profileCompletion.percentage}%
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Progress bar */}
+                <View style={styles.profileBarBg}>
+                  <View
+                    style={[
+                      styles.profileBarFill,
+                      { width: `${profileCompletion.percentage}%` },
+                    ]}
+                  />
+                </View>
+
+                {/* Step pills */}
+                <View style={styles.profileSteps}>
+                  {profileCompletion.steps.map((step) => (
+                    <View
+                      key={step.key}
+                      style={[
+                        styles.profileStepPill,
+                        step.done && styles.profileStepPillDone,
+                      ]}
+                    >
+                      <Ionicons
+                        name={step.done ? "checkmark-circle" : step.icon}
+                        size={13}
+                        color={step.done ? "#16A34A" : colors.textDisabled}
+                      />
+                      <Text
+                        style={[
+                          styles.profileStepTxt,
+                          step.done && styles.profileStepTxtDone,
+                        ]}
+                      >
+                        {step.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* CTA button */}
+                {profileCompletion.firstIncomplete && (
+                  <TouchableOpacity
+                    style={styles.profileCta}
+                    onPress={() =>
+                      router.push(profileCompletion.firstIncomplete.route)
+                    }
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.profileCtaTxt}>
+                      Complete: {profileCompletion.firstIncomplete.label}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={14} color="#fff" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+
         {/* ── Volunteer Home Section ──────────────────────────────────────── */}
         {isLoggedIn && userRole === "volunteer" && (
           <View style={styles.section}>
@@ -1110,7 +1218,7 @@ export default function Home() {
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "#F0FDF4" },
+                    { backgroundColor: colors.elevated },
                   ]}
                 >
                   <Ionicons name="shield-checkmark" size={22} color="#16A34A" />
@@ -1119,7 +1227,12 @@ export default function Home() {
                   <Text style={[styles.roleBannerTitle, { color: "#16A34A" }]}>
                     Volunteer Panel
                   </Text>
-                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
+                  <Text
+                    style={[
+                      styles.roleBannerSub,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {volDashboard?.assignedTours?.length
                       ? `${volDashboard.assignedTours.length} tour${volDashboard.assignedTours.length > 1 ? "s" : ""} assigned`
                       : "No tours assigned yet"}
@@ -1211,7 +1324,7 @@ export default function Home() {
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "#FEE8E2" },
+                    { backgroundColor: colors.elevated },
                   ]}
                 >
                   <Ionicons name="shield" size={22} color="#D95D39" />
@@ -1220,7 +1333,12 @@ export default function Home() {
                   <Text style={[styles.roleBannerTitle, { color: "#D95D39" }]}>
                     Admin Dashboard
                   </Text>
-                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
+                  <Text
+                    style={[
+                      styles.roleBannerSub,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Manage your tour operations
                   </Text>
                 </View>
@@ -1318,16 +1436,26 @@ export default function Home() {
                 <View
                   style={[
                     styles.roleBannerIcon,
-                    { backgroundColor: "#F5F3FF" },
+                    { backgroundColor: colors.elevated },
                   ]}
                 >
                   <Ionicons name="planet" size={22} color="#7C3AED" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleBannerTitle, { color: "#111827" }]}>
+                  <Text
+                    style={[
+                      styles.roleBannerTitle,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
                     Super Admin
                   </Text>
-                  <Text style={[styles.roleBannerSub, { color: "#6B7280" }]}>
+                  <Text
+                    style={[
+                      styles.roleBannerSub,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Platform-wide overview
                   </Text>
                 </View>
@@ -1363,7 +1491,10 @@ export default function Home() {
                     key={st.label}
                     style={[
                       styles.adminStatCard,
-                      { backgroundColor: "#F5F3FF", borderColor: "#DDD6FE" },
+                      {
+                        backgroundColor: colors.elevated,
+                        borderColor: colors.borderSubtle,
+                      },
                     ]}
                   >
                     <Ionicons name={st.icon} size={15} color={st.color} />
@@ -1562,7 +1693,7 @@ export default function Home() {
                             <View
                               style={[
                                 styles.tourBadge,
-                                { backgroundColor: "rgba(2,132,199,0.85)" },
+                                { backgroundColor: "#B94929" },
                               ]}
                             >
                               <Ionicons
@@ -1635,14 +1766,7 @@ export default function Home() {
                               <Text style={styles.tourPrice}>
                                 {tour.price || "₹—"}
                               </Text>
-                              <View
-                                style={[
-                                  styles.bookPill,
-                                  tour.isExternal && {
-                                    backgroundColor: "#0284C7",
-                                  },
-                                ]}
-                              >
+                              <View style={[styles.bookPill, tour.isExternal]}>
                                 <Text style={styles.bookPillText}>
                                   {tour.isExternal ? "View" : t.bookNow}
                                 </Text>
@@ -1897,7 +2021,7 @@ const makeStyles = (colors) =>
       flexDirection: "row",
       alignItems: "flex-start",
       gap: 8,
-      backgroundColor: "#FEF3C7",
+      backgroundColor: colors.elevated,
       borderLeftWidth: 4,
       borderLeftColor: "#F59E0B",
       marginHorizontal: 16,
@@ -1923,7 +2047,7 @@ const makeStyles = (colors) =>
     greeting: {
       fontSize: 24,
       fontFamily: fonts.heading,
-      color: "#111827",
+      color: colors.textPrimary,
       letterSpacing: -0.3,
     },
     greetSub: {
@@ -1939,10 +2063,10 @@ const makeStyles = (colors) =>
       height: 44,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       borderRadius: 999,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     walletHeaderBtn: {
       flexDirection: "row",
@@ -1962,7 +2086,7 @@ const makeStyles = (colors) =>
     langBtn: {
       paddingHorizontal: 12,
       paddingVertical: 6,
-      backgroundColor: "#111827",
+      backgroundColor: colors.surface,
       borderRadius: 999,
     },
     langText: {
@@ -2038,7 +2162,7 @@ const makeStyles = (colors) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 5,
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       borderRadius: 999,
       paddingHorizontal: 14,
       paddingVertical: 9,
@@ -2077,7 +2201,7 @@ const makeStyles = (colors) =>
     sectionLabel: {
       fontFamily: fonts.bodyMedium,
       fontSize: 11,
-      color: "#9CA3AF",
+      color: colors.textDisabled,
       letterSpacing: 3,
       textTransform: "uppercase",
       marginBottom: 12,
@@ -2091,7 +2215,7 @@ const makeStyles = (colors) =>
     h2: {
       fontFamily: fonts.heading,
       fontSize: 24,
-      color: "#111827",
+      color: colors.textPrimary,
       letterSpacing: -0.3,
     },
     h2Sub: {
@@ -2106,11 +2230,11 @@ const makeStyles = (colors) =>
     quickCard: {
       flex: 1,
       minWidth: 130,
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       padding: 16,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     quickIcon: {
       width: 44,
@@ -2131,6 +2255,85 @@ const makeStyles = (colors) =>
       color: colors.textSecondary,
       marginTop: 2,
     },
+
+    // Profile completion card
+    profileCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.borderSubtle,
+      padding: 16,
+      gap: 12,
+    },
+    profileCardHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+    profileCardIconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    profileCardTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    profileCardSub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    profilePctWrap: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      borderWidth: 3,
+      borderColor: "#D95D39",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.elevated,
+    },
+    profilePct: { fontFamily: fonts.heading, fontSize: 15, color: "#D95D39" },
+    profileBarBg: {
+      height: 6,
+      backgroundColor: colors.elevated,
+      borderRadius: 3,
+    },
+    profileBarFill: { height: 6, backgroundColor: "#D95D39", borderRadius: 3 },
+    profileSteps: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+    profileStepPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: colors.elevated,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    profileStepPillDone: {
+      backgroundColor: colors.elevated,
+      borderColor: "#BBF7D0",
+    },
+    profileStepTxt: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textDisabled,
+    },
+    profileStepTxtDone: { color: "#16A34A" },
+    profileCta: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: "#D95D39",
+      paddingVertical: 11,
+      borderRadius: 10,
+    },
+    profileCtaTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
 
     empty: { alignItems: "center", paddingVertical: 32, gap: 6 },
     emptyText: {
@@ -2157,7 +2360,7 @@ const makeStyles = (colors) =>
     },
     tourCardExternal: {
       borderWidth: 2,
-      borderColor: "#0284C7",
+      // borderColor: "#0284C7",
     },
     tourImg: {
       ...StyleSheet.absoluteFillObject,
@@ -2179,7 +2382,7 @@ const makeStyles = (colors) =>
     tourBadgeText: {
       fontFamily: fonts.bodyBold,
       fontSize: 11,
-      color: "#111827",
+      color: colors.textPrimary,
     },
     seatsLeftBadge: {
       position: "absolute",
@@ -2394,11 +2597,11 @@ const makeStyles = (colors) =>
     whyCard: {
       flex: 1,
       minWidth: 130,
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       padding: 16,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     whyIcon: {
       width: 46,
@@ -2422,18 +2625,18 @@ const makeStyles = (colors) =>
     },
 
     loginCta: {
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       borderRadius: 24,
       padding: 28,
       alignItems: "center",
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     loginCtaIcon: {
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: "#FEE8E2",
+      backgroundColor: colors.elevated,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 14,
@@ -2441,7 +2644,7 @@ const makeStyles = (colors) =>
     loginCtaTitle: {
       fontFamily: fonts.heading,
       fontSize: 22,
-      color: "#111827",
+      color: colors.textPrimary,
       textAlign: "center",
       marginBottom: 6,
     },
@@ -2468,12 +2671,12 @@ const makeStyles = (colors) =>
       height: 48,
       borderRadius: 999,
       borderWidth: 1.5,
-      borderColor: "#D1D5DB",
+      borderColor: colors.textDisabled,
       alignItems: "center",
       justifyContent: "center",
     },
     registerBtnTxt: {
-      color: "#374151",
+      color: colors.textPrimary,
       fontFamily: fonts.bodyBold,
       fontSize: 14,
     },
@@ -2481,11 +2684,11 @@ const makeStyles = (colors) =>
     feedbackCard: {
       width: width * 0.75,
       marginRight: 14,
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       padding: 18,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     feedbackHead: {
       flexDirection: "row",
@@ -2521,8 +2724,8 @@ const makeStyles = (colors) =>
       padding: 20,
       gap: 14,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
-      backgroundColor: "#fff",
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.surface,
     },
     roleBannerTop: { flexDirection: "row", alignItems: "center", gap: 12 },
     roleBannerIcon: {
@@ -2536,7 +2739,7 @@ const makeStyles = (colors) =>
     roleBannerSub: {
       fontFamily: fonts.body,
       fontSize: 12,
-      color: "#6B7280",
+      color: colors.textSecondary,
       marginTop: 2,
     },
     roleBannerCta: { flexDirection: "row", alignItems: "center", gap: 4 },
@@ -2550,7 +2753,7 @@ const makeStyles = (colors) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      backgroundColor: "#F0FDF4",
+      backgroundColor: colors.elevated,
       borderRadius: 16,
       padding: 12,
       borderWidth: 1,
@@ -2566,12 +2769,12 @@ const makeStyles = (colors) =>
     todayTourName: {
       fontFamily: fonts.bodyBold,
       fontSize: 14,
-      color: "#111827",
+      color: colors.textPrimary,
     },
     todayTourMeta: {
       fontFamily: fonts.body,
       fontSize: 11,
-      color: "#6B7280",
+      color: colors.textSecondary,
       marginTop: 2,
     },
     todayTourBtn: {
@@ -2595,7 +2798,7 @@ const makeStyles = (colors) =>
       flex: 1,
       alignItems: "center",
       gap: 6,
-      backgroundColor: "#F0FDF4",
+      backgroundColor: colors.elevated,
       paddingVertical: 12,
       borderRadius: 16,
       borderWidth: 1,
@@ -2612,17 +2815,17 @@ const makeStyles = (colors) =>
       flex: 1,
       alignItems: "center",
       gap: 4,
-      backgroundColor: "#FEF3F0",
+      backgroundColor: colors.elevated,
       paddingVertical: 12,
       borderRadius: 16,
       borderWidth: 1,
-      borderColor: "#FECAB7",
+      borderColor: colors.borderSubtle,
     },
     adminStatValue: { fontFamily: fonts.bodyBold, fontSize: 18 },
     adminStatLabel: {
       fontFamily: fonts.body,
       fontSize: 10,
-      color: "#6B7280",
+      color: colors.textSecondary,
       letterSpacing: 0.5,
     },
     adminActionsGrid: { flexDirection: "row", gap: 8 },
@@ -2630,11 +2833,11 @@ const makeStyles = (colors) =>
       flex: 1,
       alignItems: "center",
       gap: 6,
-      backgroundColor: "#F9FAFB",
+      backgroundColor: colors.elevated,
       paddingVertical: 14,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
     },
     adminActionTxt: { fontFamily: fonts.bodyBold, fontSize: 10 },
 
@@ -2692,10 +2895,10 @@ const makeStyles = (colors) =>
     searchCard: {
       marginHorizontal: 16,
       marginBottom: 12,
-      backgroundColor: "#fff",
+      backgroundColor: colors.surface,
       borderRadius: 12,
       borderWidth: 1.5,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
       paddingHorizontal: 14,
       paddingVertical: 12,
       flexDirection: "row",
@@ -2716,7 +2919,7 @@ const makeStyles = (colors) =>
       borderColor: "#D95D39",
     },
     chipInactive: {
-      backgroundColor: "#FFF8F5",
+      backgroundColor: colors.elevated,
       borderColor: "#E5C4B8",
     },
     chipText: {
@@ -2732,12 +2935,12 @@ const makeStyles = (colors) =>
     searchInputRow: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#F2F0ED",
+      backgroundColor: colors.elevated,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 4,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
       gap: 10,
     },
     searchInputIconWrap: {
@@ -2750,7 +2953,7 @@ const makeStyles = (colors) =>
       flex: 1,
       fontFamily: fonts.body,
       fontSize: 14,
-      color: "#1F2937",
+      color: colors.textPrimary,
       paddingVertical: 10,
     },
     swapRow: {
@@ -2761,13 +2964,13 @@ const makeStyles = (colors) =>
     swapDivider: {
       flex: 1,
       height: 1,
-      backgroundColor: "#EDE9E6",
+      backgroundColor: colors.borderSubtle,
     },
     swapIconWrap: {
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: "#FFF8F5",
+      backgroundColor: colors.elevated,
       borderWidth: 1,
       borderColor: "#E5C4B8",
       alignItems: "center",
@@ -2776,18 +2979,18 @@ const makeStyles = (colors) =>
     dateRow: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#F2F0ED",
+      backgroundColor: colors.elevated,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderWidth: 1,
-      borderColor: "#E5E7EB",
+      borderColor: colors.borderSubtle,
       gap: 10,
     },
     dateText: {
       fontFamily: fonts.bodyMedium,
       fontSize: 14,
-      color: "#1F2937",
+      color: colors.textPrimary,
     },
     quickDateBtn: {
       paddingHorizontal: 10,
@@ -2795,7 +2998,7 @@ const makeStyles = (colors) =>
       borderRadius: 999,
       borderWidth: 1,
       borderColor: "#E5C4B8",
-      backgroundColor: "#FFF8F5",
+      backgroundColor: colors.elevated,
     },
     quickDateBtnActive: {
       backgroundColor: "#D95D39",

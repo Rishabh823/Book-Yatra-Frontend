@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell, StatusBadge } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { members as membersApi, api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 import Toast from "../../components/Toast";
@@ -16,6 +17,7 @@ const TABS = [
 ];
 
 export default function AdminMembers() {
+  const colors = useColors();
   const [tab, setTab] = useState('pending');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,8 @@ export default function AdminMembers() {
   const { toast, showToast, hideToast } = useToast();
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
   const [updateTarget, setUpdateTarget] = useState(null); // { id, status }
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -121,12 +125,12 @@ export default function AdminMembers() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 14 },
   tab: { flex: 1, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   tabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   initials: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.secondaryLight, alignItems: 'center', justifyContent: 'center' },
   initialText: { fontFamily: fonts.heading, fontSize: 18, color: '#fff' },

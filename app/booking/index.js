@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import {
   tours as toursApi,
   bookings as bookingsApi,
@@ -39,6 +40,8 @@ function SeatMap({
   onToggle,
   maxSelect,
 }) {
+  const colors = useColors();
+  const sm = useMemo(() => makeSmStyles(colors), [colors]);
   const layout = seatStructure === "2x3" ? [2, 3] : [2, 2];
   const seatsPerRow = layout[0] + layout[1];
   const rows = Math.ceil(totalSeats / seatsPerRow);
@@ -120,7 +123,7 @@ function SeatMap({
       <View style={sm.legend}>
         <LegendItem color="#F0FFF4" border="#22C55E" label="Available" />
         <LegendItem color="#FCE7F3" border="#EC4899" label="Female" />
-        <LegendItem color="#E5E7EB" border="#9CA3AF" label="Occupied" />
+        <LegendItem color={colors.borderSubtle} border={colors.textDisabled} label="Occupied" />
         <LegendItem
           color={colors.primary}
           border={colors.primary}
@@ -133,6 +136,7 @@ function SeatMap({
 }
 
 function Seat({ number, gender, selected, onPress }) {
+  const colors = useColors();
   let seatBg = "#F0FFF4",
     seatBorder = "#22C55E",
     topBg = "#22C55E22";
@@ -146,11 +150,11 @@ function Seat({ number, gender, selected, onPress }) {
     iconColor = "#EC4899";
     numColor = "#9D174D";
   } else if (gender === "Male" || gender === "Other") {
-    seatBg = "#E5E7EB";
-    seatBorder = "#9CA3AF";
-    topBg = "#9CA3AF44";
-    iconColor = "#6B7280";
-    numColor = "#374151";
+    seatBg = colors.borderSubtle;
+    seatBorder = colors.textDisabled;
+    topBg = colors.textDisabled + "44";
+    iconColor = colors.textSecondary;
+    numColor = colors.textPrimary;
   }
   if (selected) {
     seatBg = colors.primary;
@@ -166,12 +170,12 @@ function Seat({ number, gender, selected, onPress }) {
       onPress={onPress}
       disabled={taken}
       activeOpacity={taken ? 1 : 0.72}
-      style={[sm.seat, { backgroundColor: seatBg, borderColor: seatBorder }]}
+      style={[smBase.seat, { backgroundColor: seatBg, borderColor: seatBorder }]}
     >
       {/* Seat back / headrest */}
       <View
         style={[
-          sm.seatBack,
+          smBase.seatBack,
           { backgroundColor: topBg, borderBottomColor: seatBorder },
         ]}
       >
@@ -182,14 +186,16 @@ function Seat({ number, gender, selected, onPress }) {
         />
       </View>
       {/* Seat cushion */}
-      <View style={sm.seatCushion}>
-        <Text style={[sm.seatNum, { color: numColor }]}>{number}</Text>
+      <View style={smBase.seatCushion}>
+        <Text style={[smBase.seatNum, { color: numColor }]}>{number}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
 function LegendItem({ color, border, label, textColor }) {
+  const colors = useColors();
+  const sm = useMemo(() => makeSmStyles(colors), [colors]);
   return (
     <View style={sm.legendItem}>
       <View
@@ -202,7 +208,37 @@ function LegendItem({ color, border, label, textColor }) {
   );
 }
 
-const sm = StyleSheet.create({
+// Static styles that don't need colors (seat shape/layout only)
+const smBase = StyleSheet.create({
+  seat: {
+    width: SEAT_W,
+    height: SEAT_H,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  seatBack: {
+    height: 26,
+    borderBottomWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopLeftRadius: 7,
+    borderTopRightRadius: 7,
+  },
+  seatCushion: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  seatNum: { fontFamily: fonts.bodyBold, fontSize: 10 },
+});
+
+const makeSmStyles = (colors) => StyleSheet.create({
   container: { alignItems: "center", marginVertical: 4 },
   busFront: {
     width: 220,
@@ -248,7 +284,7 @@ const sm = StyleSheet.create({
     letterSpacing: 1,
   },
   busBody: {
-    backgroundColor: "#FAFAFA",
+    backgroundColor: colors.elevated,
     borderLeftWidth: 3,
     borderRightWidth: 3,
     borderBottomWidth: 3,
@@ -268,32 +304,6 @@ const sm = StyleSheet.create({
     color: colors.textDisabled,
     letterSpacing: 0.5,
   },
-  seat: {
-    width: SEAT_W,
-    height: SEAT_H,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  seatBack: {
-    height: 26,
-    borderBottomWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    borderTopLeftRadius: 7,
-    borderTopRightRadius: 7,
-  },
-  seatCushion: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  seatNum: { fontFamily: fonts.bodyBold, fontSize: 10 },
   legend: {
     flexDirection: "row",
     gap: 12,
@@ -321,6 +331,9 @@ const sm = StyleSheet.create({
 const STEP_LABELS = ["Personal", "Select Seats", "Review"];
 
 export default function Booking() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
   const insets = useSafeAreaInsets();
   const { tourId } = useLocalSearchParams();
   const router = useRouter();
@@ -1165,6 +1178,8 @@ export default function Booking() {
 }
 
 function PassengerSection({ label, data }) {
+  const colors = useColors();
+  const rv = useMemo(() => makeRvStyles(colors), [colors]);
   return (
     <View style={rv.section}>
       <Text style={rv.sectionLabel}>{label}</Text>
@@ -1179,6 +1194,8 @@ function PassengerSection({ label, data }) {
 }
 
 function RevItem({ icon, label, value }) {
+  const colors = useColors();
+  const rv = useMemo(() => makeRvStyles(colors), [colors]);
   return (
     <View style={rv.row}>
       <View style={rv.iconWrap}>
@@ -1192,7 +1209,7 @@ function RevItem({ icon, label, value }) {
   );
 }
 
-const rv = StyleSheet.create({
+const makeRvStyles = (colors) => StyleSheet.create({
   section: { marginBottom: 4 },
   sectionLabel: {
     fontFamily: fonts.accent,
@@ -1234,7 +1251,7 @@ const rv = StyleSheet.create({
   },
 });
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   center: {
     flex: 1,
     alignItems: "center",
@@ -1567,7 +1584,7 @@ const s = StyleSheet.create({
   passengerCard: {
     marginTop: 16,
     marginBottom: 4,
-    backgroundColor: colors.elevated || "#FFF4EC",
+    backgroundColor: colors.elevated,
     borderRadius: radius.xl,
     padding: 16,
     borderWidth: 1,
@@ -1602,7 +1619,7 @@ const s = StyleSheet.create({
   couponSection: {
     marginTop: 16,
     padding: 14,
-    backgroundColor: colors.primaryLight || "#FFF4EC",
+    backgroundColor: colors.primaryLight,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.primary + "30",

@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import React from "react";
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, TextInput, RefreshControl, Image,
@@ -6,7 +7,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius } from "../../lib/theme";
+import { fonts, radius } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { communityApi } from "../../lib/api";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -14,6 +16,8 @@ import { useToast } from "../../lib/hooks/useToast";
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
 
 function RejectSheet({ post, onClose, onReject }) {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const handleReject = async () => {
@@ -62,7 +66,10 @@ function RejectSheet({ post, onClose, onReject }) {
 
 export default function AdminCommunityScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { toast, showToast, hideToast } = useToast();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -235,14 +242,14 @@ export default function AdminCommunityScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   title: { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
   subtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.primary, marginTop: 1 },
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, gap: 10, borderWidth: 1, borderColor: "#E5E7EB" },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, gap: 10, borderWidth: 1, borderColor: colors.borderSubtle },
   authorRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: { width: 38, height: 38, borderRadius: 19 },
   avatarFallback: { backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },

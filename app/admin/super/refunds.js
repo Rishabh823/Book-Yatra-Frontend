@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
   Alert, FlatList, Modal, TextInput, ScrollView, KeyboardAvoidingView, Platform,
@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
 import { colors, fonts, radius } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const FILTERS = [
@@ -23,6 +24,7 @@ const STATUS_COLORS = {
 };
 
 export default function SuperRefunds() {
+  const colors = useColors();
   const [refunds,  setRefunds]  = useState([]);
   const [filter,   setFilter]   = useState('');
   const [loading,  setLoading]  = useState(true);
@@ -30,6 +32,8 @@ export default function SuperRefunds() {
   const [modal,    setModal]    = useState(null);  // 'approve' | 'reject'
   const [inputVal, setInputVal] = useState('');    // amount (approve) or reason (reject)
   const [acting,   setActing]   = useState(false);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -238,7 +242,7 @@ export default function SuperRefunds() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   filterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
   chip:        { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   chipActive:  { backgroundColor: colors.primary, borderColor: colors.primary },
@@ -247,7 +251,7 @@ const s = StyleSheet.create({
 
   list: { paddingHorizontal: 16, paddingBottom: 40 },
 
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   cardHead: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
   tourName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   bookingId: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 },
@@ -259,7 +263,7 @@ const s = StyleSheet.create({
   infoDot: { color: colors.textDisabled, fontSize: 14 },
 
   amountRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  amountChip: { flex: 1, backgroundColor: '#F8F7F4', borderRadius: 16, padding: 10 },
+  amountChip: { flex: 1, backgroundColor: colors.elevated, borderRadius: 16, padding: 10 },
   amountLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginBottom: 2 },
   amountVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
 

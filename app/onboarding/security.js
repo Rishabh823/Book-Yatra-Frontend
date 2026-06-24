@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as LocalAuthentication from "expo-local-authentication";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { markSecurityDone } from "../../lib/onboarding";
 
 const STEP = 8;
 const TOTAL = 11;
@@ -81,7 +82,10 @@ export default function SecurityScreen() {
     } catch {}
   };
 
-  const handleNext = () => router.push("/onboarding/emergency");
+  const handleNext = async () => {
+    await markSecurityDone();
+    router.push("/onboarding/emergency");
+  };
   const handleSkip = () => router.push("/onboarding/emergency");
 
   const biometricIcon =

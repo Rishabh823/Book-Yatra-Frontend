@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,10 +16,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../lib/api";
 import { fonts } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 
 export default function CouponsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
   const { toast, showToast, hideToast } = useToast();
   const [code, setCode] = useState("");
   const [validating, setValidating] = useState(false);
@@ -73,11 +76,11 @@ export default function CouponsScreen() {
       {/* Flat white header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Offers & Coupons</Text>
         <View style={styles.headerRight}>
-          <Ionicons name="search-outline" size={20} color="#6B7280" />
+          <Ionicons name="search-outline" size={20} color={themeColors.textSecondary} />
         </View>
       </View>
 
@@ -100,7 +103,7 @@ export default function CouponsScreen() {
               value={code}
               onChangeText={(t) => setCode(t.toUpperCase())}
               placeholder="Enter coupon code"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={themeColors.textDisabled}
               autoCapitalize="characters"
             />
             <TouchableOpacity
@@ -229,10 +232,10 @@ export default function CouponsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
 
   /* Header */
@@ -241,15 +244,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -257,14 +260,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: "Philosopher_700Bold",
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
     marginLeft: 10,
   },
   headerRight: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -272,14 +275,14 @@ const styles = StyleSheet.create({
   /* Gray band */
   grayBand: {
     height: 10,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: colors.elevated,
   },
 
   /* Checker card */
   checkerCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -287,7 +290,7 @@ const styles = StyleSheet.create({
   checkerTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   inputRow: {
     flexDirection: "row",
@@ -296,13 +299,13 @@ const styles = StyleSheet.create({
   },
   codeInput: {
     flex: 1,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 14,
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
     letterSpacing: 1,
   },
   applyBtn: {
@@ -314,7 +317,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   applyBtnDisabled: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.borderSubtle,
   },
   applyText: {
     fontFamily: fonts.bodyBold,
@@ -338,15 +341,15 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: colors.textPrimary,
   },
 
   /* Coupon cards */
   couponCard: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -402,19 +405,19 @@ const styles = StyleSheet.create({
   couponMin: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   couponExpiry: {
     fontFamily: fonts.bodyMedium,
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
 
   /* Earn card */
   earnCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -432,12 +435,12 @@ const styles = StyleSheet.create({
   earnTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   earnSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: colors.textSecondary,
     marginTop: 2,
   },
 });

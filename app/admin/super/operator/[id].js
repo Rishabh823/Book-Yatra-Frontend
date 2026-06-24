@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
   Alert, Switch, TextInput, Modal, Platform, KeyboardAvoidingView,
@@ -8,14 +8,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { AdminShell } from '../../../../lib/AdminScreen';
 import { colors, fonts, radius } from '../../../../lib/theme';
+import { useColors } from '../../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../../lib/api';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', businessName: '', password: '' };
 
 export default function OperatorDetail() {
+  const colors = useColors();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { width } = useWindowDimensions();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const [operator, setOperator] = useState(null);
   const [allTours, setAllTours] = useState([]);
@@ -277,7 +281,7 @@ export default function OperatorDetail() {
         <View style={{ paddingHorizontal: 16 }}>
           {activeTab === 'tours' && (
             allTours.length === 0 ? (
-              <EmptyState icon="bus-outline" text="No tours yet" />
+              <EmptyState icon="bus-outline" text="No tours yet" s={s} colors={colors} />
             ) : (
               allTours.map(tour => (
                 <TouchableOpacity
@@ -302,7 +306,7 @@ export default function OperatorDetail() {
 
           {activeTab === 'users' && (
             allUsers.length === 0 ? (
-              <EmptyState icon="people-outline" text="No users joined this operator" />
+              <EmptyState icon="people-outline" text="No users joined this operator" s={s} colors={colors} />
             ) : (
               allUsers.map(user => (
                 <TouchableOpacity
@@ -333,7 +337,7 @@ export default function OperatorDetail() {
 
           {activeTab === 'bookings' && (
             allBookings.length === 0 ? (
-              <EmptyState icon="ticket-outline" text="No bookings for this operator's tours" />
+              <EmptyState icon="ticket-outline" text="No bookings for this operator's tours" s={s} colors={colors} />
             ) : (
               allBookings.map(b => {
                 const sc = b.status === 'confirmed' ? { bg: '#DCFCE7', text: '#16A34A' }
@@ -378,10 +382,10 @@ export default function OperatorDetail() {
               </TouchableOpacity>
             </View>
             <ScrollView keyboardShouldPersistTaps="handled">
-              <Field label="Business Name" value={form.businessName} onChangeText={v => setForm(f => ({ ...f, businessName: v }))} placeholder="Business name" />
-              <Field label="Full Name *"   value={form.name}         onChangeText={v => setForm(f => ({ ...f, name: v }))}         placeholder="Full name" />
-              <Field label="Email *"       value={form.email}        onChangeText={v => setForm(f => ({ ...f, email: v }))}        placeholder="Email" autoCapitalize="none" keyboardType="email-address" />
-              <Field label="Phone *"       value={form.phone}        onChangeText={v => setForm(f => ({ ...f, phone: v }))}        placeholder="Phone" keyboardType="phone-pad" />
+              <Field label="Business Name" value={form.businessName} onChangeText={v => setForm(f => ({ ...f, businessName: v }))} placeholder="Business name" s={s} colors={colors} />
+              <Field label="Full Name *"   value={form.name}         onChangeText={v => setForm(f => ({ ...f, name: v }))}         placeholder="Full name" s={s} colors={colors} />
+              <Field label="Email *"       value={form.email}        onChangeText={v => setForm(f => ({ ...f, email: v }))}        placeholder="Email" autoCapitalize="none" keyboardType="email-address" s={s} colors={colors} />
+              <Field label="Phone *"       value={form.phone}        onChangeText={v => setForm(f => ({ ...f, phone: v }))}        placeholder="Phone" keyboardType="phone-pad" s={s} colors={colors} />
               <View style={s.field}>
                 <Text style={s.label}>New Password</Text>
                 <View style={s.inputRow}>
@@ -410,7 +414,7 @@ export default function OperatorDetail() {
   );
 }
 
-function Field({ label, ...props }) {
+function Field({ label, s, colors, ...props }) {
   return (
     <View style={s.field}>
       <Text style={s.label}>{label}</Text>
@@ -419,7 +423,7 @@ function Field({ label, ...props }) {
   );
 }
 
-function EmptyState({ icon, text }) {
+function EmptyState({ icon, text, s, colors }) {
   return (
     <View style={{ alignItems: 'center', paddingVertical: 32 }}>
       <Ionicons name={icon} size={36} color={colors.textDisabled} />
@@ -428,8 +432,8 @@ function EmptyState({ icon, text }) {
   );
 }
 
-const s = StyleSheet.create({
-  profileCard:      { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: "#E5E7EB", marginTop: 8, marginBottom: 4 },
+const makeStyles = (colors) => StyleSheet.create({
+  profileCard:      { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 8, marginBottom: 4 },
   profileRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
   profileAvatar:    { width: 60, height: 60, borderRadius: 30 },
   profileAvatarFallback: { backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
@@ -444,7 +448,7 @@ const s = StyleSheet.create({
   contactTxt:       { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
 
   statsRow:         { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginVertical: 12 },
-  statCard:         { flex: 1, backgroundColor: colors.surface, borderRadius: 16, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: "#E5E7EB" },
+  statCard:         { flex: 1, backgroundColor: colors.surface, borderRadius: 16, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   statIcon:         { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   statValue:        { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   statLabel:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
@@ -463,7 +467,7 @@ const s = StyleSheet.create({
   tabTxt:           { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary, textTransform: 'capitalize' },
   tabTxtActive:     { color: '#fff' },
 
-  listCard:         { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
+  listCard:         { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.borderSubtle },
   listCardTitle:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   listCardSub:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   listCardPrice:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
@@ -480,7 +484,7 @@ const s = StyleSheet.create({
 
   emptyTxt:         { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, marginTop: 10 },
 
-  commissionCard:       { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: "#E5E7EB" },
+  commissionCard:       { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.borderSubtle },
   commissionHead:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   commissionIcon:       { width: 38, height: 38, borderRadius: 19, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
   commissionTitle:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },

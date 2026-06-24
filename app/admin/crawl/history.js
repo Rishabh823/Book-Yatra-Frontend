@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, useWindowDimensions, ActivityIndicator, Modal,
@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell, SectionHeader } from '../../../lib/AdminScreen';
 import { colors, fonts } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { crawlApi } from '../../../lib/api';
 
 const STATUS = {
@@ -34,6 +35,8 @@ function fmtDate(d) {
 export default function CrawlHistory() {
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 24 : 16;
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const [jobs, setJobs] = useState([]);
   const [total, setTotal] = useState(0);
@@ -143,11 +146,11 @@ export default function CrawlHistory() {
 
                   <View style={s.cardFoot}>
                     <View style={s.trigBadge}>
-                      <Ionicons name={job.triggeredBy === 'manual' ? 'person-outline' : 'alarm-outline'} size={11} color="#6B7280" />
+                      <Ionicons name={job.triggeredBy === 'manual' ? 'person-outline' : 'alarm-outline'} size={11} color={themeColors.textSecondary} />
                       <Text style={s.trigTxt}>{job.triggeredBy}</Text>
                     </View>
                     <Text style={s.pagesScraped}>{job.pagesScraped ?? 0} pages</Text>
-                    <Ionicons name="chevron-forward" size={14} color="#D1D5DB" />
+                    <Ionicons name="chevron-forward" size={14} color={themeColors.borderSubtle} />
                   </View>
                 </TouchableOpacity>
               );
@@ -164,10 +167,10 @@ export default function CrawlHistory() {
 
       {/* Detail Modal */}
       <Modal visible={!!detailJob} animationType="slide" presentationStyle="pageSheet">
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={{ flex: 1, backgroundColor: themeColors.surface }}>
           <View style={s.mHeader}>
             <TouchableOpacity onPress={() => setDetailJob(null)} style={s.mClose}>
-              <Ionicons name="close" size={22} color="#111827" />
+              <Ionicons name="close" size={22} color={themeColors.textPrimary} />
             </TouchableOpacity>
             <Text style={s.mTitle}>Job Detail</Text>
           </View>
@@ -197,7 +200,7 @@ export default function CrawlHistory() {
                   <View style={s.logsBox}>
                     {detailJob.logs.map((log, i) => (
                       <View key={i} style={s.logLine}>
-                        <Text style={[s.logLevel, { color: log.level === 'error' ? '#DC2626' : log.level === 'warn' ? '#D97706' : '#6B7280' }]}>
+                        <Text style={[s.logLevel, { color: log.level === 'error' ? '#DC2626' : log.level === 'warn' ? '#D97706' : themeColors.textSecondary }]}>
                           [{log.level?.toUpperCase()}]
                         </Text>
                         <Text style={s.logMsg}>{log.message}</Text>
@@ -215,67 +218,71 @@ export default function CrawlHistory() {
 }
 
 function Count({ label, value, color }) {
+  const colors = useColors();
   return (
     <View style={{ alignItems: 'center', flex: 1 }}>
-      <Text style={[s.countVal, { color }]}>{value}</Text>
-      <Text style={s.countLabel}>{label}</Text>
+      <Text style={{ fontFamily: fonts.heading, fontSize: 16, color }}>{value}</Text>
+      <Text style={{ fontFamily: fonts.body, fontSize: 9, color: colors.textDisabled, marginTop: 1 }}>{label}</Text>
     </View>
   );
 }
 
 function DetailRow({ label, value, last }) {
+  const colors = useColors();
   return (
-    <View style={[s.dRow, last && { borderBottomWidth: 0 }]}>
-      <Text style={s.dLabel}>{label}</Text>
-      <Text style={s.dValue}>{value || '—'}</Text>
+    <View style={[
+      { flexDirection: 'row', justifyContent: 'space-between', padding: 12, borderBottomWidth: last ? 0 : 1, borderBottomColor: colors.borderSubtle },
+    ]}>
+      <Text style={{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary }}>{label}</Text>
+      <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textPrimary, maxWidth: '60%', textAlign: 'right' }}>{value || '—'}</Text>
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   center: { paddingTop: 60, alignItems: 'center' },
   empty:  { paddingTop: 60, alignItems: 'center', gap: 12 },
-  emptyTxt:{ fontFamily: fonts.body, fontSize: 14, color: '#9CA3AF' },
+  emptyTxt:{ fontFamily: fonts.body, fontSize: 14, color: colors.textDisabled },
 
-  filterChip:     { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
+  filterChip:     { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
   filterChipActive:{ backgroundColor: '#FEF3F0', borderColor: '#D95D39' },
-  filterTxt:      { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6B7280', textTransform: 'capitalize' },
+  filterTxt:      { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, textTransform: 'capitalize' },
   filterTxtActive:{ color: '#D95D39', fontFamily: fonts.bodyBold },
 
-  card:       { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, marginBottom: 10 },
+  card:       { backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, padding: 14, marginBottom: 10 },
   cardHead:   { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   statusIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  sourceName: { fontFamily: fonts.bodyBold, fontSize: 14, color: '#111827' },
-  timestamp:  { fontFamily: fonts.body, fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  sourceName: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  timestamp:  { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 1 },
   badge:      { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   badgeTxt:   { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
-  duration:   { fontFamily: fonts.body, fontSize: 10, color: '#9CA3AF' },
+  duration:   { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },
 
-  counts:     { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#F2F2F2', paddingTop: 10, marginBottom: 8 },
+  counts:     { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.borderSubtle, paddingTop: 10, marginBottom: 8 },
   countVal:   { fontFamily: fonts.heading, fontSize: 16 },
-  countLabel: { fontFamily: fonts.body, fontSize: 9, color: '#9CA3AF', marginTop: 1 },
+  countLabel: { fontFamily: fonts.body, fontSize: 9, color: colors.textDisabled, marginTop: 1 },
 
   errRow:     { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEF2F2', padding: 8, borderRadius: 8, marginBottom: 8 },
   errTxt:     { fontFamily: fonts.body, fontSize: 11, color: '#DC2626', flex: 1 },
 
-  cardFoot:   { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: '#F2F2F2', paddingTop: 8 },
-  trigBadge:  { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  trigTxt:    { fontFamily: fonts.body, fontSize: 10, color: '#6B7280', textTransform: 'capitalize' },
-  pagesScraped:{ fontFamily: fonts.body, fontSize: 10, color: '#9CA3AF', flex: 1 },
+  cardFoot:   { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: colors.borderSubtle, paddingTop: 8 },
+  trigBadge:  { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.elevated, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  trigTxt:    { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, textTransform: 'capitalize' },
+  pagesScraped:{ fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled, flex: 1 },
 
   loadMore:    { paddingVertical: 14, alignItems: 'center' },
   loadMoreTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
 
-  mHeader:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  mClose:   { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
-  mTitle:   { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: '#111827', marginLeft: 12 },
+  mHeader:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  mClose:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
+  mTitle:   { flex: 1, fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginLeft: 12 },
 
-  detailCard:{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
-  dRow:     { flexDirection: 'row', justifyContent: 'space-between', padding: 12, borderBottomWidth: 1, borderBottomColor: '#F2F2F2' },
-  dLabel:   { fontFamily: fonts.bodyBold, fontSize: 12, color: '#6B7280' },
-  dValue:   { fontFamily: fonts.body, fontSize: 12, color: '#111827', maxWidth: '60%', textAlign: 'right' },
+  detailCard:{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
+  dRow:     { flexDirection: 'row', justifyContent: 'space-between', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  dLabel:   { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
+  dValue:   { fontFamily: fonts.body, fontSize: 12, color: colors.textPrimary, maxWidth: '60%', textAlign: 'right' },
 
-  logsTitle:  { fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 },
+  logsTitle:  { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 },
   logsBox:    { backgroundColor: '#0A0A0A', borderRadius: 10, padding: 12 },
   logLine:    { flexDirection: 'row', gap: 6, marginBottom: 4 },
   logLevel:   { fontFamily: 'monospace', fontSize: 10, width: 60 },

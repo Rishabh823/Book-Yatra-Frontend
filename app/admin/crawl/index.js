@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, useWindowDimensions, ActivityIndicator,
@@ -8,6 +8,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell, SectionHeader } from '../../../lib/AdminScreen';
 import { colors, fonts } from '../../../lib/theme';
 import { crawlApi } from '../../../lib/api';
+import { useColors } from '../../../lib/ThemeContext';
 
 const STATUS_COLOR = {
   success:  { bg: '#F0FDF4', text: '#16A34A' },
@@ -21,6 +22,8 @@ export default function CrawlDashboard() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 24 : 16;
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -167,6 +170,8 @@ export default function CrawlDashboard() {
 }
 
 function StatCard({ icon, label, value, color }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   return (
     <View style={[s.statCard, { borderLeftColor: color }]}>
       <View style={[s.statIcon, { backgroundColor: color + '18' }]}>
@@ -178,45 +183,45 @@ function StatCard({ icon, label, value, color }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   hero: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
     borderRadius: 16,
     padding: 18,
   },
   heroRow:  { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   heroLeft: { flex: 1 },
   heroRight:{ alignItems: 'flex-end', gap: 6 },
-  heroLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: '#9CA3AF', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
-  heroValue:{ fontFamily: fonts.heading, fontSize: 48, color: '#111827', letterSpacing: -1 },
-  heroSub:  { fontFamily: fonts.body, fontSize: 12, color: '#6B7280', marginTop: 2 },
+  heroLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
+  heroValue:{ fontFamily: fonts.heading, fontSize: 48, color: colors.textPrimary, letterSpacing: -1 },
+  heroSub:  { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   heroPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F0FDF4', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   heroPillTxt:{ fontFamily: fonts.bodyBold, fontSize: 11 },
 
   statRow:  { flexDirection: 'row', gap: 8 },
-  statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB', borderLeftWidth: 3, gap: 4 },
+  statCard: { flex: 1, backgroundColor: colors.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle, borderLeftWidth: 3, gap: 4 },
   statIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   statValue:{ fontFamily: fonts.heading, fontSize: 20 },
-  statLabel:{ fontFamily: fonts.body, fontSize: 10, color: '#6B7280' },
+  statLabel:{ fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary },
 
   quickRow: { flexDirection: 'row', gap: 10 },
-  quickCard:{ flex: 1, alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 16, gap: 8 },
+  quickCard:{ flex: 1, alignItems: 'center', backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, padding: 16, gap: 8 },
   quickIcon:{ width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  quickLabel:{ fontFamily: fonts.bodyBold, fontSize: 11, color: '#111827', textAlign: 'center' },
+  quickLabel:{ fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, textAlign: 'center' },
 
-  jobRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, marginBottom: 8 },
+  jobRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, padding: 12, marginBottom: 8 },
   jobDot:   { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  jobName:  { fontFamily: fonts.bodyBold, fontSize: 13, color: '#111827' },
-  jobMeta:  { fontFamily: fonts.body, fontSize: 11, color: '#6B7280', marginTop: 2 },
+  jobName:  { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
+  jobMeta:  { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   jobStatus:{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   jobStatusTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'capitalize' },
 
-  howRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, marginBottom: 8 },
+  howRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, padding: 14, marginBottom: 8 },
   howIcon:  { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  howTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: '#111827' },
-  howDesc:  { fontFamily: fonts.body, fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 16 },
-  howNum:   { width: 24, height: 24, borderRadius: 12, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center' },
-  howNumTxt:{ fontFamily: fonts.bodyBold, fontSize: 11, color: '#6B7280' },
+  howTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
+  howDesc:  { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2, lineHeight: 16 },
+  howNum:   { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
+  howNumTxt:{ fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textSecondary },
 });

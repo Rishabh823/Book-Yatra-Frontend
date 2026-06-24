@@ -7,21 +7,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { api, auth as authApi } from '../../lib/api';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
 
-const ROLE_COLORS = {
-  admin: '#DC2626',
-  manager: '#EA580C',
-  volunteer: '#16A34A',
-  user: colors.textSecondary,
-};
-
 export default function AdminUsers() {
   const router = useRouter();
+  const colors = useColors();
   const [items, setItems]             = useState([]);
   const [loading, setLoading]         = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
@@ -34,6 +29,15 @@ export default function AdminUsers() {
   const [blockTarget, setBlockTarget] = useState(null); // user object
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // user object
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
+  const ROLE_COLORS = {
+    admin: '#DC2626',
+    manager: '#EA580C',
+    volunteer: '#16A34A',
+    user: colors.textSecondary,
+  };
 
   const isSuperAdmin = currentRole === 'super_admin';
 
@@ -291,7 +295,7 @@ export default function AdminUsers() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   searchWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     marginHorizontal: 20, marginBottom: 14,
@@ -304,13 +308,13 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.surface, borderRadius: 16,
-    padding: 12, gap: 12, borderWidth: 1, borderColor: "#E5E7EB",
+    padding: 12, gap: 12, borderWidth: 1, borderColor: colors.borderSubtle,
   },
   cardBlocked: { opacity: 0.72, borderWidth: 1, borderColor: '#FCA5A5' },
 
   avatar:         { width: 44, height: 44, borderRadius: 22 },
   avatarFallback: { backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' },
-  avatarBlocked:  { backgroundColor: '#9CA3AF' },
+  avatarBlocked:  { backgroundColor: colors.textDisabled },
   avatarText: { fontFamily: fonts.heading, fontSize: 18, color: '#fff' },
 
   name: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, flex: 1 },

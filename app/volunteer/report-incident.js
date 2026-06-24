@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 const TYPES = [
   "medical",
@@ -38,6 +39,8 @@ const SEV_COLORS = {
 
 export default function ReportIncidentScreen() {
   const { tourId } = useLocalSearchParams();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
@@ -218,7 +221,7 @@ export default function ReportIncidentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 20,
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   typeChipActive: {
     backgroundColor: colors.primary,
@@ -275,7 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
     alignItems: "center",
   },
   sevText: {
@@ -292,7 +295,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   textArea: { height: 120, textAlignVertical: "top" },
   warningCard: {

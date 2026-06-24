@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, TextInput,
@@ -6,7 +6,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AdminShell, StatusBadge } from "../../../lib/AdminScreen";
-import { colors, fonts, radius } from "../../../lib/theme";
+import { colors as themeColors, fonts, radius } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 import { api } from "../../../lib/api";
 import { fmtDate, fmtCurrency } from "../../../lib/utils";
 
@@ -15,6 +16,8 @@ const STATUSES = ["pending", "confirmed", "cancelled"];
 export default function AdminBookingDetail() {
   const { id }   = useLocalSearchParams();
   const router   = useRouter();
+  const colors   = useColors();
+  const s        = useMemo(() => makeStyles(colors), [colors]);
   const [booking,  setBooking]  = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
@@ -181,21 +184,21 @@ export default function AdminBookingDetail() {
         </View>
 
         {/* Who booked */}
-        <SectionHead label="· Passenger Info ·" />
+        <SectionHead label="· Passenger Info ·" s={s} />
         <View style={s.card}>
           {editMode ? (
             <>
-              <Field label="Name" icon="person-outline" value={form.name}     onChangeText={v => setF("name", v)} />
-              <Field label="Phone" icon="call-outline"  value={form.phone}    onChangeText={v => setF("phone", v)} kb="phone-pad" />
-              <Field label="Email" icon="mail-outline"  value={form.email}    onChangeText={v => setF("email", v)} kb="email-address" />
+              <Field label="Name" icon="person-outline" value={form.name}     onChangeText={v => setF("name", v)} s={s} colors={colors} />
+              <Field label="Phone" icon="call-outline"  value={form.phone}    onChangeText={v => setF("phone", v)} kb="phone-pad" s={s} colors={colors} />
+              <Field label="Email" icon="mail-outline"  value={form.email}    onChangeText={v => setF("email", v)} kb="email-address" s={s} colors={colors} />
             </>
           ) : (
             <>
-              <InfoRow icon="person"    label="Name"   value={b.name} />
-              <InfoRow icon="call"      label="Phone"  value={b.phone} />
-              {b.email    ? <InfoRow icon="mail"       label="Email"  value={b.email} /> : null}
-              {b.gender   ? <InfoRow icon="male-female" label="Gender" value={b.gender} /> : null}
-              {b.age      ? <InfoRow icon="calendar"   label="Age"    value={String(b.age)} /> : null}
+              <InfoRow icon="person"    label="Name"   value={b.name} s={s} colors={colors} />
+              <InfoRow icon="call"      label="Phone"  value={b.phone} s={s} colors={colors} />
+              {b.email    ? <InfoRow icon="mail"       label="Email"  value={b.email} s={s} colors={colors} /> : null}
+              {b.gender   ? <InfoRow icon="male-female" label="Gender" value={b.gender} s={s} colors={colors} /> : null}
+              {b.age      ? <InfoRow icon="calendar"   label="Age"    value={String(b.age)} s={s} colors={colors} /> : null}
             </>
           )}
         </View>
@@ -203,37 +206,37 @@ export default function AdminBookingDetail() {
         {/* Registered user details (if available from userId populate) */}
         {bookedUser && (
           <>
-            <SectionHead label="· Account ·" />
+            <SectionHead label="· Account ·" s={s} />
             <View style={s.card}>
-              <InfoRow icon="person-circle" label="Account"  value={bookedUser.name || "—"} />
-              {bookedUser.email ? <InfoRow icon="mail"  label="Email"   value={bookedUser.email} /> : null}
-              {bookedUser.phone ? <InfoRow icon="call"  label="Mobile"  value={bookedUser.phone} /> : null}
+              <InfoRow icon="person-circle" label="Account"  value={bookedUser.name || "—"} s={s} colors={colors} />
+              {bookedUser.email ? <InfoRow icon="mail"  label="Email"   value={bookedUser.email} s={s} colors={colors} /> : null}
+              {bookedUser.phone ? <InfoRow icon="call"  label="Mobile"  value={bookedUser.phone} s={s} colors={colors} /> : null}
             </View>
           </>
         )}
 
         {/* Tour */}
-        <SectionHead label="· Tour Details ·" />
+        <SectionHead label="· Tour Details ·" s={s} />
         <View style={s.card}>
-          <InfoRow icon="map"         label="Tour"        value={b.tourTitle || b.tour?.title || "—"} />
-          <InfoRow icon="location"    label="Route"       value={`${b.source || "—"} → ${b.destination || "—"}`} />
-          <InfoRow icon="calendar"    label="Trip Date"   value={fmtDate(b.tourStartDate || b.tripDate)} />
-          {b.tourEndDate && <InfoRow icon="calendar-outline" label="End Date" value={fmtDate(b.tourEndDate)} />}
+          <InfoRow icon="map"         label="Tour"        value={b.tourTitle || b.tour?.title || "—"} s={s} colors={colors} />
+          <InfoRow icon="location"    label="Route"       value={`${b.source || "—"} → ${b.destination || "—"}`} s={s} colors={colors} />
+          <InfoRow icon="calendar"    label="Trip Date"   value={fmtDate(b.tourStartDate || b.tripDate)} s={s} colors={colors} />
+          {b.tourEndDate && <InfoRow icon="calendar-outline" label="End Date" value={fmtDate(b.tourEndDate)} s={s} colors={colors} />}
         </View>
 
         {/* Seats & Amount */}
-        <SectionHead label="· Booking Summary ·" />
+        <SectionHead label="· Booking Summary ·" s={s} />
         <View style={s.card}>
           {editMode ? (
             <>
-              <Field label="No. of Seats" icon="people-outline" value={form.numberOfSeats} onChangeText={v => setF("numberOfSeats", v)} kb="number-pad" />
-              <Field label="Total Amount (₹)" icon="pricetag-outline" value={form.totalAmount} onChangeText={v => setF("totalAmount", v)} kb="number-pad" />
+              <Field label="No. of Seats" icon="people-outline" value={form.numberOfSeats} onChangeText={v => setF("numberOfSeats", v)} kb="number-pad" s={s} colors={colors} />
+              <Field label="Total Amount (₹)" icon="pricetag-outline" value={form.totalAmount} onChangeText={v => setF("totalAmount", v)} kb="number-pad" s={s} colors={colors} />
             </>
           ) : (
             <>
-              <InfoRow icon="people"     label="Seats"     value={`${b.numberOfSeats || 1} seat(s)${b.seats?.length ? ` · Nos: ${(b.seats || []).join(", ")}` : ""}`} />
-              <InfoRow icon="pricetag"   label="Amount"    value={fmtCurrency(b.totalAmount)} />
-              {b.amountPaid ? <InfoRow icon="card" label="Paid" value={fmtCurrency(b.amountPaid)} /> : null}
+              <InfoRow icon="people"     label="Seats"     value={`${b.numberOfSeats || 1} seat(s)${b.seats?.length ? ` · Nos: ${(b.seats || []).join(", ")}` : ""}`} s={s} colors={colors} />
+              <InfoRow icon="pricetag"   label="Amount"    value={fmtCurrency(b.totalAmount)} s={s} colors={colors} />
+              {b.amountPaid ? <InfoRow icon="card" label="Paid" value={fmtCurrency(b.amountPaid)} s={s} colors={colors} /> : null}
             </>
           )}
         </View>
@@ -241,7 +244,7 @@ export default function AdminBookingDetail() {
         {/* Additional passengers */}
         {Array.isArray(b.passengers) && b.passengers.length > 0 && (
           <>
-            <SectionHead label="· Additional Passengers ·" />
+            <SectionHead label="· Additional Passengers ·" s={s} />
             <View style={s.card}>
               {b.passengers.map((p, i) => (
                 <View key={i} style={[s.passengerItem, i < b.passengers.length - 1 && s.passengerBorder]}>
@@ -261,7 +264,7 @@ export default function AdminBookingDetail() {
         {/* Status selector in edit mode */}
         {editMode && (
           <>
-            <SectionHead label="· Status ·" />
+            <SectionHead label="· Status ·" s={s} />
             <View style={s.statusRow}>
               {STATUSES.map(st => (
                 <TouchableOpacity key={st}
@@ -293,11 +296,11 @@ export default function AdminBookingDetail() {
   );
 }
 
-function SectionHead({ label }) {
+function SectionHead({ label, s }) {
   return <Text style={s.sectionLabel}>{label}</Text>;
 }
 
-function InfoRow({ icon, label, value }) {
+function InfoRow({ icon, label, value, s, colors }) {
   return (
     <View style={s.infoRow}>
       <View style={s.infoIcon}><Ionicons name={icon} size={15} color={colors.primary} /></View>
@@ -307,7 +310,7 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-function Field({ label, icon, value, onChangeText, kb = "default" }) {
+function Field({ label, icon, value, onChangeText, kb = "default", s, colors }) {
   return (
     <View style={s.field}>
       <Text style={s.fieldLabel}>{label}</Text>
@@ -326,8 +329,8 @@ function Field({ label, icon, value, onChangeText, kb = "default" }) {
   );
 }
 
-const s = StyleSheet.create({
-  statusCard:    { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
+const makeStyles = (colors) => StyleSheet.create({
+  statusCard:    { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: colors.borderSubtle },
   statusCardId:  { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
   statusCardDate:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
 
@@ -347,7 +350,7 @@ const s = StyleSheet.create({
   editBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.secondary },
 
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 12, marginTop: 4 },
-  card:         { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:         { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: colors.borderSubtle },
 
   infoRow:   { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle, gap: 12 },
   infoIcon:  { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },

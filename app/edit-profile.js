@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, Image, DeviceEventEmitter,
@@ -10,13 +10,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, fonts } from '../lib/theme';
+import { fonts } from '../lib/theme';
+import { useColors } from '../lib/ThemeContext';
 import { auth as authApi } from '../lib/api';
 
 const PRIMARY = '#D95D39';
 
 export default function EditProfile() {
   const router = useRouter();
+  const colors = useColors();
   const [profile, setProfile] = useState({ name: '', email: '', mobile: '', photoUrl: '' });
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -107,9 +109,11 @@ export default function EditProfile() {
     }
   };
 
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
   if (fetching) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff", alignItems: 'center', justifyContent: 'center' }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }} edges={['top']}>
         <ActivityIndicator color={PRIMARY} size="large" />
       </SafeAreaView>
     );
@@ -118,13 +122,13 @@ export default function EditProfile() {
   const initials = (profile.name || '?').charAt(0).toUpperCase();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn} testID="edit-profile-back">
-            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>Edit profile</Text>
           <View style={{ width: 40 }} />
@@ -164,7 +168,7 @@ export default function EditProfile() {
                 {f.label}{f.req ? ' *' : ''}{f.opt ? ' (optional)' : ''}
               </Text>
               <View style={s.inputRow}>
-                <Ionicons name={f.icon} size={18} color="#9CA3AF" />
+                <Ionicons name={f.icon} size={18} color={colors.textDisabled} />
                 <TextInput
                   testID={`ep-${f.k}`}
                   style={s.input}
@@ -201,7 +205,7 @@ export default function EditProfile() {
             <View key={f.k} style={s.fieldWrap}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputRow}>
-                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+                <Ionicons name="lock-closed-outline" size={18} color={colors.textDisabled} />
                 <TextInput
                   testID={`ep-${f.k}`}
                   style={s.input}
@@ -212,16 +216,16 @@ export default function EditProfile() {
                   onChangeText={(v) => setPw(f.k, v)}
                 />
                 <TouchableOpacity onPress={() => setShowPw((p) => ({ ...p, [f.showK]: !p[f.showK] }))} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name={showPw[f.showK] ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9CA3AF" />
+                  <Ionicons name={showPw[f.showK] ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textDisabled} />
                 </TouchableOpacity>
               </View>
             </View>
           ))}
 
           <TouchableOpacity style={s.saveBtnOutlined} onPress={changePassword} disabled={loadingPw} testID="change-pw-btn">
-            {loadingPw ? <ActivityIndicator color="#374151" /> : (
+            {loadingPw ? <ActivityIndicator color={colors.textPrimary} /> : (
               <>
-                <Ionicons name="lock-closed" size={16} color="#374151" />
+                <Ionicons name="lock-closed" size={16} color={colors.textPrimary} />
                 <Text style={s.saveBtnOutlinedTxt}>Change password</Text>
               </>
             )}
@@ -234,16 +238,16 @@ export default function EditProfile() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
@@ -251,12 +255,12 @@ const s = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F4F4F4',
+    backgroundColor: colors.elevated,
   },
   headerTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: '#111827',
+    color: colors.textPrimary,
   },
 
   avatarSection: {
@@ -294,18 +298,18 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: colors.surface,
   },
   avatarHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
   },
 
   sectionLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     letterSpacing: 1.5,
     textAlign: 'center',
     marginBottom: 16,
@@ -315,14 +319,14 @@ const s = StyleSheet.create({
   fieldLabel: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: '#374151',
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#F2F0ED',
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 52,
@@ -331,7 +335,7 @@ const s = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: '#111827',
+    color: colors.textPrimary,
     height: 52,
   },
 
@@ -353,7 +357,7 @@ const s = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.borderSubtle,
     marginVertical: 28,
   },
 
@@ -362,16 +366,16 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     height: 52,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   saveBtnOutlinedTxt: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: '#111827',
+    color: colors.textPrimary,
   },
 });

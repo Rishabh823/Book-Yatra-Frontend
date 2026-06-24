@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl,
 } from "react-native";
@@ -7,11 +7,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { colors, fonts } from "../../../lib/theme";
 import { operatorWalletApi } from "../../../lib/api";
+import { useColors } from "../../../lib/ThemeContext";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 function StatCard({ label, value, icon, color, sub }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   return (
     <View style={s.statCard}>
       <View style={[s.statIconWrap, { backgroundColor: color + "18" }]}>
@@ -25,6 +28,8 @@ function StatCard({ label, value, icon, color, sub }) {
 }
 
 function MonthBar({ item, maxRevenue }) {
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   const ratio = maxRevenue > 0 ? item.earnings / maxRevenue : 0;
   return (
     <View style={s.monthBarWrap}>
@@ -40,6 +45,8 @@ function MonthBar({ item, maxRevenue }) {
 
 export default function OperatorWalletScreen() {
   const router = useRouter();
+  const themeColors = useColors();
+  const s = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [wallet, setWallet] = useState(null);
   const [analytics, setAnalytics] = useState([]);
   const [settlements, setSettlements] = useState([]);
@@ -155,7 +162,7 @@ export default function OperatorWalletScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
@@ -167,19 +174,19 @@ const s = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   hero: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   heroLabel: {
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     fontFamily: fonts.bodyBold,
     fontSize: 10,
     letterSpacing: 1.5,
@@ -193,27 +200,27 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     paddingHorizontal: 18,
     paddingVertical: 9,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   heroBtnOutline: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   heroBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   statCard: {
     flex: 1,
     minWidth: "44%",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 5,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   statIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   statValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
@@ -223,12 +230,12 @@ const s = StyleSheet.create({
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   sectionLink: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
   chartCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     gap: 10,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   monthBarWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
   monthBarTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: colors.bg, flexDirection: "row", overflow: "hidden" },
@@ -236,11 +243,11 @@ const s = StyleSheet.create({
   monthLabel: { fontFamily: fonts.bodyMedium, fontSize: 11, color: colors.textSecondary, width: 28 },
   monthAmt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary, width: 64, textAlign: "right" },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 4,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   settlRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   settlTour: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },

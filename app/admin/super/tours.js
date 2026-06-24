@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
   RefreshControl, TextInput, Alert, ScrollView, Image,
@@ -7,19 +7,22 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../../lib/theme';
+import { fonts, radius } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const TYPES = ['all', 'temple', 'pilgrimage', 'mountain', 'leisure', 'heritage', 'beach', 'other'];
-const TYPE_COLORS = {
-  temple: '#D97706', pilgrimage: colors.primary, mountain: '#0284C7',
-  leisure: '#16A34A', heritage: '#7C3AED', beach: '#0891B2', other: '#6B7280',
-};
 
 export default function SuperTours() {
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 20 : 12;
+
+  const TYPE_COLORS = {
+    temple: '#D97706', pilgrimage: colors.primary, mountain: '#0284C7',
+    leisure: '#16A34A', heritage: '#7C3AED', beach: '#0891B2', other: '#6B7280',
+  };
 
   const [items, setItems]       = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -27,6 +30,8 @@ export default function SuperTours() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch]     = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -108,7 +113,7 @@ export default function SuperTours() {
         </View>
       </TouchableOpacity>
     );
-  }, [px, router]);
+  }, [px, router, s, colors, TYPE_COLORS]);
 
   return (
     <AdminShell title="All Tours" subtitle={`${filtered.length} of ${items.length}`}>
@@ -154,20 +159,20 @@ export default function SuperTours() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   searchBar:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 4 },
   searchInput:{ flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   chip:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
   chipActive: { backgroundColor: colors.primary + '18', borderColor: colors.primary },
   chipTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  card:       { backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: "#E5E7EB" },
+  card:       { backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSubtle },
   thumb:      { width: '100%', height: 130, resizeMode: 'cover' },
   thumbFallback: { width: '100%', height: 90, alignItems: 'center', justifyContent: 'center' },
   cardBody:   { padding: 12 },
   cardTop:    { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 4 },
   title:      { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  delBtn:     { width: 28, height: 28, borderRadius: 8, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center' },
+  delBtn:     { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
   row:        { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
   sub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, flex: 1 },
   foot:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' },

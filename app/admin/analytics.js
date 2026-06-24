@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
-import { colors, fonts } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
+import { useColors } from "../../lib/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -21,7 +22,7 @@ const pct = (v) => {
   return sign + v.toFixed(1) + '%';
 };
 
-function BarChart({ data = [], color = colors.primary }) {
+function BarChart({ data = [], color, styles }) {
   if (!data.length) return null;
   const max = Math.max(...data.map(d => d.value), 1);
   return (
@@ -44,6 +45,8 @@ function BarChart({ data = [], color = colors.primary }) {
 }
 
 export default function AnalyticsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [summary, setSummary] = useState(null);
@@ -174,7 +177,7 @@ export default function AnalyticsScreen() {
               </View>
             </View>
             {chartData.length > 0 ? (
-              <BarChart data={chartData} color={colors.primary} />
+              <BarChart data={chartData} color={colors.primary} styles={styles} />
             ) : (
               <View style={styles.noData}>
                 <Text style={styles.noDataText}>No data for this period</Text>
@@ -260,7 +263,7 @@ export default function AnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 20,
@@ -269,15 +272,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -289,7 +292,7 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   kpiIconWrap: {
     width: 36,
@@ -302,12 +305,12 @@ const styles = StyleSheet.create({
   kpiLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   kpiGrowth: { fontFamily: fonts.bodyMedium, fontSize: 11 },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -320,7 +323,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
   },
   periodTabActive: { backgroundColor: colors.primary },
   periodTabText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
@@ -340,7 +343,7 @@ const styles = StyleSheet.create({
     width: 24,
   },
   occTour: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
-  occBarBg: { height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
+  occBarBg: { height: 6, backgroundColor: colors.elevated, borderRadius: 3, overflow: 'hidden' },
   occBarFill: { height: '100%', borderRadius: 3 },
   occPct: {
     fontFamily: fonts.bodyBold,

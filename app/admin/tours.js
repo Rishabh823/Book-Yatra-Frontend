@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AdminShell } from "../../lib/AdminScreen";
-import { colors, fonts, radius } from "../../lib/theme";
+import { fonts, radius } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { tours as toursApi, upload as uploadApi } from "../../lib/api";
 import { DateInput } from "../../components/DateInput";
 import Toast from "../../components/Toast";
@@ -36,15 +37,6 @@ const TOUR_TYPES = [
   "beach",
   "other",
 ];
-const TYPE_COLORS = {
-  temple: "#D97706",
-  pilgrimage: colors.primary,
-  mountain: "#0284C7",
-  leisure: "#16A34A",
-  heritage: "#7C3AED",
-  beach: "#0891B2",
-  other: "#6B7280",
-};
 
 const EMPTY_FORM = {
   title: "",
@@ -65,6 +57,17 @@ export default function AdminTours() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
   const px = width >= 600 ? 20 : 14;
+  const colors = useColors();
+
+  const TYPE_COLORS = {
+    temple: "#D97706",
+    pilgrimage: colors.primary,
+    mountain: "#0284C7",
+    leisure: "#16A34A",
+    heritage: "#7C3AED",
+    beach: "#0891B2",
+    other: colors.textSecondary,
+  };
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,8 @@ export default function AdminTours() {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { toast, showToast, hideToast } = useToast();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -184,7 +189,7 @@ export default function AdminTours() {
 
   const renderItem = useCallback(
     ({ item }) => {
-      const color = TYPE_COLORS[item.tourType] || "#6B7280";
+      const color = TYPE_COLORS[item.tourType] || colors.textSecondary;
       const startStr = item.startDate
         ? new Date(item.startDate).toLocaleDateString("en-IN", {
             day: "numeric",
@@ -257,7 +262,7 @@ export default function AdminTours() {
         </TouchableOpacity>
       );
     },
-    [px],
+    [px, s, colors, TYPE_COLORS],
   );
 
   return (
@@ -394,12 +399,16 @@ export default function AdminTours() {
               </View>
 
               <Field
+                s={s}
+                colors={colors}
                 label="Tour Title *"
                 value={form.title}
                 onChangeText={(v) => f(v, "title")}
                 placeholder="e.g. Char Dham Yatra 2025"
               />
               <Field
+                s={s}
+                colors={colors}
                 label="Description *"
                 value={form.description}
                 onChangeText={(v) => f(v, "description")}
@@ -412,6 +421,8 @@ export default function AdminTours() {
               <View style={s.row2}>
                 <View style={{ flex: 1 }}>
                   <Field
+                    s={s}
+                    colors={colors}
                     label="From *"
                     value={form.source}
                     onChangeText={(v) => f(v, "source")}
@@ -420,6 +431,8 @@ export default function AdminTours() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Field
+                    s={s}
+                    colors={colors}
                     label="To *"
                     value={form.destination}
                     onChangeText={(v) => f(v, "destination")}
@@ -448,6 +461,8 @@ export default function AdminTours() {
               <View style={s.row2}>
                 <View style={{ flex: 1 }}>
                   <Field
+                    s={s}
+                    colors={colors}
                     label="Price (₹) *"
                     value={form.price}
                     onChangeText={(v) => f(v, "price")}
@@ -457,6 +472,8 @@ export default function AdminTours() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Field
+                    s={s}
+                    colors={colors}
                     label="Seats"
                     value={form.totalSeats}
                     onChangeText={(v) => f(v, "totalSeats")}
@@ -467,6 +484,8 @@ export default function AdminTours() {
               </View>
 
               <SelectorRow
+                s={s}
+                colors={colors}
                 label="Tour Type"
                 options={TOUR_TYPES}
                 value={form.tourType}
@@ -474,12 +493,16 @@ export default function AdminTours() {
                 optColors={TYPE_COLORS}
               />
               <SelectorRow
+                s={s}
+                colors={colors}
                 label="Bus Type"
                 options={BUS_TYPES}
                 value={form.busType}
                 onSelect={(v) => f(v, "busType")}
               />
               <SelectorRow
+                s={s}
+                colors={colors}
                 label="Seat Layout"
                 options={SEAT_STRUCTURES}
                 value={form.seatStructure}
@@ -515,7 +538,7 @@ export default function AdminTours() {
   );
 }
 
-function Field({ label, style, ...props }) {
+function Field({ s, colors, label, style, ...props }) {
   return (
     <View style={s.field}>
       <Text style={s.label}>{label}</Text>
@@ -528,7 +551,7 @@ function Field({ label, style, ...props }) {
   );
 }
 
-function SelectorRow({ label, options, value, onSelect, optColors }) {
+function SelectorRow({ s, colors, label, options, value, onSelect, optColors }) {
   return (
     <View style={s.field}>
       <Text style={s.label}>{label}</Text>
@@ -561,7 +584,7 @@ function SelectorRow({ label, options, value, onSelect, optColors }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -574,12 +597,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     paddingHorizontal: 12,
     height: 42,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   searchInput: {
     flex: 1,
@@ -603,7 +626,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.primary + "40",
   },
@@ -612,11 +635,11 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   thumb: {
     width: 72,
@@ -682,11 +705,11 @@ const s = StyleSheet.create({
     padding: 14,
   },
   sheet: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
 
   sheetTitle: {
@@ -744,13 +767,13 @@ const s = StyleSheet.create({
   label: {
     fontFamily: fonts.bodyBold,
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     letterSpacing: 1.5,
     textTransform: "uppercase",
     marginBottom: 5,
   },
   input: {
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,

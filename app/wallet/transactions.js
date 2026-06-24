@@ -1,11 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { walletApi } from "../../lib/api";
 import { useFocusEffect } from "expo-router";
 
@@ -26,12 +27,15 @@ const FILTERS = ["all", "credit", "debit"];
 
 export default function WalletTransactions() {
   const router = useRouter();
+  const colors = useColors();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [filter, setFilter] = useState("all");
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async (p = 1, f = filter, reset = false) => {
     if (p === 1) setLoading(true); else setLoadingMore(true);
@@ -136,7 +140,7 @@ export default function WalletTransactions() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },

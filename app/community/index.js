@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
-import { colors, fonts } from "../../lib/theme";
+import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 const PRIMARY = "#D95D39";
 
@@ -72,12 +73,12 @@ function Avatar({ name, size = 38 }) {
   );
 }
 
-const PostCard = ({ post, onLike, onPress }) => {
+const PostCard = ({ post, onLike, onPress, s, colors }) => {
   const authorName =
     (typeof post.authorId === "object" ? post.authorId?.name : null) ||
     post.author?.name ||
     "Anonymous";
-  const tc = TYPE_COLORS[post.type] || { bg: "#F3F4F6", color: "#6B7280" };
+  const tc = TYPE_COLORS[post.type] || { bg: colors.elevated, color: colors.textSecondary };
   return (
     <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.92}>
       <View style={s.authorRow}>
@@ -108,7 +109,7 @@ const PostCard = ({ post, onLike, onPress }) => {
           <Text style={s.actionText}>{post.likeCount || 0}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.action} onPress={onPress}>
-          <Ionicons name="chatbubble-outline" size={16} color="#9CA3AF" />
+          <Ionicons name="chatbubble-outline" size={16} color={colors.textDisabled} />
           <Text style={s.actionText}>
             {post.commentCount || post.comments?.length || 0}
           </Text>
@@ -127,12 +128,15 @@ const PostCard = ({ post, onLike, onPress }) => {
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [posts, setPosts] = useState([]);
   const [type, setType] = useState("all");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const fetchPosts = useCallback(
     async (reset = false, postType = type) => {
@@ -183,7 +187,7 @@ export default function CommunityScreen() {
 
   return (
     <View style={[s.container, { paddingTop: insets.top }]}>
-      {/* Clean white header */}
+      {/* Clean header */}
       <View style={s.header}>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>Community</Text>
@@ -229,6 +233,8 @@ export default function CommunityScreen() {
               post={item}
               onLike={handleLike}
               onPress={() => router.push("/community/" + item._id)}
+              s={s}
+              colors={colors}
             />
           )}
           contentContainerStyle={{
@@ -251,7 +257,7 @@ export default function CommunityScreen() {
           ListEmptyComponent={
             <View style={s.empty}>
               <View style={s.emptyIconCircle}>
-                <Ionicons name="people-outline" size={32} color="#9CA3AF" />
+                <Ionicons name="people-outline" size={32} color={colors.textDisabled} />
               </View>
               <Text style={s.emptyTitle}>No posts yet</Text>
               <Text style={s.emptySub}>
@@ -272,10 +278,10 @@ export default function CommunityScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg,
   },
   header: {
     flexDirection: "row",
@@ -283,19 +289,19 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     // borderBottomWidth: StyleSheet.hairlineWidth,
-    // borderBottomColor: "#E5E7EB",
+    // borderBottomColor: colors.borderSubtle,
   },
   title: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     marginTop: 2,
   },
   createBtn: {
@@ -308,9 +314,9 @@ const s = StyleSheet.create({
   },
 
   filtersWrapper: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     // borderBottomWidth: StyleSheet.hairlineWidth,
-    // borderBottomColor: "#E5E7EB",
+    // borderBottomColor: colors.borderSubtle,
   },
   filtersContent: {
     flexDirection: "row",
@@ -323,30 +329,30 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 50,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
   },
   filterChipActive: { backgroundColor: PRIMARY },
   filterText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   filterTextActive: { color: "white", fontFamily: fonts.bodyBold },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     gap: 10,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
   },
   authorRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  authorName: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#111827" },
+  authorName: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   postTime: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     marginTop: 1,
   },
   typeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 50 },
@@ -355,11 +361,11 @@ const s = StyleSheet.create({
     fontSize: 11,
     textTransform: "capitalize",
   },
-  postTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#111827" },
+  postTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   postContent: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#374151",
+    color: colors.textPrimary,
     lineHeight: 20,
   },
   actionsRow: {
@@ -368,10 +374,10 @@ const s = StyleSheet.create({
     gap: 14,
     paddingTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: colors.elevated,
   },
   action: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionText: { fontFamily: fonts.body, fontSize: 13, color: "#9CA3AF" },
+  actionText: { fontFamily: fonts.body, fontSize: 13, color: colors.textDisabled },
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -385,15 +391,15 @@ const s = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 18, color: "#111827" },
+  emptyTitle: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.textPrimary },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     textAlign: "center",
   },
   emptyBtn: {

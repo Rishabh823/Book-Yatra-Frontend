@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, useWindowDimensions,
@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { securityApi } from '../../lib/api';
 import { fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 
 const SCORE_COLOR = (s) => s >= 80 ? '#16A34A' : s >= 60 ? '#D97706' : '#DC2626';
 const SCORE_LABEL = (s) => s >= 80 ? 'Strong' : s >= 60 ? 'Fair' : s >= 40 ? 'Weak' : 'At Risk';
@@ -24,7 +25,10 @@ const MENU = [
 export default function SecurityCenter() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [data,       setData]       = useState(null);
   const [loading,    setLoading]    = useState(true);
@@ -58,14 +62,14 @@ export default function SecurityCenter() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Flat white header */}
+      {/* Flat header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Security</Text>
         <TouchableOpacity style={styles.headerRight}>
-          <Ionicons name="shield-checkmark-outline" size={20} color="#6B7280" />
+          <Ionicons name="shield-checkmark-outline" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -87,7 +91,7 @@ export default function SecurityCenter() {
         <View style={styles.scoreSection}>
           <View style={styles.scoreCard}>
             <View style={[styles.scoreCircle, { borderColor: scoreColor }]}>
-              <Text style={[styles.scoreNum, { color: '#111827' }]}>{score}</Text>
+              <Text style={[styles.scoreNum, { color: colors.textPrimary }]}>{score}</Text>
             </View>
             <Text style={styles.scoreStatusLabel}>{SCORE_LABEL(score)}</Text>
             <Text style={styles.scoreTip}>Security Score</Text>
@@ -95,13 +99,13 @@ export default function SecurityCenter() {
             {/* Quick stats row */}
             <View style={styles.statsRow}>
               <View style={styles.stat}>
-                <Ionicons name="phone-portrait" size={16} color="#6B7280" />
+                <Ionicons name="phone-portrait" size={16} color={colors.textSecondary} />
                 <Text style={styles.statVal}>{data?.trustedDevices ?? '—'}</Text>
                 <Text style={styles.statLbl}>Devices</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
-                <Ionicons name="layers" size={16} color="#6B7280" />
+                <Ionicons name="layers" size={16} color={colors.textSecondary} />
                 <Text style={styles.statVal}>{data?.activeSessions ?? '—'}</Text>
                 <Text style={styles.statLbl}>Sessions</Text>
               </View>
@@ -142,7 +146,7 @@ export default function SecurityCenter() {
                       {typeof status === 'string' && (
                         <Text style={styles.menuCount}>{status}</Text>
                       )}
-                      <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+                      <Ionicons name="chevron-forward" size={16} color={colors.borderSubtle} />
                     </View>
                   </TouchableOpacity>
                   {!isLast && (
@@ -195,10 +199,10 @@ export default function SecurityCenter() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
 
   /* Header */
@@ -207,15 +211,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -223,14 +227,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Philosopher_700Bold',
     fontSize: 18,
-    color: '#111827',
+    color: colors.textPrimary,
     marginLeft: 10,
   },
   headerRight: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -238,7 +242,7 @@ const styles = StyleSheet.create({
   /* Gray band */
   grayBand: {
     height: 10,
-    backgroundColor: '#F2F2F2',
+    backgroundColor: colors.elevated,
   },
 
   /* Score section */
@@ -248,9 +252,9 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   scoreCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.borderSubtle,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -269,17 +273,17 @@ const styles = StyleSheet.create({
   scoreNum: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: '#111827',
+    color: colors.textPrimary,
   },
   scoreStatusLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: '#111827',
+    color: colors.textPrimary,
   },
   scoreTip: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
 
   /* Stats row inside score card */
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: colors.borderSubtle,
     width: '100%',
     justifyContent: 'center',
   },
@@ -301,18 +305,18 @@ const styles = StyleSheet.create({
   statVal: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: '#111827',
+    color: colors.textPrimary,
     marginTop: 2,
   },
   statLbl: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
   },
   statDivider: {
     width: StyleSheet.hairlineWidth,
     height: 40,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.borderSubtle,
   },
 
   /* Section */
@@ -324,7 +328,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     marginBottom: 4,
@@ -332,9 +336,9 @@ const styles = StyleSheet.create({
 
   /* Menu list container */
   menuList: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -346,7 +350,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
   },
   menuIcon: {
     width: 36,
@@ -358,12 +362,12 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: '#111827',
+    color: colors.textPrimary,
   },
   menuSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     marginTop: 1,
   },
   menuRight: {
@@ -374,7 +378,7 @@ const styles = StyleSheet.create({
   menuCount: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
 
   /* Badge */
@@ -391,7 +395,7 @@ const styles = StyleSheet.create({
   /* Separator */
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.borderSubtle,
     marginLeft: 64,
   },
 
@@ -402,7 +406,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
   },
   eventDot: {
     width: 28,
@@ -414,13 +418,13 @@ const styles = StyleSheet.create({
   eventType: {
     fontFamily: fonts.bodyBold,
     fontSize: 13,
-    color: '#111827',
+    color: colors.textPrimary,
     textTransform: 'capitalize',
   },
   eventMeta: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
 
   /* View all */

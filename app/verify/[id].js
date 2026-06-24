@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
+import { useColors } from "../../lib/ThemeContext";
 const BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   "https://shyamsawariyaparivar.com/api";
@@ -24,10 +25,16 @@ const fmtDate = (d) =>
     : "—";
 
 function Row({ label, value, highlight }) {
+  const colors = useColors();
+  const rs = useMemo(() => StyleSheet.create({
+    row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 2 },
+    rowLabel: { fontSize: 13, color: colors.textSecondary },
+    rowValue: { fontSize: 13, color: colors.textPrimary, fontWeight: "600", maxWidth: "60%", textAlign: "right" },
+  }), [colors]);
   return (
-    <View style={s.row}>
-      <Text style={s.rowLabel}>{label}</Text>
-      <Text style={[s.rowValue, highlight && { color: "#16A34A", fontWeight: "700" }]}>
+    <View style={rs.row}>
+      <Text style={rs.rowLabel}>{label}</Text>
+      <Text style={[rs.rowValue, highlight && { color: "#16A34A", fontWeight: "700" }]}>
         {value || "—"}
       </Text>
     </View>
@@ -36,6 +43,8 @@ function Row({ label, value, highlight }) {
 
 export default function VerifyBooking() {
   const { id } = useLocalSearchParams();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -167,13 +176,13 @@ export default function VerifyBooking() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8F0" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF8F0",
+    backgroundColor: colors.bg,
     padding: 32,
     gap: 12,
   },
@@ -198,7 +207,7 @@ const s = StyleSheet.create({
   },
   scroll: { padding: 20, gap: 16, paddingBottom: 40 },
   statusCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 28,
     alignItems: "center",
@@ -221,7 +230,7 @@ const s = StyleSheet.create({
   statusTitle: { fontSize: 22, fontWeight: "800", letterSpacing: 1 },
   statusSub: {
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 19,
   },
@@ -245,7 +254,7 @@ const s = StyleSheet.create({
   },
   checkedInText: { fontSize: 13, color: "#0284C7", fontWeight: "600" },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 18,
     gap: 12,
@@ -269,9 +278,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 2,
   },
-  rowLabel: { fontSize: 13, color: "#6B7280" },
-  rowValue: { fontSize: 13, color: "#111827", fontWeight: "600", maxWidth: "60%", textAlign: "right" },
-  loadingText: { marginTop: 12, fontSize: 14, color: "#6B7280" },
+  rowLabel: { fontSize: 13, color: colors.textSecondary },
+  rowValue: { fontSize: 13, color: colors.textPrimary, fontWeight: "600", maxWidth: "60%", textAlign: "right" },
+  loadingText: { marginTop: 12, fontSize: 14, color: colors.textSecondary },
   footer: {
     textAlign: "center",
     fontSize: 14,

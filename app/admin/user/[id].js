@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AdminShell } from "../../../lib/AdminScreen";
 import { colors, fonts, radius } from "../../../lib/theme";
 import { api, auth as authApi } from "../../../lib/api";
+import { useColors } from "../../../lib/ThemeContext";
 
 const ROLES = ["user", "volunteer", "manager", "admin"];
 const ROLE_COLORS = {
@@ -28,6 +29,8 @@ const ROLE_COLORS = {
 export default function AdminUserDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [user, setUser]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
@@ -514,7 +517,7 @@ export default function AdminUserDetail() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   avatarSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -524,7 +527,7 @@ const s = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   avatar: { width: 72, height: 72, borderRadius: 36 },
   avatarPlaceholder: {
@@ -566,7 +569,7 @@ const s = StyleSheet.create({
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
 
   field: { marginBottom: 14 },
@@ -648,7 +651,7 @@ const s = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   expandHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   expandIconBg: {

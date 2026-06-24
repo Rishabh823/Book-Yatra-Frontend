@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 
 const fmtTime = (d) => {
   if (!d) return "";
@@ -37,6 +38,8 @@ const getInitials = (name) =>
 export default function ChatListScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [chats, setChats] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -134,17 +137,17 @@ export default function ChatListScreen() {
           style={styles.composeBtn}
           onPress={() => router.push("/chat/new")}
         >
-          <Ionicons name="create-outline" size={22} color="#111827" />
+          <Ionicons name="create-outline" size={22} color={themeColors.textPrimary} />
         </TouchableOpacity>
       </View>
       <View style={styles.searchWrap}>
-        <Ionicons name="search" size={16} color="#6B7280" />
+        <Ionicons name="search" size={16} color={themeColors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search conversations..."
           value={search}
           onChangeText={handleSearch}
-          placeholderTextColor="#6B7280"
+          placeholderTextColor={themeColors.textSecondary}
         />
       </View>
       {loading ? (
@@ -169,7 +172,7 @@ export default function ChatListScreen() {
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={48}
-                color="#9CA3AF"
+                color={themeColors.textDisabled}
               />
               <Text style={styles.emptyTitle}>No messages yet</Text>
               <Text style={styles.emptySub}>
@@ -189,28 +192,28 @@ export default function ChatListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   title: {
     flex: 1,
     fontFamily: "Philosopher_700Bold",
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   composeBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     height: 46,
     paddingHorizontal: 14,
@@ -229,15 +232,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   chatRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 14,
   },
@@ -255,21 +258,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.bodyBold,
     fontSize: 15,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   chatTime: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   chatFooter: { flexDirection: "row", alignItems: "center" },
   lastMessage: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
-  unreadMsg: { fontFamily: fonts.bodyBold, color: "#111827" },
+  unreadMsg: { fontFamily: fonts.bodyBold, color: colors.textPrimary },
   badge: {
     minWidth: 18,
     height: 18,
@@ -284,12 +287,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
   },
   emptySub: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#6B7280",
+    color: colors.textSecondary,
   },
   newChatBtn: {
     backgroundColor: "#D95D39",

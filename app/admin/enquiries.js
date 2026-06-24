@@ -5,20 +5,24 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../lib/theme';
+import { fonts, radius } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { api } from '../../lib/api';
 import { fmtDate } from '../../lib/utils';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
 
-const TABS = [
-  { key: 'open',     label: 'Open',     color: '#D97706', bg: '#FFFBEB' },
-  { key: 'resolved', label: 'Resolved', color: '#16A34A', bg: '#F0FDF4' },
-  { key: '',         label: 'All',      color: colors.textPrimary, bg: colors.surface },
-];
-
 export default function AdminEnquiries() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
+  const TABS = [
+    { key: 'open',     label: 'Open',     color: '#D97706', bg: '#FFFBEB' },
+    { key: 'resolved', label: 'Resolved', color: '#16A34A', bg: '#F0FDF4' },
+    { key: '',         label: 'All',      color: colors.textPrimary, bg: colors.surface },
+  ];
+
   const [items, setItems]     = useState([]);
   const [tab, setTab]         = useState('open');
   const [loading, setLoading] = useState(true);
@@ -178,7 +182,7 @@ export default function AdminEnquiries() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   statsRow:  { flexDirection: 'row', marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   statItem:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
   statDiv:   { width: 1, backgroundColor: colors.borderSubtle },
@@ -189,7 +193,7 @@ const s = StyleSheet.create({
   tab:       { flex: 1, paddingVertical: 9, borderRadius: 999, backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1, borderColor: colors.borderSubtle },
   tabTxt:    { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
 
-  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
   cardTop:   { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   iconCircle:{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   name:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },

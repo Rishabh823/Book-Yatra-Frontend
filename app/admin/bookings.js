@@ -7,7 +7,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { AdminShell } from "../../lib/AdminScreen";
-import { colors, fonts, radius } from "../../lib/theme";
+import { fonts, radius } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { admin as adminApi } from "../../lib/api";
 import { fmtDate, fmtCurrency } from "../../lib/utils";
 
@@ -20,6 +21,7 @@ const SC = {
 
 export default function AdminBookings() {
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 20 : 16;
 
@@ -28,6 +30,8 @@ export default function AdminBookings() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -84,13 +88,13 @@ export default function AdminBookings() {
     <AdminShell title="Manage Bookings" subtitle={`${filtered.length} of ${items.length}`}>
       {/* Stats strip */}
       <View style={[s.statsStrip, { marginHorizontal: px }]}>
-        <StripStat label="Total" value={stats.total} color={colors.textPrimary} />
+        <StripStat label="Total" value={stats.total} color={colors.textPrimary} s={s} />
         <View style={s.stripDiv} />
-        <StripStat label="Confirmed" value={stats.confirmed} color="#16A34A" />
+        <StripStat label="Confirmed" value={stats.confirmed} color="#16A34A" s={s} />
         <View style={s.stripDiv} />
-        <StripStat label="Pending" value={stats.pending} color="#D97706" />
+        <StripStat label="Pending" value={stats.pending} color="#D97706" s={s} />
         <View style={s.stripDiv} />
-        <StripStat label="Revenue" value={fmtRev(stats.revenue)} color={colors.primary} />
+        <StripStat label="Revenue" value={fmtRev(stats.revenue)} color={colors.primary} s={s} />
         <TouchableOpacity style={s.exportBtn} onPress={exportCSV}>
           <Ionicons name="share-outline" size={14} color={colors.primary} />
           <Text style={s.exportTxt}>Export</Text>
@@ -143,7 +147,7 @@ export default function AdminBookings() {
             </View>
           }
           renderItem={({ item }) => {
-            const sc = SC[item.status] || { bg: "#F3F4F6", text: "#6B7280" };
+            const sc = SC[item.status] || { bg: colors.elevated, text: colors.textSecondary };
             return (
               <TouchableOpacity
                 style={s.card}
@@ -215,7 +219,7 @@ export default function AdminBookings() {
   );
 }
 
-function StripStat({ label, value, color }) {
+function StripStat({ label, value, color, s }) {
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <Text style={[s.stripVal, { color }]}>{value}</Text>
@@ -224,7 +228,7 @@ function StripStat({ label, value, color }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   statsStrip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
   stripDiv:   { width: 1, backgroundColor: colors.borderSubtle, height: 24, marginHorizontal: 6 },
   exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: 16 },
@@ -239,7 +243,7 @@ const s = StyleSheet.create({
   chipTxt:    { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, textTransform: "capitalize" },
   chipTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:      { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
   cardTop:   { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   idBadge:   { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + "14", alignItems: "center", justifyContent: "center" },
   idTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },

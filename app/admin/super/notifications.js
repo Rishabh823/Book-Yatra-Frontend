@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, FlatList,
@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AdminShell } from '../../../lib/AdminScreen';
 import { colors, fonts, radius } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const TARGETS = [
@@ -16,6 +17,9 @@ const TARGETS = [
 ];
 
 export default function SuperNotifications() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
+
   const [title,   setTitle]   = useState('');
   const [body,    setBody]    = useState('');
   const [target,  setTarget]  = useState('all');
@@ -71,7 +75,7 @@ export default function SuperNotifications() {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Compose ─────────────────────────────── */}
-        <SectionLabel icon="create-outline" title="Compose" />
+        <SectionLabel icon="create-outline" title="Compose" colors={colors} s={s} />
 
         <View style={s.card}>
           <Text style={s.fieldLabel}>Title</Text>
@@ -103,7 +107,7 @@ export default function SuperNotifications() {
         </View>
 
         {/* ── Target Audience ──────────────────────── */}
-        <SectionLabel icon="funnel-outline" title="Target Audience" />
+        <SectionLabel icon="funnel-outline" title="Target Audience" colors={colors} s={s} />
         <View style={s.targetGrid}>
           {TARGETS.map(t => (
             <TouchableOpacity
@@ -137,7 +141,7 @@ export default function SuperNotifications() {
         </TouchableOpacity>
 
         {/* ── History ──────────────────────────────── */}
-        <SectionLabel icon="time-outline" title="Recent Broadcasts" />
+        <SectionLabel icon="time-outline" title="Recent Broadcasts" colors={colors} s={s} />
 
         {loadingHistory ? (
           <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
@@ -171,7 +175,7 @@ export default function SuperNotifications() {
   );
 }
 
-function SectionLabel({ icon, title }) {
+function SectionLabel({ icon, title, colors, s }) {
   return (
     <View style={s.sectionRow}>
       <Ionicons name={icon} size={13} color={colors.textSecondary} />
@@ -180,30 +184,30 @@ function SectionLabel({ icon, title }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
 
   sectionRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, marginBottom: 8 },
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 2, textTransform: 'uppercase' },
 
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSubtle },
   fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 8 },
   input: { backgroundColor: colors.bg, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSubtle, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   textarea: { height: 96, paddingTop: 12, textAlignVertical: 'top' },
   charCount: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, textAlign: 'right', marginTop: 4 },
 
   targetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 4 },
-  targetCard: { flex: 1, minWidth: '45%', backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB", padding: 14, alignItems: 'center', gap: 8 },
+  targetCard: { flex: 1, minWidth: '45%', backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.borderSubtle, padding: 14, alignItems: 'center', gap: 8 },
   targetIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   targetLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textPrimary, textAlign: 'center' },
 
-  sendBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, height: 56, borderRadius: 999, backgroundColor: colors.primary, borderWidth: 1, borderColor: "#E5E7EB" },
+  sendBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, height: 56, borderRadius: 999, backgroundColor: colors.primary, borderWidth: 1, borderColor: colors.borderSubtle },
   sendTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#fff' },
 
-  emptyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: "#E5E7EB" },
+  emptyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.borderSubtle },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textDisabled },
 
-  historyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
+  historyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSubtle },
   historyTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   historyTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, flex: 1 },
   historyBody: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, lineHeight: 18 },

@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../../lib/api';
-import { colors, fonts } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -19,12 +20,15 @@ const fmtTime = (d) => {
 export default function LiveDashboard() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [trackings, setTrackings] = useState([]);
   const [activeSOS, setActiveSOS] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const intervalRef = React.useRef(null);
   const { toast, showToast, hideToast } = useToast();
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -151,7 +155,7 @@ export default function LiveDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 20,
@@ -160,15 +164,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -178,7 +182,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -190,19 +194,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   statVal: { fontFamily: fonts.bodyBold, fontSize: 28 },
   statLabel: { fontFamily: fonts.body, fontSize: 12, textAlign: 'center' },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary, marginBottom: 10 },
   sosCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
     borderLeftWidth: 4,
     borderLeftColor: '#DC2626',
   },
@@ -214,18 +218,18 @@ const styles = StyleSheet.create({
   statusText: { fontFamily: fonts.bodyBold, fontSize: 11 },
   sosMsg: { fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary },
   sosActions: { flexDirection: 'row', gap: 8 },
-  viewBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  viewBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: colors.elevated, alignItems: 'center' },
   viewBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
   ackBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#FFFBEB', alignItems: 'center' },
   ackBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#D97706' },
   trackCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   trackHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trackIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center' },
@@ -235,13 +239,13 @@ const styles = StyleSheet.create({
   viewMapBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   viewMapText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary },
   emptyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
 });

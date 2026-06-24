@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { volunteerApi } from "../../../lib/api";
 import { colors, fonts, radius } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 
 const fmtDate = (d) =>
   d
@@ -48,6 +49,8 @@ export default function VolunteerDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const [volunteer, setVolunteer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -229,7 +232,7 @@ export default function VolunteerDetailScreen() {
             )}
             {status !== "pending" && (
               <TouchableOpacity
-                style={[s.actionPill, { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" }]}
+                style={[s.actionPill, { backgroundColor: colors.elevated, borderColor: colors.borderSubtle }]}
                 onPress={() => updateStatus("pending")}
               >
                 <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
@@ -328,7 +331,7 @@ export default function VolunteerDetailScreen() {
                   <Text style={s.tourDate}>{fmtDate(tour.startDate)}</Text>
                 </View>
                 <View style={[s.tourStatusBadge, {
-                  backgroundColor: tour.status === "active" ? "#DCFCE7" : "#F3F4F6",
+                  backgroundColor: tour.status === "active" ? "#DCFCE7" : colors.elevated,
                 }]}>
                   <Text style={[s.tourStatusTxt, {
                     color: tour.status === "active" ? "#16A34A" : colors.textSecondary,
@@ -416,8 +419,8 @@ export default function VolunteerDetailScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -425,15 +428,15 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -453,12 +456,12 @@ const s = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   profileTop: { flexDirection: "row", alignItems: "flex-start" },
   bigAvatar: {
@@ -469,7 +472,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   bigAvatarText: { fontFamily: fonts.bodyBold, fontSize: 24, color: "white" },
-  volName: { fontFamily: fonts.bodyBold, fontSize: 17, color: "#1F2937" },
+  volName: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.textPrimary },
   volEmail: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   volPhone: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.primary, marginTop: 2 },
   statusBadge: {
@@ -488,13 +491,13 @@ const s = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     padding: 12,
   },
   infoItem: { width: "47%", gap: 2 },
-  infoLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
-  infoValue: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#1F2937" },
+  infoLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
+  infoValue: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
 
   statusActions: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   actionPill: {
@@ -509,7 +512,7 @@ const s = StyleSheet.create({
   actionPillTxt: { fontFamily: fonts.bodyBold, fontSize: 13 },
 
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  sectionTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: "#1F2937" },
+  sectionTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   sectionCount: {
     fontFamily: fonts.bodyBold,
     fontSize: 12,
@@ -524,9 +527,9 @@ const s = StyleSheet.create({
   emptySectionTxt: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
   emptySectionSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textDisabled, textAlign: "center" },
 
-  docRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 8, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
+  docRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.elevated },
   docIconBox: { width: 40, height: 40, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  docType: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#1F2937" },
+  docType: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   docDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   docNote: { fontFamily: fonts.body, fontSize: 11, color: "#D97706", marginTop: 2, fontStyle: "italic" },
   docStatusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: "flex-start", marginTop: 4 },
@@ -536,14 +539,14 @@ const s = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  tourRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
+  tourRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.elevated },
   tourDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  tourTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#1F2937" },
+  tourTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   tourMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   tourDate: { fontFamily: fonts.body, fontSize: 11, color: colors.primary, marginTop: 1 },
   tourStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
@@ -551,7 +554,7 @@ const s = StyleSheet.create({
 
   dangerCard: { borderWidth: 1, borderColor: "#FCA5A5", backgroundColor: "#FFF5F5" },
   dangerTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#DC2626" },
-  dangerSub: { fontFamily: fonts.body, fontSize: 13, color: "#6B7280" },
+  dangerSub: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary },
   deleteBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -570,7 +573,7 @@ const s = StyleSheet.create({
 
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalSheet: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -581,21 +584,21 @@ const s = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.borderSubtle,
     alignSelf: "center",
     marginBottom: 4,
   },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  modalTitle: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: "#1F2937" },
+  modalTitle: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: colors.textPrimary },
   modalSub: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textSecondary },
-  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
+  fieldLabel: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
   noteInput: {
     borderRadius: 12,
     padding: 12,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#1F2937",
-    backgroundColor: "#F2F0ED",
+    color: colors.textPrimary,
+    backgroundColor: colors.elevated,
     minHeight: 72,
     textAlignVertical: "top",
   },

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Image, ActivityIndicator, Alert, Switch, Platform,
@@ -9,6 +9,7 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { colors, fonts, radius } from "../../../lib/theme";
 import { tours as toursApi } from "../../../lib/api";
+import { useColors } from "../../../lib/ThemeContext";
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -34,12 +35,13 @@ const FACILITIES_ICONS = {
   chargingPoint: "flash", drinkingWater: "water",
 };
 
-function SectionCard({ icon, title, children, action }) {
+function SectionCard({ icon, title, children, action, s }) {
+  const colors = useColors();
   return (
-    <View style={c.card}>
-      <View style={c.cardHead}>
-        <View style={c.cardIconBox}><Ionicons name={icon} size={16} color={colors.primary} /></View>
-        <Text style={c.cardTitle}>{title}</Text>
+    <View style={s.card}>
+      <View style={s.cardHead}>
+        <View style={s.cardIconBox}><Ionicons name={icon} size={16} color={colors.primary} /></View>
+        <Text style={s.cardTitle}>{title}</Text>
         {action}
       </View>
       {children}
@@ -47,13 +49,14 @@ function SectionCard({ icon, title, children, action }) {
   );
 }
 
-function InfoRow({ label, value, icon, valueStyle }) {
+function InfoRow({ label, value, icon, valueStyle, s }) {
+  const colors = useColors();
   if (!value && value !== 0) return null;
   return (
-    <View style={c.infoRow}>
+    <View style={s.infoRow}>
       {icon && <Ionicons name={icon} size={14} color={colors.textSecondary} />}
-      <Text style={c.infoLabel}>{label}</Text>
-      <Text style={[c.infoValue, valueStyle]}>{String(value)}</Text>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={[s.infoValue, valueStyle]}>{String(value)}</Text>
     </View>
   );
 }
@@ -65,6 +68,8 @@ export default function TourDetailAdmin() {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -152,117 +157,117 @@ export default function TourDetailAdmin() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
       {/* Header */}
-      <View style={c.header}>
-        <TouchableOpacity style={c.backBtn} onPress={() => router.back()}>
+      <View style={s.header}>
+        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={c.headerTitle} numberOfLines={1}>{tour.title || "Tour Details"}</Text>
-          {tour.tourCode ? <Text style={c.headerCode}>#{tour.tourCode}</Text> : null}
+          <Text style={s.headerTitle} numberOfLines={1}>{tour.title || "Tour Details"}</Text>
+          {tour.tourCode ? <Text style={s.headerCode}>#{tour.tourCode}</Text> : null}
         </View>
-        <TouchableOpacity style={c.editBtn} onPress={() => router.push(`/admin/tour/create?id=${id}`)}>
+        <TouchableOpacity style={s.editBtn} onPress={() => router.push(`/admin/tour/create?id=${id}`)}>
           <Ionicons name="create-outline" size={16} color={colors.primary} />
-          <Text style={c.editBtnTxt}>Edit</Text>
+          <Text style={s.editBtnTxt}>Edit</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={c.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
 
         {/* Cover Image */}
         {tour.coverPhotoUrl ? (
-          <Image source={{ uri: tour.coverPhotoUrl }} style={c.cover} resizeMode="cover" />
+          <Image source={{ uri: tour.coverPhotoUrl }} style={s.cover} resizeMode="cover" />
         ) : (
-          <View style={c.coverPlaceholder}>
+          <View style={s.coverPlaceholder}>
             <Ionicons name="image-outline" size={40} color={colors.textDisabled} />
           </View>
         )}
 
         {/* Status Bar */}
-        <View style={c.statusBar}>
-          <View style={[c.statusBadge, { backgroundColor: st.bg }]}>
+        <View style={s.statusBar}>
+          <View style={[s.statusBadge, { backgroundColor: st.bg }]}>
             <Ionicons name={st.icon} size={13} color={st.color} />
-            <Text style={[c.statusTxt, { color: st.color }]}>{st.label}</Text>
+            <Text style={[s.statusTxt, { color: st.color }]}>{st.label}</Text>
           </View>
           {tour.difficulty && (
-            <View style={[c.statusBadge, { backgroundColor: (DIFF_COLORS[tour.difficulty] || colors.primary) + "20" }]}>
-              <Text style={[c.statusTxt, { color: DIFF_COLORS[tour.difficulty] || colors.primary }]}>
+            <View style={[s.statusBadge, { backgroundColor: (DIFF_COLORS[tour.difficulty] || colors.primary) + "20" }]}>
+              <Text style={[s.statusTxt, { color: DIFF_COLORS[tour.difficulty] || colors.primary }]}>
                 {tour.difficulty.charAt(0).toUpperCase() + tour.difficulty.slice(1)}
               </Text>
             </View>
           )}
           {tour.category && (
-            <View style={[c.statusBadge, { backgroundColor: colors.primaryLight }]}>
-              <Text style={[c.statusTxt, { color: colors.primary }]}>{tour.category}</Text>
+            <View style={[s.statusBadge, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[s.statusTxt, { color: colors.primary }]}>{tour.category}</Text>
             </View>
           )}
         </View>
 
         {/* Quick Stats */}
-        <View style={c.statsRow}>
+        <View style={s.statsRow}>
           {[
             { icon: "calendar", val: fmt(tour.startDate), lbl: "Departure" },
             { icon: "flag",     val: fmt(tour.endDate),   lbl: "Return" },
             { icon: "people",   val: totalSeats,           lbl: "Seats" },
             { icon: "pricetag", val: adultPrice ? `₹${adultPrice}` : "—", lbl: "Adult" },
           ].map(stat => (
-            <View key={stat.lbl} style={c.statBox}>
+            <View key={stat.lbl} style={s.statBox}>
               <Ionicons name={stat.icon} size={14} color={colors.primary} />
-              <Text style={c.statVal}>{stat.val}</Text>
-              <Text style={c.statLbl}>{stat.lbl}</Text>
+              <Text style={s.statVal}>{stat.val}</Text>
+              <Text style={s.statLbl}>{stat.lbl}</Text>
             </View>
           ))}
         </View>
 
         {/* Basic Info */}
-        <SectionCard icon="information-circle" title="Basic Information">
-          {tour.description ? <Text style={c.descText}>{tour.description}</Text> : null}
-          <InfoRow label="Tour Type" value={tour.tourType} />
-          <InfoRow label="Distance" value={tour.distance ? `${tour.distance} km` : null} />
-          <InfoRow label="Est. Duration" value={tour.estimatedDuration} />
+        <SectionCard icon="information-circle" title="Basic Information" s={s}>
+          {tour.description ? <Text style={s.descText}>{tour.description}</Text> : null}
+          <InfoRow label="Tour Type" value={tour.tourType} s={s} />
+          <InfoRow label="Distance" value={tour.distance ? `${tour.distance} km` : null} s={s} />
+          <InfoRow label="Est. Duration" value={tour.estimatedDuration} s={s} />
           {tour.videoUrl ? (
-            <TouchableOpacity style={c.linkRow} onPress={() => WebBrowser.openBrowserAsync(tour.videoUrl)}>
+            <TouchableOpacity style={s.linkRow} onPress={() => WebBrowser.openBrowserAsync(tour.videoUrl)}>
               <Ionicons name="play-circle" size={18} color={colors.primary} />
-              <Text style={c.linkTxt}>View Tour Video</Text>
+              <Text style={s.linkTxt}>View Tour Video</Text>
               <Ionicons name="open-outline" size={14} color={colors.primary} />
             </TouchableOpacity>
           ) : null}
           {tour.pdfBrochure ? (
-            <TouchableOpacity style={c.linkRow} onPress={() => WebBrowser.openBrowserAsync(tour.pdfBrochure)}>
+            <TouchableOpacity style={s.linkRow} onPress={() => WebBrowser.openBrowserAsync(tour.pdfBrochure)}>
               <Ionicons name="document-text" size={18} color="#DC2626" />
-              <Text style={[c.linkTxt, { color: "#DC2626" }]}>Open PDF Brochure</Text>
+              <Text style={[s.linkTxt, { color: "#DC2626" }]}>Open PDF Brochure</Text>
               <Ionicons name="open-outline" size={14} color="#DC2626" />
             </TouchableOpacity>
           ) : null}
         </SectionCard>
 
         {/* Route */}
-        <SectionCard icon="navigate" title="Route">
-          <View style={c.routeRow}>
-            <View style={c.routeStop}>
-              <View style={[c.routeDot, { backgroundColor: "#16A34A" }]} />
+        <SectionCard icon="navigate" title="Route" s={s}>
+          <View style={s.routeRow}>
+            <View style={s.routeStop}>
+              <View style={[s.routeDot, { backgroundColor: "#16A34A" }]} />
               <View style={{ flex: 1 }}>
-                <Text style={c.routeLabel}>From</Text>
-                <Text style={c.routeCity}>{tour.source || "—"}</Text>
+                <Text style={s.routeLabel}>From</Text>
+                <Text style={s.routeCity}>{tour.source || "—"}</Text>
               </View>
             </View>
-            <View style={c.routeLine} />
-            <View style={c.routeStop}>
-              <View style={[c.routeDot, { backgroundColor: colors.primary }]} />
+            <View style={s.routeLine} />
+            <View style={s.routeStop}>
+              <View style={[s.routeDot, { backgroundColor: colors.primary }]} />
               <View style={{ flex: 1 }}>
-                <Text style={c.routeLabel}>To</Text>
-                <Text style={c.routeCity}>{tour.destination || "—"}</Text>
+                <Text style={s.routeLabel}>To</Text>
+                <Text style={s.routeCity}>{tour.destination || "—"}</Text>
               </View>
             </View>
           </View>
           {pickupPoints.length > 0 && (
             <View style={{ marginTop: 10 }}>
-              <Text style={c.subLabel}>Pickup Points ({pickupPoints.length})</Text>
+              <Text style={s.subLabel}>Pickup Points ({pickupPoints.length})</Text>
               {pickupPoints.map((pt, i) => (
-                <View key={i} style={c.pointRow}>
+                <View key={i} style={s.pointRow}>
                   <Ionicons name="location-outline" size={14} color="#16A34A" />
                   <View style={{ flex: 1, marginLeft: 6 }}>
-                    <Text style={c.pointName}>{pt.name}</Text>
-                    {pt.time ? <Text style={c.pointMeta}>{pt.time}</Text> : null}
+                    <Text style={s.pointName}>{pt.name}</Text>
+                    {pt.time ? <Text style={s.pointMeta}>{pt.time}</Text> : null}
                   </View>
                 </View>
               ))}
@@ -270,13 +275,13 @@ export default function TourDetailAdmin() {
           )}
           {dropPoints.length > 0 && (
             <View style={{ marginTop: 8 }}>
-              <Text style={c.subLabel}>Drop Points ({dropPoints.length})</Text>
+              <Text style={s.subLabel}>Drop Points ({dropPoints.length})</Text>
               {dropPoints.map((pt, i) => (
-                <View key={i} style={c.pointRow}>
+                <View key={i} style={s.pointRow}>
                   <Ionicons name="location" size={14} color={colors.primary} />
                   <View style={{ flex: 1, marginLeft: 6 }}>
-                    <Text style={c.pointName}>{pt.name}</Text>
-                    {pt.time ? <Text style={c.pointMeta}>{pt.time}</Text> : null}
+                    <Text style={s.pointName}>{pt.name}</Text>
+                    {pt.time ? <Text style={s.pointMeta}>{pt.time}</Text> : null}
                   </View>
                 </View>
               ))}
@@ -286,15 +291,15 @@ export default function TourDetailAdmin() {
 
         {/* Itinerary */}
         {itinerary.length > 0 && (
-          <SectionCard icon="map" title={`Itinerary (${itinerary.length} days)`}>
+          <SectionCard icon="map" title={`Itinerary (${itinerary.length} days)`} s={s}>
             {itinerary.map((day, i) => (
-              <View key={i} style={c.dayRow}>
-                <View style={c.dayBadge}><Text style={c.dayBadgeTxt}>D{day.day}</Text></View>
+              <View key={i} style={s.dayRow}>
+                <View style={s.dayBadge}><Text style={s.dayBadgeTxt}>D{day.day}</Text></View>
                 <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={c.dayTitle}>{day.title}</Text>
-                  {day.location ? <Text style={c.dayMeta}><Ionicons name="location-outline" size={11} /> {day.location}</Text> : null}
-                  {(day.startTime || day.endTime) ? <Text style={c.dayMeta}>{day.startTime} {day.endTime ? `→ ${day.endTime}` : ""}</Text> : null}
-                  {day.description ? <Text style={c.dayDesc} numberOfLines={2}>{day.description}</Text> : null}
+                  <Text style={s.dayTitle}>{day.title}</Text>
+                  {day.location ? <Text style={s.dayMeta}><Ionicons name="location-outline" size={11} /> {day.location}</Text> : null}
+                  {(day.startTime || day.endTime) ? <Text style={s.dayMeta}>{day.startTime} {day.endTime ? `→ ${day.endTime}` : ""}</Text> : null}
+                  {day.description ? <Text style={s.dayDesc} numberOfLines={2}>{day.description}</Text> : null}
                 </View>
               </View>
             ))}
@@ -302,74 +307,74 @@ export default function TourDetailAdmin() {
         )}
 
         {/* Fleet */}
-        <SectionCard icon="bus" title="Fleet">
-          <View style={c.fleetStats}>
-            <View style={c.fleetStat}><Text style={c.fleetStatVal}>{buses.length || 1}</Text><Text style={c.fleetStatLbl}>Buses</Text></View>
-            <View style={c.fleetStat}><Text style={c.fleetStatVal}>{totalSeats}</Text><Text style={c.fleetStatLbl}>Seats</Text></View>
-            <View style={c.fleetStat}><Text style={c.fleetStatVal}>{tour.seatStructure || "2x2"}</Text><Text style={c.fleetStatLbl}>Layout</Text></View>
-            <View style={c.fleetStat}><Text style={c.fleetStatVal}>{tour.busType || "AC"}</Text><Text style={c.fleetStatLbl}>Type</Text></View>
+        <SectionCard icon="bus" title="Fleet" s={s}>
+          <View style={s.fleetStats}>
+            <View style={s.fleetStat}><Text style={s.fleetStatVal}>{buses.length || 1}</Text><Text style={s.fleetStatLbl}>Buses</Text></View>
+            <View style={s.fleetStat}><Text style={s.fleetStatVal}>{totalSeats}</Text><Text style={s.fleetStatLbl}>Seats</Text></View>
+            <View style={s.fleetStat}><Text style={s.fleetStatVal}>{tour.seatStructure || "2x2"}</Text><Text style={s.fleetStatLbl}>Layout</Text></View>
+            <View style={s.fleetStat}><Text style={s.fleetStatVal}>{tour.busType || "AC"}</Text><Text style={s.fleetStatLbl}>Type</Text></View>
           </View>
           {buses.map((b, i) => (
-            <View key={i} style={c.busCard}>
+            <View key={i} style={s.busCard}>
               <Ionicons name="bus" size={20} color={b.isAC ? "#0284C7" : "#16A34A"} />
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={c.busNum}>{b.busNumber}</Text>
-                <Text style={c.busMeta}>{b.busType} · {b.capacity} seats · {b.seatLayout}</Text>
+                <Text style={s.busNum}>{b.busNumber}</Text>
+                <Text style={s.busMeta}>{b.busType} · {b.capacity} seats · {b.seatLayout}</Text>
               </View>
-              {b.isAC && <View style={c.acBadge}><Text style={c.acBadgeTxt}>AC</Text></View>}
+              {b.isAC && <View style={s.acBadge}><Text style={s.acBadgeTxt}>AC</Text></View>}
             </View>
           ))}
           {tour.primaryDriver && (
-            <View style={c.driverCard}>
-              <View style={c.driverIcon}><Ionicons name="person" size={16} color={colors.primary} /></View>
+            <View style={s.driverCard}>
+              <View style={s.driverIcon}><Ionicons name="person" size={16} color={colors.primary} /></View>
               <View style={{ flex: 1 }}>
-                <Text style={c.driverName}>{tour.primaryDriver?.name || "Primary Driver"}</Text>
-                <Text style={c.driverMeta}>
+                <Text style={s.driverName}>{tour.primaryDriver?.name || "Primary Driver"}</Text>
+                <Text style={s.driverMeta}>
                   {tour.primaryDriver?.licenseNo ? `License: ${tour.primaryDriver.licenseNo}` : "Primary Driver"}
                   {tour.primaryDriver?.phone ? ` · ${tour.primaryDriver.phone}` : ""}
                 </Text>
               </View>
-              <View style={c.driverBadge}><Text style={c.driverBadgeTxt}>Primary</Text></View>
+              <View style={s.driverBadge}><Text style={s.driverBadgeTxt}>Primary</Text></View>
             </View>
           )}
         </SectionCard>
 
         {/* Pricing */}
-        <SectionCard icon="pricetag" title="Pricing">
-          <View style={c.pricingGrid}>
+        <SectionCard icon="pricetag" title="Pricing" s={s}>
+          <View style={s.pricingGrid}>
             {[
               ["Adult", tour.pricing?.adult || tour.price],
               ["Child", tour.pricing?.child],
               ["Senior", tour.pricing?.seniorCitizen],
               ["VIP", tour.pricing?.vip],
             ].filter(([, v]) => v && v !== 0).map(([label, val]) => (
-              <View key={label} style={c.priceBox}>
-                <Text style={c.priceBoxLbl}>{label}</Text>
-                <Text style={c.priceBoxVal}>₹{val}</Text>
+              <View key={label} style={s.priceBox}>
+                <Text style={s.priceBoxLbl}>{label}</Text>
+                <Text style={s.priceBoxVal}>₹{val}</Text>
               </View>
             ))}
           </View>
-          {(tour.pricing?.earlyBirdDiscount > 0) && <InfoRow label="Early Bird Discount" value={`${tour.pricing.earlyBirdDiscount}%`} />}
-          {(tour.pricing?.groupDiscount?.percentage > 0) && <InfoRow label="Group Discount" value={`${tour.pricing.groupDiscount.percentage}% (min ${tour.pricing.groupDiscount.minGroupSize} pax)`} />}
+          {(tour.pricing?.earlyBirdDiscount > 0) && <InfoRow label="Early Bird Discount" value={`${tour.pricing.earlyBirdDiscount}%`} s={s} />}
+          {(tour.pricing?.groupDiscount?.percentage > 0) && <InfoRow label="Group Discount" value={`${tour.pricing.groupDiscount.percentage}% (min ${tour.pricing.groupDiscount.minGroupSize} pax)`} s={s} />}
           {tour.pricing?.emiEnabled && (
-            <View style={c.featureRow}>
+            <View style={s.featureRow}>
               <Ionicons name="card" size={14} color="#16A34A" />
-              <Text style={[c.featureTxt, { color: "#16A34A" }]}>EMI Payment Available</Text>
+              <Text style={[s.featureTxt, { color: "#16A34A" }]}>EMI Payment Available</Text>
             </View>
           )}
         </SectionCard>
 
         {/* Volunteers */}
         {volunteers.length > 0 && (
-          <SectionCard icon="people" title={`Volunteers (${volunteers.length})`}>
+          <SectionCard icon="people" title={`Volunteers (${volunteers.length})`} s={s}>
             {volunteers.map((a, i) => (
-              <View key={i} style={c.volRow}>
-                <View style={c.volAvatar}><Ionicons name="person" size={14} color="#fff" /></View>
+              <View key={i} style={s.volRow}>
+                <View style={s.volAvatar}><Ionicons name="person" size={14} color="#fff" /></View>
                 <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={c.volName}>{a.volunteerId?.name || "Volunteer"}</Text>
-                  <Text style={c.volMeta}>{a.role?.replace(/_/g, " ") || "Coordinator"}</Text>
+                  <Text style={s.volName}>{a.volunteerId?.name || "Volunteer"}</Text>
+                  <Text style={s.volMeta}>{a.role?.replace(/_/g, " ") || "Coordinator"}</Text>
                 </View>
-                {a.tasks?.length > 0 && <Text style={c.volTask} numberOfLines={1}>{a.tasks.slice(0, 2).join(", ")}</Text>}
+                {a.tasks?.length > 0 && <Text style={s.volTask} numberOfLines={1}>{a.tasks.slice(0, 2).join(", ")}</Text>}
               </View>
             ))}
           </SectionCard>
@@ -377,33 +382,33 @@ export default function TourDetailAdmin() {
 
         {/* Facilities */}
         {Object.values(facilities).some(Boolean) && (
-          <SectionCard icon="checkbox" title="Facilities Included">
-            <View style={c.facilityGrid}>
+          <SectionCard icon="checkbox" title="Facilities Included" s={s}>
+            <View style={s.facilityGrid}>
               {Object.entries(facilities).filter(([, v]) => v).map(([key]) => (
-                <View key={key} style={c.facilityItem}>
+                <View key={key} style={s.facilityItem}>
                   <Ionicons name={FACILITIES_ICONS[key] || "checkmark-circle"} size={16} color={colors.primary} />
-                  <Text style={c.facilityItemTxt}>{FACILITIES_LABELS[key] || key}</Text>
+                  <Text style={s.facilityItemTxt}>{FACILITIES_LABELS[key] || key}</Text>
                 </View>
               ))}
             </View>
             {inclusions.length > 0 && (
               <View style={{ marginTop: 10 }}>
-                <Text style={c.subLabel}>Inclusions</Text>
+                <Text style={s.subLabel}>Inclusions</Text>
                 {inclusions.map((item, i) => (
-                  <View key={i} style={c.listItem}>
+                  <View key={i} style={s.listItem}>
                     <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-                    <Text style={c.listItemTxt}>{item}</Text>
+                    <Text style={s.listItemTxt}>{item}</Text>
                   </View>
                 ))}
               </View>
             )}
             {exclusions.length > 0 && (
               <View style={{ marginTop: 10 }}>
-                <Text style={c.subLabel}>Exclusions</Text>
+                <Text style={s.subLabel}>Exclusions</Text>
                 {exclusions.map((item, i) => (
-                  <View key={i} style={[c.listItem, { backgroundColor: "#FEF2F2" }]}>
+                  <View key={i} style={[s.listItem, { backgroundColor: "#FEF2F2" }]}>
                     <Ionicons name="close-circle" size={14} color="#DC2626" />
-                    <Text style={c.listItemTxt}>{item}</Text>
+                    <Text style={s.listItemTxt}>{item}</Text>
                   </View>
                 ))}
               </View>
@@ -413,13 +418,13 @@ export default function TourDetailAdmin() {
 
         {/* Documents */}
         {requiredDocs.length > 0 && (
-          <SectionCard icon="document-text" title="Required Documents">
+          <SectionCard icon="document-text" title="Required Documents" s={s}>
             {requiredDocs.map((doc, i) => (
-              <View key={i} style={c.docRow}>
+              <View key={i} style={s.docRow}>
                 <Ionicons name="document" size={16} color={doc.mandatory ? colors.primary : colors.textSecondary} />
-                <Text style={c.docName}>{doc.name}</Text>
-                <View style={[c.docBadge, { backgroundColor: doc.mandatory ? "#FEE2E2" : "#F0FDF4" }]}>
-                  <Text style={[c.docBadgeTxt, { color: doc.mandatory ? "#DC2626" : "#16A34A" }]}>
+                <Text style={s.docName}>{doc.name}</Text>
+                <View style={[s.docBadge, { backgroundColor: doc.mandatory ? "#FEE2E2" : "#F0FDF4" }]}>
+                  <Text style={[s.docBadgeTxt, { color: doc.mandatory ? "#DC2626" : "#16A34A" }]}>
                     {doc.mandatory ? "Mandatory" : "Optional"}
                   </Text>
                 </View>
@@ -430,26 +435,26 @@ export default function TourDetailAdmin() {
 
         {/* Booking Rules */}
         {tour.bookingRules && (
-          <SectionCard icon="clipboard" title="Booking Rules">
-            <InfoRow label="Max Bookings" value={tour.bookingRules.maxBookingCount} />
-            <InfoRow label="Min Bookings Required" value={tour.bookingRules.minBookingCount} />
-            <InfoRow label="Max Seats / Booking" value={tour.bookingRules.maxSeatsPerBooking} />
+          <SectionCard icon="clipboard" title="Booking Rules" s={s}>
+            <InfoRow label="Max Bookings" value={tour.bookingRules.maxBookingCount} s={s} />
+            <InfoRow label="Min Bookings Required" value={tour.bookingRules.minBookingCount} s={s} />
+            <InfoRow label="Max Seats / Booking" value={tour.bookingRules.maxSeatsPerBooking} s={s} />
             {tour.bookingRules.waitlistEnabled && (
-              <View style={c.featureRow}>
+              <View style={s.featureRow}>
                 <Ionicons name="list" size={14} color="#0284C7" />
-                <Text style={[c.featureTxt, { color: "#0284C7" }]}>Waitlist Enabled</Text>
+                <Text style={[s.featureTxt, { color: "#0284C7" }]}>Waitlist Enabled</Text>
               </View>
             )}
             {tour.bookingRules.autoApproval && (
-              <View style={c.featureRow}>
+              <View style={s.featureRow}>
                 <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-                <Text style={[c.featureTxt, { color: "#16A34A" }]}>Auto Approval On</Text>
+                <Text style={[s.featureTxt, { color: "#16A34A" }]}>Auto Approval On</Text>
               </View>
             )}
             {tour.bookingRules.cancellationPolicy ? (
               <View style={{ marginTop: 8 }}>
-                <Text style={c.subLabel}>Cancellation Policy</Text>
-                <Text style={c.policyText}>{tour.bookingRules.cancellationPolicy}</Text>
+                <Text style={s.subLabel}>Cancellation Policy</Text>
+                <Text style={s.policyText}>{tour.bookingRules.cancellationPolicy}</Text>
               </View>
             ) : null}
           </SectionCard>
@@ -457,8 +462,8 @@ export default function TourDetailAdmin() {
 
         {/* Safety */}
         {tour.safety && (
-          <SectionCard icon="shield" title="Safety & Tracking">
-            <View style={c.safetyGrid}>
+          <SectionCard icon="shield" title="Safety & Tracking" s={s}>
+            <View style={s.safetyGrid}>
               {[
                 ["SOS Button", tour.safety.sosEnabled, "alert-circle"],
                 ["GPS Tracking", tour.safety.gpsTracking, "location"],
@@ -467,19 +472,19 @@ export default function TourDetailAdmin() {
                 ["Route Monitor", tour.safety.routeMonitoring, "pulse"],
                 ["Emergency Broadcast", tour.safety.emergencyBroadcasting, "radio"],
               ].map(([label, val, icon]) => (
-                <View key={label} style={[c.safetyItem, val && c.safetyItemActive]}>
+                <View key={label} style={[s.safetyItem, val && s.safetyItemActive]}>
                   <Ionicons name={icon} size={14} color={val ? colors.primary : colors.textDisabled} />
-                  <Text style={[c.safetyItemTxt, val && { color: colors.primary }]}>{label}</Text>
+                  <Text style={[s.safetyItemTxt, val && { color: colors.primary }]}>{label}</Text>
                 </View>
               ))}
             </View>
             {emergencyContacts.length > 0 && (
               <View style={{ marginTop: 10 }}>
-                <Text style={c.subLabel}>Emergency Contacts</Text>
+                <Text style={s.subLabel}>Emergency Contacts</Text>
                 {emergencyContacts.map((ec, i) => (
-                  <View key={i} style={c.ecRow}>
-                    <Text style={c.ecName}>{ec.name}</Text>
-                    <Text style={c.ecMeta}>{ec.relation ? `${ec.relation} · ` : ""}{ec.phone}</Text>
+                  <View key={i} style={s.ecRow}>
+                    <Text style={s.ecName}>{ec.name}</Text>
+                    <Text style={s.ecMeta}>{ec.relation ? `${ec.relation} · ` : ""}{ec.phone}</Text>
                   </View>
                 ))}
               </View>
@@ -488,16 +493,16 @@ export default function TourDetailAdmin() {
         )}
 
         {/* Actions */}
-        <View style={c.actions}>
+        <View style={s.actions}>
           <TouchableOpacity
-            style={[c.actionBtn, { flex: 1, borderColor: tour.status === "published" ? "#D97706" : "#16A34A", backgroundColor: tour.status === "published" ? "#FEF3C7" : "#DCFCE7" }]}
+            style={[s.actionBtn, { flex: 1, borderColor: tour.status === "published" ? "#D97706" : "#16A34A", backgroundColor: tour.status === "published" ? "#FEF3C7" : "#DCFCE7" }]}
             onPress={togglePublish}
             disabled={publishing}
           >
             {publishing ? <ActivityIndicator color={colors.primary} size="small" /> : (
               <>
                 <Ionicons name={tour.status === "published" ? "arrow-down-circle-outline" : "rocket"} size={18} color={tour.status === "published" ? "#D97706" : "#16A34A"} />
-                <Text style={[c.actionBtnTxt, { color: tour.status === "published" ? "#D97706" : "#16A34A" }]}>
+                <Text style={[s.actionBtnTxt, { color: tour.status === "published" ? "#D97706" : "#16A34A" }]}>
                   {tour.status === "published" ? "Unpublish" : "Publish Tour"}
                 </Text>
               </>
@@ -505,17 +510,17 @@ export default function TourDetailAdmin() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[c.actionBtn, { flex: 1, borderColor: colors.primary, backgroundColor: colors.primaryLight }]}
+            style={[s.actionBtn, { flex: 1, borderColor: colors.primary, backgroundColor: colors.primaryLight }]}
             onPress={() => router.push(`/admin/tour/create?id=${id}`)}
           >
             <Ionicons name="create-outline" size={18} color={colors.primary} />
-            <Text style={[c.actionBtnTxt, { color: colors.primary }]}>Edit in Wizard</Text>
+            <Text style={[s.actionBtnTxt, { color: colors.primary }]}>Edit in Wizard</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={c.deleteBtn} onPress={onDelete} disabled={deleting}>
+        <TouchableOpacity style={s.deleteBtn} onPress={onDelete} disabled={deleting}>
           {deleting ? <ActivityIndicator color="#DC2626" size="small" /> : (
-            <><Ionicons name="trash-outline" size={16} color="#DC2626" /><Text style={c.deleteBtnTxt}>Delete Tour</Text></>
+            <><Ionicons name="trash-outline" size={16} color="#DC2626" /><Text style={s.deleteBtnTxt}>Delete Tour</Text></>
           )}
         </TouchableOpacity>
 
@@ -525,11 +530,11 @@ export default function TourDetailAdmin() {
   );
 }
 
-const c = StyleSheet.create({
-  header:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  backBtn:      { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+const makeStyles = (colors) => StyleSheet.create({
+  header:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  backBtn:      { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.elevated, alignItems: "center", justifyContent: "center" },
   headerTitle:  { fontFamily: fonts.heading, fontSize: 17, color: colors.textPrimary, marginLeft: 0 },
-  headerCode:   { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 2, marginTop: 2 },
+  headerCode:   { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 2, marginTop: 2 },
   editBtn:      { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" },
   editBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
   content:      { paddingBottom: 40 },
@@ -538,11 +543,11 @@ const c = StyleSheet.create({
   statusBar:    { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
   statusBadge:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   statusTxt:    { fontFamily: fonts.bodyBold, fontSize: 12 },
-  statsRow:     { flexDirection: "row", marginHorizontal: 16, marginBottom: 8, backgroundColor: "#fff", borderRadius: 20, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  statsRow:     { flexDirection: "row", marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.surface, borderRadius: 20, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   statBox:      { flex: 1, alignItems: "center", gap: 4 },
   statVal:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, textAlign: "center" },
-  statLbl:      { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
-  card:         { marginHorizontal: 16, marginBottom: 12, backgroundColor: "#fff", borderRadius: 24, padding: 16, borderWidth: 1, borderColor: "#E5E7EB" },
+  statLbl:      { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
+  card:         { marginHorizontal: 16, marginBottom: 12, backgroundColor: colors.surface, borderRadius: 24, padding: 16, borderWidth: 1, borderColor: colors.borderSubtle },
   cardHead:     { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14, borderBottomWidth: 1, borderColor: colors.borderSubtle, paddingBottom: 10 },
   cardIconBox:  { width: 30, height: 30, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   cardTitle:    { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.secondary, flex: 1 },
@@ -556,9 +561,9 @@ const c = StyleSheet.create({
   routeStop:    { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
   routeDot:     { width: 12, height: 12, borderRadius: 6 },
   routeLine:    { width: 2, height: 16, backgroundColor: colors.borderSubtle, marginLeft: 5 },
-  routeLabel:   { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
+  routeLabel:   { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
   routeCity:    { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
-  subLabel:     { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
+  subLabel:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
   pointRow:     { flexDirection: "row", alignItems: "flex-start", paddingVertical: 5, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
   pointName:    { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   pointMeta:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
@@ -571,7 +576,7 @@ const c = StyleSheet.create({
   fleetStats:   { flexDirection: "row", backgroundColor: colors.primaryLight, borderRadius: 20, paddingVertical: 12, marginBottom: 12 },
   fleetStat:    { flex: 1, alignItems: "center" },
   fleetStatVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.primary },
-  fleetStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
+  fleetStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
   busCard:      { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.borderSubtle + "60" },
   busNum:       { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   busMeta:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
@@ -585,7 +590,7 @@ const c = StyleSheet.create({
   driverBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: "#fff" },
   pricingGrid:  { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 8 },
   priceBox:     { flex: 1, minWidth: "45%", backgroundColor: colors.primaryLight, borderRadius: 20, padding: 12, alignItems: "center" },
-  priceBoxLbl:  { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase" },
+  priceBoxLbl:  { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase" },
   priceBoxVal:  { fontFamily: fonts.heading, fontSize: 20, color: colors.primary, marginTop: 4 },
   featureRow:   { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 5 },
   featureTxt:   { fontFamily: fonts.bodyMedium, fontSize: 13 },

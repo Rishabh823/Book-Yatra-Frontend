@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fonts } from "../lib/theme";
 import { donations as donationsApi, auth as authApi } from "../lib/api";
 import RazorpayCheckout from "../components/RazorpayCheckout";
+import { useColors } from "../lib/ThemeContext";
 
 const CATEGORIES = [
   {
@@ -79,6 +80,7 @@ export default function DonatePage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast, showToast, hideToast } = useToast();
+  const colors = useColors();
 
   const [step, setStep] = useState(STEP_CATEGORY);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -91,6 +93,8 @@ export default function DonatePage() {
   const [donorPhone, setDonorPhone] = useState("");
   const [message, setMessage] = useState("");
   const [completedDonation, setCompletedDonation] = useState(null);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     (async () => {
@@ -240,10 +244,10 @@ export default function DonatePage() {
   if (step === STEP_CATEGORY) {
     return (
       <View style={[s.container, { paddingTop: insets.top }]}>
-        {/* Flat white header */}
+        {/* Flat header */}
         <View style={s.header}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#111827" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>Donate / Seva</Text>
           <View style={{ width: 40 }} />
@@ -305,10 +309,10 @@ export default function DonatePage() {
       />
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
 
-      {/* Flat white header */}
+      {/* Flat header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => setStep(STEP_CATEGORY)}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Choose Amount</Text>
         <View style={{ width: 40 }} />
@@ -355,7 +359,7 @@ export default function DonatePage() {
             <TextInput
               style={s.amtInput}
               placeholder="Enter custom amount"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textDisabled}
               keyboardType="numeric"
               value={customAmount}
               onChangeText={(v) => { setCustomAmount(v.replace(/[^0-9]/g, "")); setSelectedPreset(null); }}
@@ -380,11 +384,11 @@ export default function DonatePage() {
               <React.Fragment key={i}>
                 {i > 0 && <View style={s.divider} />}
                 <View style={s.formField}>
-                  <Ionicons name={field.icon} size={16} color="#6B7280" />
+                  <Ionicons name={field.icon} size={16} color={colors.textSecondary} />
                   <TextInput
                     style={s.formInput}
                     placeholder={field.placeholder}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textDisabled}
                     keyboardType={field.kbType}
                     autoCapitalize={field.autoCapOff ? "none" : "words"}
                     value={field.value}
@@ -395,11 +399,11 @@ export default function DonatePage() {
             ))}
             <View style={s.divider} />
             <View style={[s.formField, { alignItems: "flex-start" }]}>
-              <Ionicons name="chatbubble-outline" size={16} color="#6B7280" style={{ marginTop: 3 }} />
+              <Ionicons name="chatbubble-outline" size={16} color={colors.textSecondary} style={{ marginTop: 3 }} />
               <TextInput
                 style={[s.formInput, { height: 72, textAlignVertical: "top" }]}
                 placeholder="Message / Sankalp (optional)"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textDisabled}
                 multiline
                 value={message}
                 onChangeText={setMessage}
@@ -448,8 +452,8 @@ export default function DonatePage() {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
 
   // Header
   header: {
@@ -457,15 +461,15 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -473,17 +477,17 @@ const s = StyleSheet.create({
     flex: 1,
     fontFamily: "Philosopher_700Bold",
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
     marginLeft: 10,
   },
 
   // Gray band
-  grayBand: { height: 10, backgroundColor: "#F2F2F2" },
+  grayBand: { height: 10, backgroundColor: colors.elevated },
 
   sectionLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.textSecondary,
     letterSpacing: 1.2,
     marginBottom: 10,
   },
@@ -492,12 +496,12 @@ const s = StyleSheet.create({
   catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   catCard: {
     width: "47%",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     overflow: "hidden",
   },
   catCardActive: {
@@ -512,10 +516,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  catLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#111827" },
-  catLabelActive: { color: "#111827" },
-  catDesc: { fontFamily: fonts.body, fontSize: 11, color: "#9CA3AF", lineHeight: 15 },
-  catDescActive: { color: "#6B7280" },
+  catLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
+  catLabelActive: { color: colors.textPrimary },
+  catDesc: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, lineHeight: 15 },
+  catDescActive: { color: colors.textSecondary },
   catCheck: { position: "absolute", top: 10, right: 10 },
 
   // Category summary
@@ -523,7 +527,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -536,7 +540,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  catSummaryLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#111827" },
+  catSummaryLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
 
   // Amount presets
   presetsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -544,36 +548,36 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
   },
   presetChipActive: { backgroundColor: "#D95D39" },
-  presetTxt: { fontFamily: fonts.bodyMedium, fontSize: 14, color: "#111827" },
+  presetTxt: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textPrimary },
   presetTxtActive: { color: "white" },
 
   amtInputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F2F0ED",
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 14,
   },
-  rupeeSign: { fontFamily: fonts.heading, fontSize: 20, color: "#6B7280", marginRight: 6 },
+  rupeeSign: { fontFamily: fonts.heading, fontSize: 20, color: colors.textSecondary, marginRight: 6 },
   amtInput: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 18,
-    color: "#111827",
+    color: colors.textPrimary,
     paddingVertical: Platform.OS === "ios" ? 14 : 10,
   },
   amtPreview: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#D95D39", marginTop: 6, textAlign: "center" },
 
   // Donor form
   formCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     overflow: "hidden",
   },
   formField: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 4 },
@@ -581,15 +585,15 @@ const s = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: "#111827",
+    color: colors.textPrimary,
     paddingVertical: Platform.OS === "ios" ? 14 : 10,
   },
-  divider: { height: 1, backgroundColor: "#E5E7EB", marginLeft: 40 },
+  divider: { height: 1, backgroundColor: colors.borderSubtle, marginLeft: 40 },
 
   // Trust badges
   trustRow: { flexDirection: "row", justifyContent: "space-around" },
   trustBadge: { flexDirection: "row", alignItems: "center", gap: 4 },
-  trustTxt: { fontFamily: fonts.body, fontSize: 11, color: "#6B7280" },
+  trustTxt: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
 
   // Buttons
   primaryBtn: {
@@ -616,7 +620,7 @@ const s = StyleSheet.create({
   disclaimer: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: "#6B7280",
+    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 17,
   },
@@ -636,22 +640,22 @@ const s = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  successTitle: { fontFamily: fonts.heading, fontSize: 26, color: "#111827", letterSpacing: 0.5 },
-  successSub: { fontFamily: fonts.body, fontSize: 15, color: "#374151", textAlign: "center", lineHeight: 22 },
-  successMeta: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#9CA3AF" },
+  successTitle: { fontFamily: fonts.heading, fontSize: 26, color: colors.textPrimary, letterSpacing: 0.5 },
+  successSub: { fontFamily: fonts.body, fontSize: 15, color: colors.textPrimary, textAlign: "center", lineHeight: 22 },
+  successMeta: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textDisabled },
 
   receiptCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  receiptTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#111827" },
-  receiptMeta: { fontFamily: fonts.body, fontSize: 12, color: "#6B7280", marginTop: 2 },
+  receiptTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  receiptMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
 
   blessingsCard: {
     backgroundColor: "#FEF3F0",

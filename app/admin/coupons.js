@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { coupons as couponsApi } from '../../lib/api';
 import { colors, fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { DateInput } from '../../components/DateInput';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -70,6 +71,8 @@ function getTypeInfo(type) {
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function AdminCouponsScreen() {
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -319,8 +322,8 @@ export default function AdminCouponsScreen() {
             <Switch
               value={item.isActive}
               onValueChange={() => handleToggleActive(item)}
-              trackColor={{ false: '#E5E7EB', true: colors.success + '60' }}
-              thumbColor={item.isActive ? colors.success : '#9CA3AF'}
+              trackColor={{ false: themeColors.borderSubtle, true: colors.success + '60' }}
+              thumbColor={item.isActive ? colors.success : themeColors.textDisabled}
               style={styles.toggleSwitch}
             />
             <Text style={[styles.activeLabel, { color: item.isActive ? colors.success : colors.textDisabled }]}>
@@ -527,8 +530,8 @@ export default function AdminCouponsScreen() {
                 <Switch
                   value={form.isActive}
                   onValueChange={v => f('isActive', v)}
-                  trackColor={{ false: '#E5E7EB', true: colors.success + '60' }}
-                  thumbColor={form.isActive ? colors.success : '#9CA3AF'}
+                  trackColor={{ false: themeColors.borderSubtle, true: colors.success + '60' }}
+                  thumbColor={form.isActive ? colors.success : themeColors.textDisabled}
                 />
               </View>
 
@@ -668,33 +671,33 @@ function StatCard({ icon, label, value, color, bg }) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
 
   // Header
   header: {
     paddingHorizontal: 20, paddingBottom: 16, paddingTop: 12,
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center', justifyContent: 'center',
   },
   title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: colors.textPrimary },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    borderWidth: 1, borderColor: colors.borderSubtle,
   },
 
   // Card
   card: {
-    backgroundColor: '#fff', borderRadius: 20,
+    backgroundColor: colors.surface, borderRadius: 20,
     padding: 14, gap: 8, overflow: 'hidden',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    borderWidth: 1, borderColor: colors.borderSubtle,
   },
   cardExpired: { opacity: 0.6 },
   expiredBadge: {
@@ -726,7 +729,7 @@ const styles = StyleSheet.create({
   usageRow: { gap: 4 },
   usageLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   progressTrack: {
-    height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden',
+    height: 4, backgroundColor: colors.borderSubtle, borderRadius: 2, overflow: 'hidden',
   },
   progressFill: { height: 4, backgroundColor: colors.primary, borderRadius: 2 },
 
@@ -759,7 +762,7 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, maxHeight: '94%',
   },
@@ -774,18 +777,18 @@ const styles = StyleSheet.create({
   // Form
   sectionHead: { marginTop: 12, marginBottom: 6 },
   sectionHeadTxt: {
-    fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF",
+    fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled,
     letterSpacing: 1.5, textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: '#F3F4F6', borderRadius: 16,
+    backgroundColor: colors.elevated, borderRadius: 16,
     paddingHorizontal: 14, paddingVertical: 12,
     fontFamily: fonts.body, fontSize: 14,
     color: colors.textPrimary, marginBottom: 10,
   },
   inputWithSuffix: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   suffixBox: {
-    backgroundColor: '#F3F4F6', borderRadius: 16,
+    backgroundColor: colors.elevated, borderRadius: 16,
     paddingHorizontal: 14, justifyContent: 'center',
   },
   suffixText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textSecondary },
@@ -793,8 +796,8 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
-    borderWidth: 1.5, borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5, borderColor: colors.borderSubtle,
+    backgroundColor: colors.elevated,
   },
   chipText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   dateField: { marginBottom: 10 },
@@ -830,7 +833,7 @@ const styles = StyleSheet.create({
   statsBarLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textPrimary },
   statsBarCount: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   statsTrack: {
-    height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden',
+    height: 8, backgroundColor: colors.borderSubtle, borderRadius: 4, overflow: 'hidden',
   },
   statsFill: { height: 8, backgroundColor: colors.primary, borderRadius: 4 },
 });

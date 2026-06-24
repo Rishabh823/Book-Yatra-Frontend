@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
-import { markOnboardingDone } from "../../lib/onboarding";
+import { markOnboardingDone, markWalletSeen } from "../../lib/onboarding";
 
 const STEP = 10;
 const TOTAL = 11;
@@ -75,13 +75,13 @@ export default function WalletScreen() {
   const [loading, setLoading] = useState(false);
 
   const finish = async () => {
-    await markOnboardingDone();
+    await Promise.all([markOnboardingDone(), markWalletSeen()]);
     router.replace("/(tabs)");
   };
 
   const handleAddMoney = async () => {
     setLoading(true);
-    await markOnboardingDone();
+    await Promise.all([markOnboardingDone(), markWalletSeen()]);
     router.replace("/wallet/add-money");
   };
 

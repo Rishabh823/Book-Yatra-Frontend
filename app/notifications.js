@@ -1,24 +1,25 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../lib/api';
-import { colors, fonts, radius, shadow } from '../lib/theme';
+import { fonts, radius, shadow } from '../lib/theme';
+import { useColors } from '../lib/ThemeContext';
 
-const TYPE_STYLES = {
+const getTypeStyles = (colors) => ({
   booking: { icon: 'calendar', bg: '#EDE9FE', color: '#7C3AED' },
   tour: { icon: 'map', bg: '#FEE8E2', color: '#D95D39' },
   payment: { icon: 'card', bg: '#DCFCE7', color: '#16A34A' },
   chat: { icon: 'chatbubble', bg: '#DBEAFE', color: '#2563EB' },
   community: { icon: 'people', bg: '#FEF3C7', color: '#D97706' },
   sos: { icon: 'alert-circle', bg: '#FEE2E2', color: '#DC2626' },
-  system: { icon: 'settings', bg: '#F3F4F6', color: '#6B7280' },
+  system: { icon: 'settings', bg: colors.elevated, color: colors.textSecondary },
   gamification: { icon: 'star', bg: '#FEF3C7', color: '#D97706' },
-};
+});
 
-const DEFAULT_TYPE = { icon: 'notifications', bg: '#F3F4F6', color: '#6B7280' };
+const getDefaultType = (colors) => ({ icon: 'notifications', bg: colors.elevated, color: colors.textSecondary });
 
 const fmtTime = (d) => {
   if (!d) return '';
@@ -35,12 +36,17 @@ const FILTERS = ['all','unread','tours','payments','system'];
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const TYPE_STYLES = useMemo(() => getTypeStyles(colors), [colors]);
+  const DEFAULT_TYPE = useMemo(() => getDefaultType(colors), [colors]);
 
   const load = useCallback(async (reset = false) => {
     if (reset) setLoading(true);
@@ -141,7 +147,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -149,7 +155,7 @@ const styles = StyleSheet.create({
   readAllBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.15)' },
   readAllText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: 'white' },
   filtersWrap: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexWrap: 'wrap' },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: '#E5E7EB' },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   filterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   filterTextActive: { color: 'white' },

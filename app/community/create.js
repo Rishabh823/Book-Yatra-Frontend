@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../../lib/api';
-import { colors, fonts } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import Toast from '../../components/Toast';
 import { useToast } from '../../lib/hooks/useToast';
 
@@ -13,12 +14,15 @@ const POST_TYPES = ['post', 'memory', 'travel_tip', 'experience'];
 export default function CreatePostScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const { toast, showToast, hideToast } = useToast();
   const [type, setType] = useState('post');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const submit = async () => {
     if (!content.trim()) { showToast('Content is required', 'error'); return; }
@@ -119,31 +123,31 @@ export default function CreatePostScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.bg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   cancelBtn: { paddingHorizontal: 4, minWidth: 60 },
   cancelText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 15,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   headerTitle: {
     flex: 1,
     fontFamily: fonts.bodyBold,
     fontSize: 17,
-    color: '#111827',
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   postBtn: {
@@ -154,7 +158,7 @@ const s = StyleSheet.create({
     minWidth: 60,
     alignItems: 'center',
   },
-  postBtnDisabled: { backgroundColor: '#E5E7EB' },
+  postBtnDisabled: { backgroundColor: colors.borderSubtle },
   postBtnTxt: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
@@ -164,13 +168,13 @@ const s = StyleSheet.create({
   label: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: '#374151',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   labelOpt: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
   },
   labelReq: {
     color: PRIMARY,
@@ -180,7 +184,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 50,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
   },
   typeChipActive: {
     backgroundColor: PRIMARY,
@@ -188,7 +192,7 @@ const s = StyleSheet.create({
   typeChipText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   typeChipTextActive: {
     color: 'white',
@@ -196,13 +200,13 @@ const s = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: '#F2F0ED',
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: '#111827',
+    color: colors.textPrimary,
   },
   contentInput: {
     minHeight: 120,

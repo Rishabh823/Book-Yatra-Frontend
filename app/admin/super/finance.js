@@ -1,17 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts } from "../../../lib/theme";
+import { fonts } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 import { settlementApi } from "../../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-function MetricCard({ label, value, icon, color, sub }) {
+function MetricCard({ label, value, icon, color, sub, s }) {
   return (
     <View style={s.metricCard}>
       <View style={[s.metricIcon, { backgroundColor: color + "20" }]}>
@@ -24,7 +25,7 @@ function MetricCard({ label, value, icon, color, sub }) {
   );
 }
 
-function OperatorRow({ item }) {
+function OperatorRow({ item, s }) {
   return (
     <View style={s.opRow}>
       <View style={s.opAvatar}>
@@ -44,9 +45,12 @@ function OperatorRow({ item }) {
 
 export default function SuperFinanceScreen() {
   const router = useRouter();
+  const colors = useColors();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = useCallback(async () => {
     try {
@@ -118,6 +122,7 @@ export default function SuperFinanceScreen() {
             icon="wallet"
             color="#7C3AED"
             sub={`${stats.totalUsers || 0} users`}
+            s={s}
           />
           <MetricCard
             label="Operator Wallet Balances"
@@ -125,6 +130,7 @@ export default function SuperFinanceScreen() {
             icon="business"
             color="#2563EB"
             sub={`${stats.totalOperators || 0} operators`}
+            s={s}
           />
           <MetricCard
             label="Pending Withdrawals"
@@ -132,12 +138,14 @@ export default function SuperFinanceScreen() {
             icon="time"
             color="#D97706"
             sub={`${pendingCount} requests`}
+            s={s}
           />
           <MetricCard
             label="Total Withdrawn"
             value={stats.totalWithdrawn}
             icon="arrow-up-circle"
             color="#16A34A"
+            s={s}
           />
         </View>
 
@@ -161,7 +169,7 @@ export default function SuperFinanceScreen() {
             <Text style={s.sectionTitle}>Top Operators by Earnings</Text>
             <View style={s.card}>
               {operators.slice(0, 8).map((op) => (
-                <OperatorRow key={op._id} item={op} />
+                <OperatorRow key={op._id} item={op} s={s} />
               ))}
             </View>
           </>
@@ -192,7 +200,7 @@ export default function SuperFinanceScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
@@ -204,21 +212,21 @@ const s = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
   badge: { position: "absolute", top: 4, right: 4, backgroundColor: colors.error, width: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   badgeTxt: { color: "#fff", fontSize: 9, fontFamily: fonts.bodyBold },
   hero: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
     gap: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   heroLabel: {
-    color: "#9CA3AF",
+    color: colors.textDisabled,
     fontFamily: fonts.bodyBold,
     fontSize: 10,
     letterSpacing: 1.5,
@@ -229,17 +237,17 @@ const s = StyleSheet.create({
   heroStat: { flex: 1, alignItems: "center", gap: 2 },
   heroStatVal: { color: colors.textPrimary, fontFamily: fonts.bodyBold, fontSize: 14 },
   heroStatLabel: { color: colors.textSecondary, fontFamily: fonts.body, fontSize: 10 },
-  heroDivider: { width: 1, height: 30, backgroundColor: "#E5E7EB" },
+  heroDivider: { width: 1, height: 30, backgroundColor: colors.borderSubtle },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   metricCard: {
     flex: 1,
     minWidth: "44%",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   metricIcon: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   metricValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
@@ -251,11 +259,11 @@ const s = StyleSheet.create({
   pendingSub: { fontFamily: fonts.body, fontSize: 12, color: "#78350F", marginTop: 2 },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 4,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   opRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   opAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },

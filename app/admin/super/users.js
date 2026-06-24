@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
   RefreshControl, TextInput, ScrollView, Image, useWindowDimensions,
@@ -6,7 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AdminShell } from '../../../lib/AdminScreen';
-import { colors, fonts, radius } from '../../../lib/theme';
+import { fonts, radius } from '../../../lib/theme';
+import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const ROLES = ['user', 'guest', 'volunteer', 'manager', 'admin', 'super_admin'];
@@ -17,6 +18,7 @@ const ROLE_COLORS = {
 
 export default function SuperUsers() {
   const router = useRouter();
+  const colors = useColors();
   const { width } = useWindowDimensions();
   const px = width >= 600 ? 20 : 12;
 
@@ -26,6 +28,8 @@ export default function SuperUsers() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch]     = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const load = async () => {
     try {
@@ -94,7 +98,7 @@ export default function SuperUsers() {
         </View>
       </TouchableOpacity>
     );
-  }, [px, router]);
+  }, [px, router, s, colors]);
 
   return (
     <AdminShell title="All Users" subtitle={`${filtered.length} of ${items.length}`}>
@@ -140,7 +144,7 @@ export default function SuperUsers() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   searchBar:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: colors.borderSubtle },
   searchInput:  { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary },
   chip:         { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle, marginRight: 6, alignSelf: 'flex-start' },
@@ -148,7 +152,7 @@ const s = StyleSheet.create({
   chipTxt:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
   chipTxtActive:{ color: colors.primary, fontFamily: fonts.bodyBold },
 
-  card:         { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  card:         { backgroundColor: colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: colors.borderSubtle },
   cardRow:      { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar:       { width: 44, height: 44, borderRadius: 22 },
   avatarFallback:{ alignItems: 'center', justifyContent: 'center' },

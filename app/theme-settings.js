@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme, ACCENT_THEMES } from '../lib/ThemeContext';
+import { useTheme, ACCENT_THEMES, useColors } from '../lib/ThemeContext';
 import { fonts } from '../lib/theme';
 import { api } from '../lib/api';
 
@@ -19,6 +19,8 @@ export default function ThemeSettings() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { theme, modePreference, accentId, setMode, setAccent, isDark } = useTheme();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
 
   const handleSetMode = async (mode) => {
     await setMode(mode);
@@ -35,7 +37,7 @@ export default function ThemeSettings() {
       {/* Flat white header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#111827" />
+          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Appearance</Text>
         <View style={{ width: 40 }} />
@@ -77,15 +79,15 @@ export default function ThemeSettings() {
                 onPress={() => handleSetMode(opt.key)}
                 activeOpacity={0.75}
               >
-                <View style={[styles.modeIcon, { backgroundColor: isActive ? '#FEF3F0' : '#F3F4F6' }]}>
+                <View style={[styles.modeIcon, { backgroundColor: isActive ? '#FEF3F0' : themeColors.elevated }]}>
                   <Ionicons
                     name={opt.icon}
                     size={20}
-                    color={isActive ? '#D95D39' : '#6B7280'}
+                    color={isActive ? '#D95D39' : themeColors.textSecondary}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.modeLabel, { color: isActive ? '#D95D39' : '#111827' }]}>
+                  <Text style={[styles.modeLabel, { color: isActive ? '#D95D39' : themeColors.textPrimary }]}>
                     {opt.label}
                   </Text>
                   <Text style={styles.modeDesc}>{opt.desc}</Text>
@@ -139,10 +141,10 @@ export default function ThemeSettings() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
   },
 
   /* Header */
@@ -151,15 +153,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -167,21 +169,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Philosopher_700Bold',
     fontSize: 18,
-    color: '#111827',
+    color: colors.textPrimary,
     marginLeft: 10,
   },
 
   /* Gray band */
   grayBand: {
     height: 10,
-    backgroundColor: '#F2F2F2',
+    backgroundColor: colors.elevated,
   },
 
   /* Preview card */
   previewCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.body,
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
     paddingBottom: 10,
   },
 
@@ -219,7 +221,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
@@ -229,9 +231,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 14,
   },
@@ -250,20 +252,20 @@ const styles = StyleSheet.create({
   modeLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 14,
-    color: '#111827',
+    color: colors.textPrimary,
   },
   modeDesc: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginTop: 1,
   },
 
   /* Accent grid */
   accentContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 14,
   },
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   accentCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -299,7 +301,7 @@ const styles = StyleSheet.create({
   accentName: {
     fontFamily: fonts.body,
     fontSize: 10,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 

@@ -11,10 +11,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState, useMemo } from "react";
-import { colors, fonts, radius, shadow } from "../lib/theme";
+import { fonts, radius, shadow } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 import { useMembers } from "../lib/hooks/useMembers";
 
-function MemberCard({ item }) {
+function MemberCard({ item, colors, s }) {
   const initials = (item.fullName || "S P")
     .split(" ")
     .slice(0, 2)
@@ -49,8 +50,11 @@ function MemberCard({ item }) {
 
 export default function Members() {
   const router = useRouter();
+  const colors = useColors();
   const { data, loading, error, refetch } = useMembers("approved");
   const [search, setSearch] = useState("");
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return data;
@@ -117,7 +121,7 @@ export default function Members() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item._id || String(Math.random())}
-          renderItem={({ item }) => <MemberCard item={item} />}
+          renderItem={({ item }) => <MemberCard item={item} colors={colors} s={s} />}
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingBottom: 40,
@@ -143,7 +147,7 @@ export default function Members() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   head: {
     flexDirection: "row",
     alignItems: "center",

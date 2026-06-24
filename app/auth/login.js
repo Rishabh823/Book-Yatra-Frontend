@@ -16,7 +16,7 @@ import { useToast } from "../../lib/hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { auth as authApi } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
@@ -82,6 +82,7 @@ const TABS = [
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function Login() {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams();
   const { t } = useLang();
   const [tab, setTab] = useState(0);
   const [emailOrMobile, setEmailOrMobile] = useState("");
@@ -120,6 +121,9 @@ export default function Login() {
         router.replace("/volunteer/onboarding");
       } else if (res?.user?.role === "volunteer") {
         router.replace("/volunteer");
+      } else if (returnTo) {
+        // Coming from onboarding — continue to next onboarding step
+        router.replace(returnTo);
       } else if (res?.user?.role === "user" && !(res?.user?.joinedOperators?.length > 0)) {
         router.replace("/select-operators");
       } else {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -33,6 +34,8 @@ export default function SOSScreen() {
   const router = useRouter();
   const { tourId } = useLocalSearchParams();
   const { toast, showToast, hideToast } = useToast();
+  const themeColors = useColors();
+  const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
   const [selectedType, setSelectedType] = useState("other");
   const [message, setMessage] = useState("");
   const [holding, setHolding] = useState(false);
@@ -104,7 +107,7 @@ export default function SOSScreen() {
       <View style={[styles.whiteHeader, { paddingTop: insets.top }]}>
         <View style={styles.whiteHeaderInner}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Emergency SOS</Text>
           <View style={{ width: 40 }} />
@@ -220,12 +223,12 @@ export default function SOSScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   // White header
   whiteHeader: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderSubtle,
   },
   whiteHeaderInner: {
     flexDirection: "row",
@@ -237,7 +240,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#F4F4F4",
+    backgroundColor: colors.elevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -246,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: "#111827",
+    color: colors.textPrimary,
   },
 
   // Dark content

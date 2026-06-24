@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   TextInput, Switch, ActivityIndicator, Alert, Image,
@@ -12,6 +12,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as WebBrowser from "expo-web-browser";
 import { Video, ResizeMode } from "expo-av";
 import { colors, fonts, radius } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 import { tours as toursApi, upload as uploadApi, api } from "../../../lib/api";
 import { DateInput } from "../../../components/DateInput";
 
@@ -66,9 +67,164 @@ const INITIAL = {
   notifications: { bookingConfirmation: true, tourReminder: true, busArrivalAlert: true, emergencyAlert: true, push: true, email: true, sms: false, whatsapp: false },
 };
 
+// ─── Style Factories ──────────────────────────────────────────────────────────
+
+const makeH = (colors) => StyleSheet.create({
+  secHead:     { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 },
+  secIconBox:  { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  secTitle:    { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
+  secSub:      { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  field:       { marginBottom: 16 },
+  label:       { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 },
+  fieldError:  { fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 },
+  input:       { backgroundColor: colors.elevated, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, minHeight: 48 },
+  inputMulti:  { minHeight: 90, paddingTop: 12 },
+  row:         { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  chipTxt:     { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
+  toggleRow:   { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle },
+  toggleIcon:  { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  toggleLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  toggleSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  addBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12, borderRadius: 20, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed", justifyContent: "center", marginVertical: 8 },
+  addBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary },
+  itemCard:    { flexDirection: "row", alignItems: "flex-start", backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.borderSubtle },
+  itemDelete:  { width: 32, height: 32, borderRadius: 16, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center", marginLeft: 8 },
+  formCard:    { backgroundColor: colors.surface, borderRadius: 24, padding: 16, marginVertical: 8, borderWidth: 1.5, borderColor: colors.primary + "40" },
+  formCardTitle:{ fontFamily: fonts.heading, fontSize: 16, color: colors.secondary, marginBottom: 14 },
+  cancelBtn:   { flex: 1, height: 44, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
+  cancelBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textSecondary },
+  saveBtn:     { flex: 2, height: 44, borderRadius: 999, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  saveBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
+  dayBadge:    { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  dayBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary, textAlign: "center" },
+  dayTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
+  daySub:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  dayDesc:     { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  timeChip:    { fontFamily: fonts.body, fontSize: 11, color: colors.primary, backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  imagePicker: { borderRadius: 20, overflow: "hidden", borderWidth: 1.5, borderColor: colors.borderSubtle, borderStyle: "dashed" },
+  imagePickerEmpty: { height: 160, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.elevated },
+  imagePickerTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textDisabled },
+  coverImg:    { width: "100%", height: 200 },
+  changeImgBtn:{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
+  changeImgTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
+  statRow:     { flexDirection: "row", gap: 12, marginBottom: 16 },
+  statBox:     { flex: 1, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 14, alignItems: "center" },
+  statVal:     { fontFamily: fonts.heading, fontSize: 24, color: colors.primary },
+  statLbl:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
+  busIcon:     { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  acBadge:     { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  acBadgeTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: "#0284C7" },
+  amenityChip: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, backgroundColor: colors.borderSubtle, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  fleetRow:       { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.borderSubtle },
+  fleetRowActive: { backgroundColor: "#F0FDF4", borderColor: "#16A34A" },
+  fleetCheckBadge:{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  fleetAddBadge:  { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  driverCard:  { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 12 },
+  driverAvatar:{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center" },
+  driverChip:  { alignItems: "center", minWidth: 80, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface, marginRight: 8 },
+  driverChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
+  driverChipTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textPrimary },
+  driverChipSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 2 },
+  emptyBox:    { alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 24, backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.borderSubtle },
+  emptyBoxTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: "center", paddingHorizontal: 24 },
+  volAvatar:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  roleBadge:   { backgroundColor: colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  roleBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
+  legendRow:   { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 12 },
+  legendItem:  { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendDot:   { width: 12, height: 12, borderRadius: 6 },
+  legendTxt:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
+  seatNote:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textAlign: "center", marginBottom: 12 },
+  seatGrid:    { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" },
+  seat:        { width: 38, height: 38, borderRadius: 12, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  seatNum:     { fontFamily: fonts.bodyBold, fontSize: 10 },
+  pricingGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
+  priceBox:    { flex: 1, minWidth: "45%", backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
+  priceBoxLabel:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
+  priceInputRow:{ flexDirection: "row", alignItems: "center", gap: 4, borderTopWidth: 1, borderColor: colors.borderSubtle, paddingTop: 8, marginTop: 4 },
+  currencySymbol:{ fontFamily: fonts.heading, fontSize: 18, color: colors.primary },
+  priceInput:  { flex: 1, fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary },
+  subSectionLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 4 },
+  facilityGrid:{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
+  facilityCard:{ width: "30%", alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: colors.surface, gap: 8 },
+  facilityCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  facilityIcon:{ width: 40, height: 40, borderRadius: 12, backgroundColor: colors.elevated, alignItems: "center", justifyContent: "center" },
+  facilityLabel:{ fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, textAlign: "center" },
+  listItem:    { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#F0FDF4", marginBottom: 8 },
+  listItemTxt: { flex: 1, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary },
+  addInlineBtn:{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginLeft: 8 },
+  docIcon:     { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  uploadMediaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  uploadMediaBtn: { width: 44, height: 48, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: colors.primary + "60" },
+  uploadHint:  { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 4 },
+  mediaPreview:{ flexDirection: "row", alignItems: "center", marginTop: 10, padding: 12, borderRadius: 20, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary + "40" },
+  mediaPreviewTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
+  mediaPreviewUrl: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+});
+
+const makeS = (colors) => StyleSheet.create({
+  safe:        { flex: 1, backgroundColor: colors.bg },
+  header:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.elevated, alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontFamily: fonts.heading, fontSize: 17, color: colors.textPrimary },
+  headerSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  draftTopBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" },
+  draftTopBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
+  progressWrap:{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
+  progressBg:  { flex: 1, height: 6, backgroundColor: colors.borderSubtle, borderRadius: 3, overflow: "hidden" },
+  progressFill:{ height: 6, backgroundColor: colors.primary, borderRadius: 3 },
+  progressTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary, minWidth: 36 },
+  pillsScroll: { maxHeight: 64 },
+  pillsContent:{ paddingHorizontal: 12, paddingVertical: 8, flexDirection: "row", gap: 6 },
+  pill:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: colors.surface },
+  pillActive:  { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  pillDone:    { borderColor: "#16A34A", backgroundColor: "#F0FDF4" },
+  pillDot:     { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
+  pillDotActive:{ backgroundColor: colors.primary },
+  pillDotDone: { backgroundColor: "#16A34A" },
+  pillDotTxt:  { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textSecondary },
+  pillTxt:     { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
+  content:     { flex: 1 },
+  contentPad:  { paddingHorizontal: 20, paddingTop: 20 },
+  footer:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.borderSubtle },
+  footerBack:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle },
+  footerBackDisabled: { borderColor: colors.borderSubtle, opacity: 0.4 },
+  footerBackTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
+  footerCenter:{ flex: 1, alignItems: "center" },
+  footerStepTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
+  footerNext:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.primary },
+  footerNextTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
+});
+
+const makeS14 = (colors) => StyleSheet.create({
+  hero:        { backgroundColor: colors.surface, borderRadius: 24, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: colors.borderSubtle },
+  heroTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, textAlign: "center" },
+  heroCode:    { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textDisabled, textAlign: "center", letterSpacing: 2, marginTop: 4, textTransform: "uppercase" },
+  heroStats:   { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 16, backgroundColor: colors.elevated, borderRadius: 20, paddingVertical: 12 },
+  heroStat:    { flex: 1, alignItems: "center" },
+  heroStatVal: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
+  heroStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
+  heroDivider: { width: 1, height: 32, backgroundColor: colors.borderSubtle },
+  section:     { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.borderSubtle },
+  sectionHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle, paddingBottom: 10 },
+  sectionTitle:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
+  row:         { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 6 },
+  rowKey:      { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, flex: 1 },
+  rowVal:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, flex: 1, textAlign: "right" },
+  actions:     { flexDirection: "row", gap: 12, marginTop: 8 },
+  draftBtn:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, borderWidth: 2, borderColor: colors.primary },
+  draftBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.primary },
+  publishBtn:  { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, backgroundColor: colors.primary },
+  publishBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
+});
+
 // ─── Helper Components ────────────────────────────────────────────────────────
 
 function SectionTitle({ icon, title, sub }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <View style={h.secHead}>
       <View style={h.secIconBox}><Ionicons name={icon} size={18} color={colors.primary} /></View>
@@ -81,6 +237,8 @@ function SectionTitle({ icon, title, sub }) {
 }
 
 function Field({ label, required, children, error }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <View style={h.field}>
       <Text style={h.label}>{label}{required && <Text style={{ color: colors.error }}> *</Text>}</Text>
@@ -91,6 +249,8 @@ function Field({ label, required, children, error }) {
 }
 
 function TInput({ value, onChangeText, placeholder, multiline, keyboardType, style, ...rest }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <TextInput
       style={[h.input, multiline && h.inputMulti, style]}
@@ -107,6 +267,8 @@ function TInput({ value, onChangeText, placeholder, multiline, keyboardType, sty
 }
 
 function Chip({ label, selected, onPress, color }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <TouchableOpacity
       style={[h.chip, selected && { backgroundColor: color || colors.primary, borderColor: color || colors.primary }]}
@@ -119,6 +281,8 @@ function Chip({ label, selected, onPress, color }) {
 }
 
 function ToggleRow({ label, sub, value, onToggle, icon }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <View style={h.toggleRow}>
       {icon && <View style={h.toggleIcon}><Ionicons name={icon} size={16} color={colors.primary} /></View>}
@@ -132,6 +296,8 @@ function ToggleRow({ label, sub, value, onToggle, icon }) {
 }
 
 function AddItemBtn({ label, onPress }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <TouchableOpacity style={h.addBtn} onPress={onPress}>
       <Ionicons name="add-circle" size={18} color={colors.primary} />
@@ -141,6 +307,8 @@ function AddItemBtn({ label, onPress }) {
 }
 
 function ItemCard({ children, onDelete }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <View style={h.itemCard}>
       <View style={{ flex: 1 }}>{children}</View>
@@ -156,6 +324,8 @@ function ItemCard({ children, onDelete }) {
 // ─── Steps ────────────────────────────────────────────────────────────────────
 
 function Step1({ data, set, errors, onPickCover, onPickVideo, onPickPdf, onOpenVideo, onOpenPdf, uploading, uploadingVideo, uploadingPdf }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <SectionTitle icon="information-circle" title="Basic Tour Information" sub="Core details visible to travelers" />
@@ -270,6 +440,8 @@ function Step1({ data, set, errors, onPickCover, onPickVideo, onPickPdf, onOpenV
 }
 
 function Step2({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [showForm, setShowForm] = useState(false);
   const [dayForm, setDayForm] = useState({ day: "", title: "", description: "", location: "", startTime: "", endTime: "" });
   const [editIdx, setEditIdx] = useState(null);
@@ -358,6 +530,8 @@ function Step2({ data, set }) {
 }
 
 function Step3({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [showPickup, setShowPickup] = useState(false);
   const [showDrop, setShowDrop] = useState(false);
   const [pointForm, setPointForm] = useState({ name: "", address: "", time: "" });
@@ -425,6 +599,8 @@ function Step3({ data, set }) {
 }
 
 function Step4({ data, set, vehicles }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [showForm, setShowForm] = useState(false);
   const [busForm, setBusForm] = useState({ busNumber: "", busType: "AC Bus", capacity: "40", isAC: true, seatLayout: "2x2", amenities: [] });
   const bf = (k, v) => setBusForm(p => ({ ...p, [k]: v }));
@@ -550,6 +726,9 @@ function Step4({ data, set, vehicles }) {
 }
 
 function Step5({ data, set, drivers }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
+
   const DriverCard = ({ driver, type }) => driver ? (
     <View style={h.driverCard}>
       <View style={h.driverAvatar}><Ionicons name="person" size={24} color={colors.primary} /></View>
@@ -621,6 +800,8 @@ function Step5({ data, set, drivers }) {
 }
 
 function Step6({ data, set, volunteerList }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [showForm, setShowForm] = useState(false);
   const [vForm, setVForm] = useState({ volunteerId: "", role: "coordinator", tasks: "" });
   const vf = (k, v) => setVForm(p => ({ ...p, [k]: v }));
@@ -692,6 +873,8 @@ function Step6({ data, set, volunteerList }) {
 }
 
 function Step7({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const layout = data.seatConfig?.layout || "2x2";
   const totalSeats = parseInt(data.totalSeats) || 40;
   const cfg = data.seatConfig || {};
@@ -708,7 +891,7 @@ function Step7({ data, set }) {
     if (cfg.womenReservedSeats?.includes(num)) return ["#DB2777", "#FDF2F8"];
     if (cfg.volunteerSeats?.includes(num)) return ["#16A34A", "#F0FDF4"];
     if (cfg.reservedSeats?.includes(num)) return ["#0284C7", "#EFF6FF"];
-    return [colors.textDisabled, "#fff"];
+    return [colors.textDisabled, colors.surface];
   };
 
   const cols = layout === "2x3" ? 5 : layout.includes("sleeper") ? 3 : 4;
@@ -764,6 +947,8 @@ function Step7({ data, set }) {
 }
 
 function Step8({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const p = data.pricing || {};
   const pp = (k, v) => set("pricing", { ...p, [k]: v });
 
@@ -805,6 +990,8 @@ function Step8({ data, set }) {
 }
 
 function Step9({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [inclText, setInclText] = useState("");
   const [exclText, setExclText] = useState("");
 
@@ -860,6 +1047,8 @@ function Step9({ data, set }) {
 }
 
 function Step10({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const [showForm, setShowForm] = useState(false);
   const [docForm, setDocForm] = useState({ docType: "aadhaar", name: "", mandatory: true });
   const df = (k, v) => setDocForm(p => ({ ...p, [k]: v }));
@@ -937,6 +1126,8 @@ function Step11({ data, set }) {
 }
 
 function Step12({ data, set }) {
+  const colors = useColors();
+  const h = useMemo(() => makeH(colors), [colors]);
   const sv = data.safety || {};
   const ss = (k, v) => set("safety", { ...sv, [k]: v });
   const [showContact, setShowContact] = useState(false);
@@ -988,11 +1179,11 @@ function Step13({ data, set }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <SectionTitle icon="notifications" title="Notification Settings" sub="Configure automated passenger notifications" />
-      <Text style={h.subSectionLabel}>Notification Types</Text>
+      <Text style={{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 4 }}>Notification Types</Text>
       {NOTIFICATION_KEYS.map(key => (
         <ToggleRow key={key} label={NOTIFICATION_LABELS[key]} value={n[key]} onToggle={v => nn(key, v)} icon="notifications-outline" />
       ))}
-      <Text style={[h.subSectionLabel, { marginTop: 20 }]}>Delivery Channels</Text>
+      <Text style={{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 20 }}>Delivery Channels</Text>
       {CHANNEL_KEYS.map(key => (
         <ToggleRow key={key} label={key.charAt(0).toUpperCase() + key.slice(1)} value={n[key]} onToggle={v => nn(key, v)} icon={CHANNEL_ICONS[key]} />
       ))}
@@ -1001,6 +1192,8 @@ function Step13({ data, set }) {
 }
 
 function Step14({ data, tourId, saving, onSaveDraft, onPublish }) {
+  const colors = useColors();
+  const s14 = useMemo(() => makeS14(colors), [colors]);
   const p = data.pricing || {};
   const adultPrice = p.adult || 0;
   const reviewSections = [
@@ -1016,7 +1209,7 @@ function Step14({ data, tourId, saving, onSaveDraft, onPublish }) {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      {/* Hero summary card — white flat */}
+      {/* Hero summary card */}
       <View style={s14.hero}>
         <Text style={s14.heroTitle}>{data.title || "Unnamed Tour"}</Text>
         {data.tourCode ? <Text style={s14.heroCode}>#{data.tourCode}</Text> : null}
@@ -1076,6 +1269,8 @@ export default function CreateTour() {
   const { id } = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const scrollRef = useRef(null);
+  const colors = useColors();
+  const s = useMemo(() => makeS(colors), [colors]);
 
   const [step, setStep] = useState(1);
   const [tour, setTour] = useState(INITIAL);
@@ -1439,157 +1634,3 @@ export default function CreateTour() {
     </SafeAreaView>
   );
 }
-
-// ─── Shared Helper Styles (h) ─────────────────────────────────────────────────
-const h = StyleSheet.create({
-  secHead:     { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 },
-  secIconBox:  { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  secTitle:    { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
-  secSub:      { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  field:       { marginBottom: 16 },
-  label:       { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 },
-  fieldError:  { fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 },
-  input:       { backgroundColor: "#F2F0ED", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, minHeight: 48 },
-  inputMulti:  { minHeight: 90, paddingTop: 12 },
-  row:         { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip:        { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff" },
-  chipTxt:     { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
-  toggleRow:   { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle },
-  toggleIcon:  { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  toggleLabel: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  toggleSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  addBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12, borderRadius: 20, borderWidth: 1.5, borderColor: colors.primary, borderStyle: "dashed", justifyContent: "center", marginVertical: 8 },
-  addBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary },
-  itemCard:    { flexDirection: "row", alignItems: "flex-start", backgroundColor: "#fff", borderRadius: 20, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#E5E7EB" },
-  itemDelete:  { width: 32, height: 32, borderRadius: 16, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center", marginLeft: 8 },
-  formCard:    { backgroundColor: "#fff", borderRadius: 24, padding: 16, marginVertical: 8, borderWidth: 1.5, borderColor: colors.primary + "40" },
-  formCardTitle:{ fontFamily: fonts.heading, fontSize: 16, color: colors.secondary, marginBottom: 14 },
-  cancelBtn:   { flex: 1, height: 44, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
-  cancelBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textSecondary },
-  saveBtn:     { flex: 2, height: 44, borderRadius: 999, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  saveBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
-  dayBadge:    { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  dayBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary, textAlign: "center" },
-  dayTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  daySub:      { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  dayDesc:     { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  timeChip:    { fontFamily: fonts.body, fontSize: 11, color: colors.primary, backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  imagePicker: { borderRadius: 20, overflow: "hidden", borderWidth: 1.5, borderColor: colors.borderSubtle, borderStyle: "dashed" },
-  imagePickerEmpty: { height: 160, alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#F2F0ED" },
-  imagePickerTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textDisabled },
-  coverImg:    { width: "100%", height: 200 },
-  changeImgBtn:{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
-  changeImgTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
-  statRow:     { flexDirection: "row", gap: 12, marginBottom: 16 },
-  statBox:     { flex: 1, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 14, alignItems: "center" },
-  statVal:     { fontFamily: fonts.heading, fontSize: 24, color: colors.primary },
-  statLbl:     { fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
-  busIcon:     { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  acBadge:     { backgroundColor: "#EFF6FF", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  acBadgeTxt:  { fontFamily: fonts.bodyBold, fontSize: 10, color: "#0284C7" },
-  amenityChip: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, backgroundColor: colors.borderSubtle, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  fleetRow:       { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#fff", borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#E5E7EB" },
-  fleetRowActive: { backgroundColor: "#F0FDF4", borderColor: "#16A34A" },
-  fleetCheckBadge:{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  fleetAddBadge:  { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  driverCard:  { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.primaryLight, borderRadius: 20, padding: 12 },
-  driverAvatar:{ width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center" },
-  driverChip:  { alignItems: "center", minWidth: 80, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff", marginRight: 8 },
-  driverChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
-  driverChipTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textPrimary },
-  driverChipSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 2 },
-  emptyBox:    { alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 24, backgroundColor: "#fff", borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB" },
-  emptyBoxTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: "center", paddingHorizontal: 24 },
-  volAvatar:   { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  roleBadge:   { backgroundColor: colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  roleBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
-  legendRow:   { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 12 },
-  legendItem:  { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendDot:   { width: 12, height: 12, borderRadius: 6 },
-  legendTxt:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
-  seatNote:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, textAlign: "center", marginBottom: 12 },
-  seatGrid:    { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "center" },
-  seat:        { width: 38, height: 38, borderRadius: 12, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
-  seatNum:     { fontFamily: fonts.bodyBold, fontSize: 10 },
-  pricingGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
-  priceBox:    { flex: 1, minWidth: "45%", backgroundColor: "#fff", borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#E5E7EB" },
-  priceBoxLabel:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
-  priceInputRow:{ flexDirection: "row", alignItems: "center", gap: 4, borderTopWidth: 1, borderColor: "#E5E7EB", paddingTop: 8, marginTop: 4 },
-  currencySymbol:{ fontFamily: fonts.heading, fontSize: 18, color: colors.primary },
-  priceInput:  { flex: 1, fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary },
-  subSectionLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, marginTop: 4 },
-  facilityGrid:{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
-  facilityCard:{ width: "30%", alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRadius: 20, borderWidth: 1.5, borderColor: colors.borderSubtle, backgroundColor: "#fff", gap: 8 },
-  facilityCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  facilityIcon:{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#F2F0ED", alignItems: "center", justifyContent: "center" },
-  facilityLabel:{ fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, textAlign: "center" },
-  listItem:    { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#F0FDF4", marginBottom: 8 },
-  listItemTxt: { flex: 1, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary },
-  addInlineBtn:{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginLeft: 8 },
-  docIcon:     { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  uploadMediaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  uploadMediaBtn: { width: 44, height: 48, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: colors.primary + "60" },
-  uploadHint:  { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 4 },
-  mediaPreview:{ flexDirection: "row", alignItems: "center", marginTop: 10, padding: 12, borderRadius: 20, backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary + "40" },
-  mediaPreviewTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.primary },
-  mediaPreviewUrl: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-});
-
-// ─── Main Wizard Styles (s) ───────────────────────────────────────────────────
-const s = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: colors.bg },
-  header:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, paddingTop: 6, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontFamily: fonts.heading, fontSize: 17, color: colors.textPrimary },
-  headerSub:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-  draftTopBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.primary + "40" },
-  draftTopBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
-  progressWrap:{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
-  progressBg:  { flex: 1, height: 6, backgroundColor: colors.borderSubtle, borderRadius: 3, overflow: "hidden" },
-  progressFill:{ height: 6, backgroundColor: colors.primary, borderRadius: 3 },
-  progressTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary, minWidth: 36 },
-  pillsScroll: { maxHeight: 64 },
-  pillsContent:{ paddingHorizontal: 12, paddingVertical: 8, flexDirection: "row", gap: 6 },
-  pill:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, backgroundColor: "#fff" },
-  pillActive:  { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  pillDone:    { borderColor: "#16A34A", backgroundColor: "#F0FDF4" },
-  pillDot:     { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.borderSubtle, alignItems: "center", justifyContent: "center" },
-  pillDotActive:{ backgroundColor: colors.primary },
-  pillDotDone: { backgroundColor: "#16A34A" },
-  pillDotTxt:  { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textSecondary },
-  pillTxt:     { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
-  content:     { flex: 1 },
-  contentPad:  { paddingHorizontal: 20, paddingTop: 20 },
-  footer:      { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#fff", borderTopWidth: 1, borderColor: "#E5E7EB" },
-  footerBack:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle },
-  footerBackDisabled: { borderColor: colors.borderSubtle, opacity: 0.4 },
-  footerBackTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
-  footerCenter:{ flex: 1, alignItems: "center" },
-  footerStepTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textSecondary },
-  footerNext:  { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.primary },
-  footerNextTxt:{ fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },
-});
-
-// ─── Step 14 Styles ───────────────────────────────────────────────────────────
-const s14 = StyleSheet.create({
-  hero:        { backgroundColor: "#fff", borderRadius: 24, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: "#E5E7EB" },
-  heroTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, textAlign: "center" },
-  heroCode:    { fontFamily: fonts.bodyBold, fontSize: 11, color: "#9CA3AF", textAlign: "center", letterSpacing: 2, marginTop: 4, textTransform: "uppercase" },
-  heroStats:   { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 16, backgroundColor: "#F2F0ED", borderRadius: 20, paddingVertical: 12 },
-  heroStat:    { flex: 1, alignItems: "center" },
-  heroStatVal: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
-  heroStatLbl: { fontFamily: fonts.bodyBold, fontSize: 9, color: "#9CA3AF", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 2 },
-  heroDivider: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
-  section:     { backgroundColor: "#fff", borderRadius: 20, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
-  sectionHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12, borderBottomWidth: 1, borderColor: colors.borderSubtle, paddingBottom: 10 },
-  sectionTitle:{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
-  row:         { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 6 },
-  rowKey:      { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, flex: 1 },
-  rowVal:      { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, flex: 1, textAlign: "right" },
-  actions:     { flexDirection: "row", gap: 12, marginTop: 8 },
-  draftBtn:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, borderWidth: 2, borderColor: colors.primary },
-  draftBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.primary },
-  publishBtn:  { flex: 2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, borderRadius: 999, backgroundColor: colors.primary },
-  publishBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
-});

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -21,9 +21,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
 import { tours as toursApi, auth as authApi, reviews as reviewsApi } from "../../lib/api";
 import { resolveImageUrl } from "../../lib/utils";
+import { useColors } from "../../lib/ThemeContext";
 import { useFavorites } from "../../lib/hooks/useFavorites";
 import { useRecentlyViewed } from "../../lib/hooks/useRecentlyViewed";
 
@@ -147,6 +148,9 @@ export default function TourDetails() {
       setReviewsLoading(false);
     });
   }, [id]);
+
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   if (loading) {
     return (
@@ -1321,19 +1325,34 @@ function GalleryModal({ visible, photos, initialIndex, onClose }) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatItem({ value, label, icon, accent }) {
+  const colors = useColors();
+  const ss = useMemo(() => StyleSheet.create({
+    statItem: { flex: 1, alignItems: "center", gap: 4 },
+    statIconWrap: {
+      width: 34, height: 34, borderRadius: 17,
+      backgroundColor: colors.primaryLight,
+      alignItems: "center", justifyContent: "center", marginBottom: 4,
+    },
+    statValue: { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
+    statLabel: { fontFamily: fonts.accent, fontSize: 9, color: colors.textSecondary, letterSpacing: 1.5, textTransform: "uppercase" },
+  }), [colors]);
   return (
-    <View style={s.statItem}>
-      <View style={s.statIconWrap}>
+    <View style={ss.statItem}>
+      <View style={ss.statIconWrap}>
         <Ionicons name={icon} size={16} color={accent || colors.secondary} />
       </View>
-      <Text style={[s.statValue, accent && { color: accent }]}>{value}</Text>
-      <Text style={s.statLabel}>{label}</Text>
+      <Text style={[ss.statValue, accent && { color: accent }]}>{value}</Text>
+      <Text style={ss.statLabel}>{label}</Text>
     </View>
   );
 }
 
 function SectionHead({ label }) {
-  return <Text style={s.sectionLabel}>{label}</Text>;
+  const colors = useColors();
+  const ss = useMemo(() => StyleSheet.create({
+    sectionLabel: { fontFamily: fonts.accent, fontSize: 11, color: colors.textSecondary, letterSpacing: 3 },
+  }), [colors]);
+  return <Text style={ss.sectionLabel}>{label}</Text>;
 }
 
 // ─── Gallery styles ───────────────────────────────────────────────────────────
@@ -1387,7 +1406,7 @@ const gl = StyleSheet.create({
 
 // ─── Main styles ──────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   center: {
     flex: 1,
     alignItems: "center",

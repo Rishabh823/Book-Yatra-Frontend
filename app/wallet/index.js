@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl,
@@ -7,7 +7,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import { walletApi } from "../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 0 })}`;
@@ -24,6 +25,8 @@ const CATEGORY_META = {
 };
 
 function TxnRow({ txn }) {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const meta = CATEGORY_META[txn.category] || CATEGORY_META.adjustment;
   const isCredit = txn.type === "credit";
   return (
@@ -43,6 +46,8 @@ function TxnRow({ txn }) {
 }
 
 function StatCard({ label, value, icon, color }) {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={s.statCard}>
       <View style={[s.statIcon, { backgroundColor: color + "18" }]}>
@@ -55,6 +60,8 @@ function StatCard({ label, value, icon, color }) {
 }
 
 export default function WalletScreen() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -167,7 +174,7 @@ export default function WalletScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 12 },
@@ -176,7 +183,7 @@ const s = StyleSheet.create({
   balanceCard: { borderRadius: radius.xxl, padding: 28, alignItems: "center", gap: 8 },
   balanceLabel: { color: "rgba(255,233,192,0.7)", fontFamily: fonts.accent, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" },
   balanceAmt: { color: "#fff", fontFamily: fonts.heading, fontSize: 42 },
-  addMoneyBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#fff", paddingHorizontal: 24, paddingVertical: 10, borderRadius: radius.pill, marginTop: 8 },
+  addMoneyBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.surface, paddingHorizontal: 24, paddingVertical: 10, borderRadius: radius.pill, marginTop: 8 },
   addMoneyTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   statCard: { flex: 1, minWidth: "44%", backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14, gap: 6, ...shadow.soft, alignItems: "flex-start" },

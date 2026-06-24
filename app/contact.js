@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { fonts } from '../lib/theme';
+import { useColors } from '../lib/ThemeContext';
 import { contacts as contactsApi } from '../lib/api';
 
 const CATEGORIES = [
@@ -20,11 +21,14 @@ const CATEGORIES = [
 
 export default function Contact() {
   const router = useRouter();
+  const colors = useColors();
   const [form, setForm] = useState({
     name: '', phone: '', email: '', subject: '', message: '', category: 'general',
   });
   const [loading, setLoading] = useState(false);
   const { toast, showToast, hideToast } = useToast();
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -46,11 +50,11 @@ export default function Contact() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="contact-back">
-            <Ionicons name="arrow-back" size={20} color="#374151" />
+            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={s.title}>Contact Us</Text>
           <View style={{ width: 40 }} />
@@ -60,9 +64,9 @@ export default function Contact() {
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }} showsVerticalScrollIndicator={false}>
           {/* Info card */}
           <View style={s.infoCard}>
-            <InfoRow icon="location" text="C-22, Pandav Nagar, New Delhi - 110092" />
-            <InfoRow icon="call" text="+91 9958985187" />
-            <InfoRow icon="mail" text="info.ssppandavnagar@gmail.com" />
+            <InfoRow icon="location" text="C-22, Pandav Nagar, New Delhi - 110092" s={s} />
+            <InfoRow icon="call" text="+91 9958985187" s={s} />
+            <InfoRow icon="mail" text="info.ssppandavnagar@gmail.com" s={s} />
           </View>
 
           {/* Category */}
@@ -93,12 +97,12 @@ export default function Contact() {
             <View key={f.k} style={s.field}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputWrap}>
-                <Ionicons name={f.icon} size={18} color="#6B7280" />
+                <Ionicons name={f.icon} size={18} color={colors.textSecondary} />
                 <TextInput
                   testID={`contact-${f.k}`}
                   style={s.input}
                   placeholder={f.label.replace(' *', '')}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textDisabled}
                   keyboardType={f.kb || 'default'}
                   value={form[f.k]}
                   onChangeText={(v) => set(f.k, v)}
@@ -113,7 +117,7 @@ export default function Contact() {
               testID="contact-message"
               style={s.textarea}
               placeholder="Write your message here..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textDisabled}
               multiline
               numberOfLines={5}
               textAlignVertical="top"
@@ -137,7 +141,7 @@ export default function Contact() {
   );
 }
 
-function InfoRow({ icon, text }) {
+function InfoRow({ icon, text, s }) {
   return (
     <View style={s.infoRow}>
       <View style={s.infoIcon}>
@@ -148,15 +152,15 @@ function InfoRow({ icon, text }) {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   iconBtn: {
     width: 40,
@@ -164,21 +168,21 @@ const s = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F4F4F4',
+    backgroundColor: colors.elevated,
   },
   title: {
     flex: 1,
     textAlign: 'center',
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: '#111827',
+    color: colors.textPrimary,
   },
-  grayBand: { height: 10, backgroundColor: '#F2F2F2' },
+  grayBand: { height: 10, backgroundColor: colors.elevated },
 
   infoCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.borderSubtle,
     borderRadius: 12,
     padding: 18,
     marginBottom: 24,
@@ -193,12 +197,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  infoText: { fontFamily: fonts.body, fontSize: 13, color: '#111827', flex: 1 },
+  infoText: { fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, flex: 1 },
 
   sectionLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginBottom: 12,
@@ -210,16 +214,16 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 50,
-    backgroundColor: '#F2F0ED',
+    backgroundColor: colors.elevated,
   },
   catChipActive: { backgroundColor: '#D95D39' },
-  catText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#111827' },
+  catText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textPrimary },
 
   field: { marginBottom: 16 },
   fieldLabel: {
     fontFamily: fonts.bodyBold,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: colors.textDisabled,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -230,18 +234,18 @@ const s = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 14,
     height: 54,
-    backgroundColor: '#F2F0ED',
+    backgroundColor: colors.elevated,
     borderRadius: 12,
   },
-  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: '#111827', height: 54 },
+  input: { flex: 1, fontFamily: fonts.body, fontSize: 14, color: colors.textPrimary, height: 54 },
   textarea: {
-    backgroundColor: '#F2F0ED',
+    backgroundColor: colors.elevated,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: '#111827',
+    color: colors.textPrimary,
     minHeight: 120,
   },
 

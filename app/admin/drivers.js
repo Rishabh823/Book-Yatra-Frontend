@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { api, upload as uploadApi } from '../../lib/api';
-import { colors, fonts } from '../../lib/theme';
+import { fonts } from '../../lib/theme';
+import { useColors } from '../../lib/ThemeContext';
 import { DateInput } from '../../components/DateInput';
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
@@ -40,6 +41,7 @@ const EMPTY_FORM = {
 export default function DriversScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,6 +53,8 @@ export default function DriversScreen() {
   const { toast, showToast, hideToast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -165,11 +169,11 @@ export default function DriversScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardRow}>
-        <View style={[styles.driverIcon, { backgroundColor: item.isAvailable ? '#DCFCE7' : '#F3F4F6' }]}>
+    <View style={s.card}>
+      <View style={s.cardRow}>
+        <View style={[s.driverIcon, { backgroundColor: item.isAvailable ? '#DCFCE7' : colors.elevated }]}>
           {item.photo ? (
-            <Image source={{ uri: item.photo }} style={styles.driverPhoto} />
+            <Image source={{ uri: item.photo }} style={s.driverPhoto} />
           ) : (
             <Ionicons
               name="person"
@@ -179,52 +183,52 @@ export default function DriversScreen() {
           )}
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.driverName}>{item.userId?.name || item.name || 'Driver'}</Text>
-          <Text style={styles.driverMeta}>License: {item.licenseNo}</Text>
-          {item.phone ? <Text style={styles.driverPhone}>{item.phone}</Text> : null}
-          {item.experience ? <Text style={styles.driverMeta}>{item.experience} yrs experience</Text> : null}
+          <Text style={s.driverName}>{item.userId?.name || item.name || 'Driver'}</Text>
+          <Text style={s.driverMeta}>License: {item.licenseNo}</Text>
+          {item.phone ? <Text style={s.driverPhone}>{item.phone}</Text> : null}
+          {item.experience ? <Text style={s.driverMeta}>{item.experience} yrs experience</Text> : null}
         </View>
-        <View style={[styles.availBadge, { backgroundColor: item.isAvailable ? '#DCFCE7' : '#FEF3C7' }]}>
-          <Text style={[styles.availText, { color: item.isAvailable ? '#16A34A' : '#D97706' }]}>
+        <View style={[s.availBadge, { backgroundColor: item.isAvailable ? '#DCFCE7' : '#FEF3C7' }]}>
+          <Text style={[s.availText, { color: item.isAvailable ? '#16A34A' : '#D97706' }]}>
             {item.isAvailable ? 'Available' : 'On Duty'}
           </Text>
         </View>
       </View>
       {(item.aadhaarFront || item.aadhaarBack) && (
-        <View style={styles.docRow}>
+        <View style={s.docRow}>
           <Ionicons name="card-outline" size={13} color="#16A34A" />
-          <Text style={styles.docText}>Aadhaar verified</Text>
+          <Text style={s.docText}>Aadhaar verified</Text>
         </View>
       )}
-      <View style={styles.cardActions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => toggleAvailability(item)}>
+      <View style={s.cardActions}>
+        <TouchableOpacity style={s.actionBtn} onPress={() => toggleAvailability(item)}>
           <Ionicons
             name={item.isAvailable ? 'pause-circle-outline' : 'play-circle-outline'}
             size={14}
             color={colors.primary}
           />
-          <Text style={styles.actionText}>{item.isAvailable ? 'Set Busy' : 'Set Available'}</Text>
+          <Text style={s.actionText}>{item.isAvailable ? 'Set Busy' : 'Set Available'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => openEdit(item)}>
+        <TouchableOpacity style={s.actionBtn} onPress={() => openEdit(item)}>
           <Ionicons name="pencil" size={14} color={colors.primary} />
-          <Text style={styles.actionText}>Edit</Text>
+          <Text style={s.actionText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
+        <TouchableOpacity style={[s.actionBtn, s.actionBtnDanger]} onPress={() => handleDelete(item)}>
           <Ionicons name="trash-outline" size={14} color={colors.error} />
-          <Text style={[styles.actionText, { color: colors.error }]}>Delete</Text>
+          <Text style={[s.actionText, { color: colors.error }]}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+    <View style={[s.container, { paddingTop: insets.top }]}>
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Drivers</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
+        <Text style={s.title}>Drivers</Text>
+        <TouchableOpacity style={s.addBtn} onPress={openAdd}>
           <Ionicons name="add" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -245,9 +249,9 @@ export default function DriversScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={styles.empty}>
+            <View style={s.empty}>
               <Ionicons name="person-outline" size={40} color={colors.textDisabled} />
-              <Text style={styles.emptyText}>No drivers added yet</Text>
+              <Text style={s.emptyText}>No drivers added yet</Text>
             </View>
           }
         />
@@ -259,54 +263,54 @@ export default function DriversScreen() {
         animationType="slide"
         onRequestClose={() => !saving && setShowModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editing ? 'Edit Driver' : 'Add Driver'}</Text>
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>{editing ? 'Edit Driver' : 'Add Driver'}</Text>
               <TouchableOpacity onPress={() => !saving && setShowModal(false)}>
-                <Text style={styles.modalClose}>Cancel</Text>
+                <Text style={s.modalClose}>Cancel</Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {/* Profile Photo */}
-              <View style={styles.photoSection}>
+              <View style={s.photoSection}>
                 <TouchableOpacity
-                  style={styles.photoWrap}
+                  style={s.photoWrap}
                   onPress={() => pickAndUpload('photo')}
                   activeOpacity={0.8}
                 >
                   {form.photo ? (
-                    <Image source={{ uri: form.photo }} style={styles.photoImg} />
+                    <Image source={{ uri: form.photo }} style={s.photoImg} />
                   ) : (
-                    <View style={styles.photoPlaceholder}>
+                    <View style={s.photoPlaceholder}>
                       <Ionicons name="person" size={36} color={colors.textDisabled} />
                     </View>
                   )}
                   {uploadingKey === 'photo' ? (
-                    <View style={styles.photoOverlay}>
+                    <View style={s.photoOverlay}>
                       <ActivityIndicator color="#fff" />
                     </View>
                   ) : (
-                    <View style={styles.photoBadge}>
+                    <View style={s.photoBadge}>
                       <Ionicons name="camera" size={14} color="#fff" />
                     </View>
                   )}
                 </TouchableOpacity>
-                <Text style={styles.photoHint}>Driver profile photo</Text>
+                <Text style={s.photoHint}>Driver profile photo</Text>
               </View>
 
               {/* Personal Info */}
-              <SectionHead label="Personal Information" />
+              <SectionHead label="Personal Information" s={s} />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.name}
                 onChangeText={v => f('name', v)}
                 placeholder="Full Name *"
                 placeholderTextColor={colors.textSecondary}
               />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.phone}
                 onChangeText={v => f('phone', v)}
                 placeholder="Phone Number *"
@@ -314,7 +318,7 @@ export default function DriversScreen() {
                 placeholderTextColor={colors.textSecondary}
               />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.address}
                 onChangeText={v => f('address', v)}
                 placeholder="Residential Address"
@@ -324,9 +328,9 @@ export default function DriversScreen() {
               />
 
               {/* License Details */}
-              <SectionHead label="License Details" />
+              <SectionHead label="License Details" s={s} />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.licenseNo}
                 onChangeText={v => f('licenseNo', v.toUpperCase())}
                 placeholder="License Number *"
@@ -338,10 +342,10 @@ export default function DriversScreen() {
                 value={form.licenseExpiry}
                 onChange={v => f('licenseExpiry', v)}
                 minDate={new Date()}
-                style={styles.dateField}
+                style={s.dateField}
               />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.experience}
                 onChangeText={v => f('experience', v)}
                 placeholder="Years of Experience"
@@ -350,9 +354,9 @@ export default function DriversScreen() {
               />
 
               {/* Aadhaar */}
-              <SectionHead label="Aadhaar Card" />
+              <SectionHead label="Aadhaar Card" s={s} />
               <TextInput
-                style={styles.input}
+                style={s.input}
                 value={form.aadhaarNo}
                 onChangeText={v => f('aadhaarNo', v.replace(/\D/g, '').slice(0, 12))}
                 placeholder="Aadhaar Number (12 digits)"
@@ -360,26 +364,30 @@ export default function DriversScreen() {
                 placeholderTextColor={colors.textSecondary}
                 maxLength={12}
               />
-              <View style={styles.aadhaarRow}>
+              <View style={s.aadhaarRow}>
                 <AadhaarUpload
                   label="Front Side"
                   uri={form.aadhaarFront}
                   uploading={uploadingKey === 'aadhaarFront'}
                   onPress={() => pickAndUpload('aadhaarFront')}
+                  s={s}
+                  colors={colors}
                 />
                 <AadhaarUpload
                   label="Back Side"
                   uri={form.aadhaarBack}
                   uploading={uploadingKey === 'aadhaarBack'}
                   onPress={() => pickAndUpload('aadhaarBack')}
+                  s={s}
+                  colors={colors}
                 />
               </View>
 
-              <TouchableOpacity style={styles.saveBtn} onPress={save} disabled={saving}>
+              <TouchableOpacity style={s.saveBtn} onPress={save} disabled={saving}>
                 {saving ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Text style={styles.saveBtnText}>
+                  <Text style={s.saveBtnText}>
                     {editing ? 'Update Driver' : 'Add Driver'}
                   </Text>
                 )}
@@ -405,39 +413,39 @@ export default function DriversScreen() {
   );
 }
 
-function SectionHead({ label }) {
+function SectionHead({ label, s }) {
   return (
-    <View style={styles.sectionHead}>
-      <Text style={styles.sectionHeadTxt}>{label}</Text>
+    <View style={s.sectionHead}>
+      <Text style={s.sectionHeadTxt}>{label}</Text>
     </View>
   );
 }
 
-function AadhaarUpload({ label, uri, uploading, onPress }) {
+function AadhaarUpload({ label, uri, uploading, onPress, s, colors }) {
   return (
-    <TouchableOpacity style={styles.aadhaarBox} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={s.aadhaarBox} onPress={onPress} activeOpacity={0.8}>
       {uri ? (
-        <Image source={{ uri }} style={styles.aadhaarImg} resizeMode="cover" />
+        <Image source={{ uri }} style={s.aadhaarImg} resizeMode="cover" />
       ) : (
-        <View style={styles.aadhaarEmpty}>
+        <View style={s.aadhaarEmpty}>
           <Ionicons name="camera-outline" size={24} color={colors.textDisabled} />
         </View>
       )}
       {uploading && (
-        <View style={styles.aadhaarOverlay}>
+        <View style={s.aadhaarOverlay}>
           <ActivityIndicator color="#fff" />
         </View>
       )}
-      <View style={styles.aadhaarLabelRow}>
+      <View style={s.aadhaarLabelRow}>
         <Ionicons name="card" size={11} color={colors.primary} />
-        <Text style={styles.aadhaarLabel}>{label}</Text>
+        <Text style={s.aadhaarLabel}>{label}</Text>
         {uri && <Ionicons name="checkmark-circle" size={13} color="#16A34A" />}
       </View>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     paddingHorizontal: 20,
@@ -446,31 +454,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.borderSubtle,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center', justifyContent: 'center',
   },
   title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: colors.textPrimary },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSubtle,
   },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   driverIcon: {
@@ -500,7 +508,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, maxHeight: '92%',
   },
@@ -516,7 +524,7 @@ const styles = StyleSheet.create({
   photoImg: { width: 88, height: 88, borderRadius: 44, borderWidth: 2.5, borderColor: colors.primary },
   photoPlaceholder: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: '#F3F4F6', borderWidth: 2, borderColor: '#E5E7EB',
+    backgroundColor: colors.elevated, borderWidth: 2, borderColor: colors.borderSubtle,
     alignItems: 'center', justifyContent: 'center',
   },
   photoOverlay: {
@@ -529,19 +537,19 @@ const styles = StyleSheet.create({
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: colors.primary,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#fff',
+    borderWidth: 2, borderColor: colors.surface,
   },
   photoHint: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   driverPhoto: { width: 44, height: 44, borderRadius: 22 },
 
   sectionHead: { marginTop: 12, marginBottom: 8 },
   sectionHeadTxt: {
-    fontFamily: fonts.bodyBold, fontSize: 10, color: "#9CA3AF",
+    fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled,
     letterSpacing: 1.5, textTransform: 'uppercase',
   },
 
   input: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
     borderRadius: 16,
     paddingHorizontal: 14, paddingVertical: 12,
     fontFamily: fonts.body, fontSize: 14,
@@ -552,13 +560,13 @@ const styles = StyleSheet.create({
   aadhaarRow: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   aadhaarBox: {
     flex: 1, borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: '#E5E7EB',
-    borderStyle: 'dashed', backgroundColor: '#F9FAFB',
+    borderWidth: 1.5, borderColor: colors.borderSubtle,
+    borderStyle: 'dashed', backgroundColor: colors.elevated,
   },
   aadhaarImg: { width: '100%', height: 100 },
   aadhaarEmpty: {
     height: 100, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.elevated,
   },
   aadhaarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -568,7 +576,7 @@ const styles = StyleSheet.create({
   aadhaarLabelRow: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 6,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
   },
   aadhaarLabel: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textPrimary },
 
