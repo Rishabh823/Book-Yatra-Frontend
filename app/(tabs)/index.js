@@ -2359,7 +2359,7 @@ const makeStyles = (colors) =>
       backgroundColor: colors.elevated,
     },
     tourCardExternal: {
-      borderWidth: 2,
+      // borderWidth: 2,
       // borderColor: "#0284C7",
     },
     tourImg: {

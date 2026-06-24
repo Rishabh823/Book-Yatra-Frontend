@@ -36,11 +36,15 @@ import {
   addNotificationListener,
   addResponseListener,
 } from "../lib/notifications";
+import { useNotificationPolling } from "../lib/useNotificationPolling";
 import { useRouter } from "expo-router";
 
 function AppNavigator() {
   const router = useRouter();
   const { theme, isDark } = useTheme();
+
+  // Polls /notifications every 30s and shows local banners for unread items
+  useNotificationPolling();
 
   useEffect(() => {
     registerPushToken().catch(() => {});

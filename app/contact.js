@@ -59,7 +59,7 @@ export default function Contact() {
           <Text style={s.title}>Contact Us</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={s.grayBand} />
+        {/* <View style={s.grayBand} /> */}
 
         <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }} showsVerticalScrollIndicator={false}>
           {/* Info card */}

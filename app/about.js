@@ -151,7 +151,7 @@ export default function About() {
         </View>
 
         {/* Gray band after hero */}
-        <View style={s.grayBand} />
+        {/* <View style={s.grayBand} /> */}
 
         {/* Stats strip */}
         <View style={s.section}>

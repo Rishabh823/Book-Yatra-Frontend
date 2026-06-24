@@ -149,7 +149,7 @@ export default function SecurityCenter() {
       </View>
 
       {/* Gray band */}
-      <View style={styles.grayBand} />
+      {/* <View style={styles.grayBand} /> */}
 
       <ScrollView
         contentContainerStyle={{

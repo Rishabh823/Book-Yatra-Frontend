@@ -187,7 +187,7 @@ export default function SelectOperators() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Flat header — no card */}
       <View style={s.topHeader}>
-        <Text style={s.om}>ॐ</Text>
+        <Ionicons name="people" size={28} color={colors.primary} style={{ marginBottom: 4 }} />
         <Text style={s.topTitle}>Choose your operators</Text>
         <Text style={s.topSub}>
           Select the tour operators you want to follow
@@ -379,7 +379,7 @@ const makeStyles = (colors) =>
     },
     cardSelected: {
       borderColor: PRIMARY,
-      backgroundColor: "#FEF3F0",
+      backgroundColor: "rgba(217,93,57,0.15)",
       borderWidth: 1.5,
     },
     avatar: {

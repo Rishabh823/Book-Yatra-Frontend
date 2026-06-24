@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from "react-native";
+import { auth as authApi } from "../../lib/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -73,6 +74,12 @@ function StepBar({ step, total }) {
 export default function WalletScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    authApi.isAuthenticated().then(ok => {
+      if (!ok) router.replace('/(tabs)');
+    }).catch(() => router.replace('/(tabs)'));
+  }, []);
 
   const finish = async () => {
     await Promise.all([markOnboardingDone(), markWalletSeen()]);

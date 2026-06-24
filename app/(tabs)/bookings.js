@@ -341,7 +341,7 @@ export default function Bookings() {
       )}
 
       {/* ── Gray band separator ─────────────────────────────────────────────── */}
-      <View style={s.grayBand} />
+      {/* <View style={s.grayBand} /> */}
 
       {loading ? (
         <View style={{ padding: 16, gap: 14 }}>
@@ -443,7 +443,11 @@ function BookingCard({ item, router, isVolunteer }) {
         {/* Header row: icon + title/id + status */}
         <View style={s.cardHeader}>
           <View style={[s.busIcon, { backgroundColor: colors.elevated }]}>
-            <Ionicons name="bus-outline" size={20} color={colors.textSecondary} />
+            <Ionicons
+              name="bus-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={s.cardTitle} numberOfLines={1}>
@@ -497,12 +501,20 @@ function BookingCard({ item, router, isVolunteer }) {
             <View style={{ flexDirection: "row", gap: 8 }}>
               {date ? (
                 <View style={s.infoChip}>
-                  <Ionicons name="calendar-outline" size={11} color={colors.textSecondary} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={11}
+                    color={colors.textSecondary}
+                  />
                   <Text style={s.infoChipTxt}>{date}</Text>
                 </View>
               ) : null}
               <View style={s.infoChip}>
-                <Ionicons name="people-outline" size={11} color={colors.textSecondary} />
+                <Ionicons
+                  name="people-outline"
+                  size={11}
+                  color={colors.textSecondary}
+                />
                 <Text style={s.infoChipTxt}>
                   {seats} seat{seats > 1 ? "s" : ""}
                 </Text>
@@ -648,7 +660,7 @@ const makeStyles = (colors) =>
     gateTitle: {
       fontFamily: fonts.heading,
       fontSize: 22,
-      color: "#5C1615",
+      color: colors.textPrimary,
       textAlign: "center",
       marginTop: 8,
     },
@@ -743,7 +755,11 @@ const makeStyles = (colors) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    cardTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary }, // primary label
+    cardTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    }, // primary label
     cardSubTitle: {
       fontFamily: fonts.body,
       fontSize: 13,
@@ -784,7 +800,11 @@ const makeStyles = (colors) =>
       letterSpacing: 1.5,
       marginBottom: 2,
     }, // small badge level
-    routeCity: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary }, // primary label
+    routeCity: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    }, // primary label
 
     footerRow: {
       flexDirection: "row",
@@ -800,7 +820,11 @@ const makeStyles = (colors) =>
       paddingVertical: 4,
       borderRadius: 20,
     },
-    infoChipTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary }, // meta level
+    infoChipTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.textSecondary,
+    }, // meta level
     amountTxt: {
       fontFamily: fonts.bodyBold,
       fontSize: 22,

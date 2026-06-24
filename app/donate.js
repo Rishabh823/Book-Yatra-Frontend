@@ -254,7 +254,7 @@ export default function DonatePage() {
         </View>
 
         {/* Gray band */}
-        <View style={s.grayBand} />
+        {/* <View style={s.grayBand} /> */}
 
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32, gap: 12 }}>
           <Text style={s.sectionLabel}>SELECT CAUSE</Text>
@@ -319,7 +319,7 @@ export default function DonatePage() {
       </View>
 
       {/* Gray band */}
-      <View style={s.grayBand} />
+      {/* <View style={s.grayBand} /> */}
 
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -507,7 +507,7 @@ const makeStyles = (colors) => StyleSheet.create({
   catCardActive: {
     borderColor: "#D95D39",
     borderWidth: 1.5,
-    backgroundColor: "#FEF3F0",
+    backgroundColor: "rgba(217,93,57,0.15)",
   },
   catIconBox: {
     width: 44,
@@ -517,7 +517,7 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: "center",
   },
   catLabel: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
-  catLabelActive: { color: colors.textPrimary },
+  catLabelActive: { color: "#D95D39" },
   catDesc: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, lineHeight: 15 },
   catDescActive: { color: colors.textSecondary },
   catCheck: { position: "absolute", top: 10, right: 10 },

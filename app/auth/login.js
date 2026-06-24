@@ -20,6 +20,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { auth as authApi } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
+import { registerPushToken } from "../../lib/notifications";
 
 const { width: W } = Dimensions.get("window");
 
@@ -117,6 +118,7 @@ export default function Login() {
       } else {
         res = await authApi.login(emailOrMobile.trim(), password);
       }
+      registerPushToken().catch(() => {});
       if (res?.user?.role === "volunteer" && res?.user?.isFirstLogin !== false) {
         router.replace("/volunteer/onboarding");
       } else if (res?.user?.role === "volunteer") {

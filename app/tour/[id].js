@@ -1041,7 +1041,7 @@ export default function TourDetails() {
               {tour.price || (priceNum ? `₹${priceNum}` : "Free")}
             </Text>
           </View>
-          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
             <TouchableOpacity
               style={s.whatsappCta}
               onPress={shareWhatsApp}
@@ -1055,7 +1055,7 @@ export default function TourDetails() {
                 testID="book-external-btn"
               >
                 <Ionicons name="open-outline" size={18} color="#fff" />
-                <Text style={s.bookCtaTxt}>Book on {tour.externalSource || 'Website'}</Text>
+                <Text style={s.bookCtaTxt} numberOfLines={1} adjustsFontSizeToFit>Book on {tour.externalSource || 'Website'}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#fff" />
               </TouchableOpacity>
             ) : soldOut ? (
@@ -2285,6 +2285,7 @@ const makeStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 10,
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
@@ -2312,16 +2313,18 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textSecondary,
   },
   bookCta: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    paddingHorizontal: 24,
+    paddingHorizontal: 14,
     paddingVertical: 14,
     backgroundColor: colors.primary,
     borderRadius: radius.pill,
     ...shadow.card,
   },
-  bookCtaTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14 },
+  bookCtaTxt: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 14, flexShrink: 1 },
   whatsappCta: {
     width: 48,
     height: 48,

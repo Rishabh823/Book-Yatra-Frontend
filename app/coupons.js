@@ -76,16 +76,24 @@ export default function CouponsScreen() {
       {/* Flat white header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={themeColors.textPrimary}
+          />
         </TouchableOpacity>
         <Text style={styles.title}>Offers & Coupons</Text>
         <View style={styles.headerRight}>
-          <Ionicons name="search-outline" size={20} color={themeColors.textSecondary} />
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={themeColors.textSecondary}
+          />
         </View>
       </View>
 
       {/* Gray band */}
-      <View style={styles.grayBand} />
+      {/* <View style={styles.grayBand} /> */}
 
       <ScrollView
         contentContainerStyle={{
@@ -162,7 +170,9 @@ export default function CouponsScreen() {
                   activeOpacity={0.8}
                 >
                   {/* Left colored bar */}
-                  <View style={[styles.couponBar, { backgroundColor: barColor }]} />
+                  <View
+                    style={[styles.couponBar, { backgroundColor: barColor }]}
+                  />
 
                   {/* Card body */}
                   <View style={styles.couponBody}>
@@ -227,220 +237,226 @@ export default function CouponsScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </View>
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
 
-  /* Header */
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    flex: 1,
-    fontFamily: "Philosopher_700Bold",
-    fontSize: 18,
-    color: colors.textPrimary,
-    marginLeft: 10,
-  },
-  headerRight: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    /* Header */
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    title: {
+      flex: 1,
+      fontFamily: "Philosopher_700Bold",
+      fontSize: 18,
+      color: colors.textPrimary,
+      marginLeft: 10,
+    },
+    headerRight: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-  /* Gray band */
-  grayBand: {
-    height: 10,
-    backgroundColor: colors.elevated,
-  },
+    /* Gray band */
+    grayBand: {
+      height: 10,
+      backgroundColor: colors.elevated,
+    },
 
-  /* Checker card */
-  checkerCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  checkerTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.textPrimary,
-  },
-  inputRow: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
-  },
-  codeInput: {
-    flex: 1,
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 14,
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-    letterSpacing: 1,
-  },
-  applyBtn: {
-    backgroundColor: "#D95D39",
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  applyBtnDisabled: {
-    backgroundColor: colors.borderSubtle,
-  },
-  applyText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: "white",
-  },
-  resultCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderRadius: 12,
-    padding: 12,
-  },
-  resultText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 14,
-    flex: 1,
-  },
+    /* Checker card */
+    checkerCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 16,
+      gap: 12,
+    },
+    checkerTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
+    inputRow: {
+      flexDirection: "row",
+      gap: 10,
+      alignItems: "center",
+    },
+    codeInput: {
+      flex: 1,
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      height: 52,
+      paddingHorizontal: 14,
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+      letterSpacing: 1,
+    },
+    applyBtn: {
+      backgroundColor: "#D95D39",
+      borderRadius: 12,
+      height: 52,
+      paddingHorizontal: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    applyBtnDisabled: {
+      backgroundColor: colors.borderSubtle,
+    },
+    applyText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: "white",
+    },
+    resultCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      borderRadius: 12,
+      padding: 12,
+    },
+    resultText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 14,
+      flex: 1,
+    },
 
-  /* Section label */
-  sectionLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.textPrimary,
-  },
+    /* Section label */
+    sectionLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
 
-  /* Coupon cards */
-  couponCard: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  couponBar: {
-    width: 4,
-    backgroundColor: "#D95D39",
-    borderRadius: 2,
-  },
-  couponBody: {
-    flex: 1,
-    padding: 14,
-    gap: 6,
-  },
-  couponTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  codeBadge: {
-    backgroundColor: "#FEF3F0",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  codeText: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: "#D95D39",
-    letterSpacing: 1,
-  },
-  copyBtn: {
-    borderWidth: 1,
-    borderColor: "#D95D39",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  copyText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: "#D95D39",
-  },
-  couponValue: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 20,
-    color: "#D95D39",
-  },
-  couponBottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  couponMin: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  couponExpiry: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
+    /* Coupon cards */
+    couponCard: {
+      flexDirection: "row",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      overflow: "hidden",
+    },
+    couponBar: {
+      width: 4,
+      backgroundColor: "#D95D39",
+      borderRadius: 2,
+    },
+    couponBody: {
+      flex: 1,
+      padding: 14,
+      gap: 6,
+    },
+    couponTopRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    codeBadge: {
+      backgroundColor: "#FEF3F0",
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    codeText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      color: "#D95D39",
+      letterSpacing: 1,
+    },
+    copyBtn: {
+      borderWidth: 1,
+      borderColor: "#D95D39",
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    copyText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: "#D95D39",
+    },
+    couponValue: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 20,
+      color: "#D95D39",
+    },
+    couponBottomRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    couponMin: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
+    couponExpiry: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
 
-  /* Earn card */
-  earnCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  earnIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "#FEF3F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  earnTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  earnSub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-});
+    /* Earn card */
+    earnCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+    },
+    earnIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: "#FEF3F0",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    earnTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    earnSub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+  });

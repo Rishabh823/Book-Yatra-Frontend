@@ -14,7 +14,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markSecurityDone } from "../../lib/onboarding";
 
-const STEP = 8;
+const STEP = 7;
 const TOTAL = 11;
 
 function StepBar({ step, total }) {

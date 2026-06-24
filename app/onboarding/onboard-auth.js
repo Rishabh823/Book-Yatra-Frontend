@@ -11,7 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 
-const STEP = 6;
+const STEP = 9;
 const TOTAL = 11;
 
 function StepBar({ step, total }) {
@@ -49,7 +49,7 @@ export default function OnboardAuthScreen() {
       label: "Continue with Google",
       color: "#4285F4",
       bg: "#EBF3FE",
-      onPress: () => router.push("/onboarding/personalization"),
+      onPress: () => router.push("/onboarding/wallet"),
     },
     {
       icon: "call-outline",
@@ -57,7 +57,7 @@ export default function OnboardAuthScreen() {
       color: colors.primary,
       bg: colors.primaryLight,
       onPress: () =>
-        router.push("/auth/login?returnTo=/onboarding/personalization"),
+        router.push("/auth/login?returnTo=/onboarding/wallet"),
     },
     {
       icon: "mail-outline",
@@ -65,7 +65,14 @@ export default function OnboardAuthScreen() {
       color: "#374151",
       bg: "#F3F4F6",
       onPress: () =>
-        router.push("/auth/login?returnTo=/onboarding/personalization"),
+        router.push("/auth/login?returnTo=/onboarding/wallet"),
+    },
+    {
+      icon: "person-add-outline",
+      label: "Create Account",
+      color: "#16A34A",
+      bg: "#F0FDF4",
+      onPress: () => router.push("/auth/register?returnTo=/onboarding/wallet"),
     },
   ];
 
@@ -122,7 +129,7 @@ export default function OnboardAuthScreen() {
       <TouchableOpacity
         style={s.signupRow}
         onPress={() =>
-          router.push("/auth/register?returnTo=/onboarding/personalization")
+          router.push("/auth/register?returnTo=/onboarding/wallet")
         }
       >
         <Text style={s.signupTxt}>
@@ -134,7 +141,7 @@ export default function OnboardAuthScreen() {
       <View style={s.bottom}>
         <TouchableOpacity
           style={s.guestBtn}
-          onPress={() => router.push("/onboarding/personalization")}
+          onPress={() => router.replace("/(tabs)")}
           activeOpacity={0.8}
         >
           <Ionicons

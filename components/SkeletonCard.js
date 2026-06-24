@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { Animated, View, StyleSheet } from "react-native";
-import { colors, radius } from "../lib/theme";
+import { radius } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 
 function Shimmer({ style }) {
+  const colors = useColors();
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -35,6 +37,8 @@ function Shimmer({ style }) {
 }
 
 export function TourCardSkeleton() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={s.card}>
       <Shimmer style={s.img} />
@@ -51,6 +55,8 @@ export function TourCardSkeleton() {
 }
 
 export function BookingCardSkeleton() {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={s.bookCard}>
       <View style={{ flexDirection: "row", gap: 12 }}>
@@ -70,6 +76,8 @@ export function BookingCardSkeleton() {
 }
 
 export function StatSkeleton({ count = 3 }) {
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16 }}>
       {Array.from({ length: count }).map((_, i) => (
@@ -79,42 +87,44 @@ export function StatSkeleton({ count = 3 }) {
   );
 }
 
-const s = StyleSheet.create({
-  card: {
-    borderRadius: radius.xxl,
-    overflow: "hidden",
-    backgroundColor: colors.surface,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  img: { height: 190, width: "100%", borderRadius: 0 },
-  info: { padding: 14, gap: 8 },
-  line1: { height: 16, borderRadius: radius.sm, width: "70%" },
-  line2: { height: 12, borderRadius: radius.sm, width: "45%" },
-  line3: { height: 12, borderRadius: radius.sm, width: "55%" },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  price: { height: 22, width: 80, borderRadius: radius.sm },
-  btn: { height: 36, width: 100, borderRadius: radius.pill },
-  bookCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  bookIcon: { width: 48, height: 48, borderRadius: radius.lg },
-  badge: { width: 70, height: 26, borderRadius: radius.pill },
-  miniBtn: { flex: 1, height: 38, borderRadius: radius.lg },
-  statPill: { flex: 1, height: 60, borderRadius: radius.xl },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: radius.xxl,
+      overflow: "hidden",
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    img: { height: 190, width: "100%", borderRadius: 0 },
+    info: { padding: 14, gap: 8 },
+    line1: { height: 16, borderRadius: radius.sm, width: "70%" },
+    line2: { height: 12, borderRadius: radius.sm, width: "45%" },
+    line3: { height: 12, borderRadius: radius.sm, width: "55%" },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: 4,
+    },
+    price: { height: 22, width: 80, borderRadius: radius.sm },
+    btn: { height: 36, width: 100, borderRadius: radius.pill },
+    bookCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      padding: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    bookIcon: { width: 48, height: 48, borderRadius: radius.lg },
+    badge: { width: 70, height: 26, borderRadius: radius.pill },
+    miniBtn: { flex: 1, height: 38, borderRadius: radius.lg },
+    statPill: { flex: 1, height: 60, borderRadius: radius.xl },
+  });
+}

@@ -1140,7 +1140,7 @@ const makeStyles = (colors) =>
       overflow: "hidden",
       height: 130,
       backgroundColor: colors.surface,
-      borderWidth: 1.5,
+      // borderWidth: 1.5,
       // borderColor: "#BFDBFE",
       shadowColor: "#0284C7",
       shadowOffset: { width: 0, height: 2 },

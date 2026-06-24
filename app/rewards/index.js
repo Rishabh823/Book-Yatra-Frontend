@@ -99,12 +99,23 @@ export default function RewardsScreen() {
 
   const handleRedeem = async () => {
     const pts = parseInt(redeemPoints);
-    if (!pts || pts < 100) { showToast("Minimum 100 points to redeem", "error"); return; }
-    if (pts > (loyalty?.points || 0)) { showToast("Insufficient points", "error"); return; }
+    if (!pts || pts < 100) {
+      showToast("Minimum 100 points to redeem", "error");
+      return;
+    }
+    if (pts > (loyalty?.points || 0)) {
+      showToast("Insufficient points", "error");
+      return;
+    }
     setRedeeming(true);
     try {
       const res = await api.post("/gamification/redeem", { points: pts });
-      showToast("Discount of ₹" + res.data.discountAmount + " available on next booking.", "success");
+      showToast(
+        "Discount of ₹" +
+          res.data.discountAmount +
+          " available on next booking.",
+        "success",
+      );
       setRedeemPoints("");
       load();
     } catch {
@@ -157,12 +168,16 @@ export default function RewardsScreen() {
           onPress={() => router.push("/rewards/leaderboard")}
           style={styles.leaderBtn}
         >
-          <Ionicons name="trophy-outline" size={20} color={colors.textPrimary} />
+          <Ionicons
+            name="trophy-outline"
+            size={20}
+            color={colors.textPrimary}
+          />
         </TouchableOpacity>
       </View>
 
       {/* Gray band */}
-      <View style={styles.grayBand} />
+      {/* <View style={styles.grayBand} /> */}
 
       <ScrollView
         refreshControl={
@@ -231,10 +246,7 @@ export default function RewardsScreen() {
 
         {/* Daily reward */}
         <TouchableOpacity
-          style={[
-            styles.dailyCard,
-            !canClaimDaily && styles.dailyCardClaimed,
-          ]}
+          style={[styles.dailyCard, !canClaimDaily && styles.dailyCardClaimed]}
           onPress={canClaimDaily ? claimDaily : undefined}
           disabled={!canClaimDaily || claimingDaily}
         >
@@ -350,245 +362,272 @@ export default function RewardsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </View>
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg },
+    center: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bg,
+    },
 
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    flex: 1,
-    fontFamily: "Philosopher_700Bold",
-    fontSize: 18,
-    color: colors.textPrimary,
-    marginLeft: 10,
-  },
-  leaderBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    // Header
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    title: {
+      flex: 1,
+      fontFamily: "Philosopher_700Bold",
+      fontSize: 18,
+      color: colors.textPrimary,
+      marginLeft: 10,
+    },
+    leaderBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-  // Gray band
-  grayBand: { height: 10, backgroundColor: colors.elevated },
+    // Gray band
+    grayBand: { height: 10, backgroundColor: colors.elevated },
 
-  // Tier card
-  tierCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-  },
-  tierRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  tierIcon: { fontSize: 36 },
-  tierName: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
-  tierProgress: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  pointsDisplay: { alignItems: "flex-end" },
-  pointsValue: { fontFamily: fonts.heading, fontSize: 28, color: "#D95D39" },
-  pointsLabel: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textDisabled,
-  },
-  progressBg: {
-    height: 6,
-    backgroundColor: colors.elevated,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: { height: "100%", backgroundColor: "#D95D39", borderRadius: 4 },
-  statsDividerRow: { flexDirection: "row", justifyContent: "space-around", alignItems: "center" },
-  stat: { alignItems: "center", flex: 1 },
-  statDivider: { width: 1, height: 32, backgroundColor: colors.borderSubtle },
-  statVal: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
-  statLbl: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textDisabled,
-    marginTop: 2,
-  },
+    // Tier card
+    tierCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 16,
+      padding: 16,
+      gap: 12,
+    },
+    tierRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+    tierIcon: { fontSize: 36 },
+    tierName: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    tierProgress: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    pointsDisplay: { alignItems: "flex-end" },
+    pointsValue: { fontFamily: fonts.heading, fontSize: 28, color: "#D95D39" },
+    pointsLabel: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textDisabled,
+    },
+    progressBg: {
+      height: 6,
+      backgroundColor: colors.elevated,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: "#D95D39",
+      borderRadius: 4,
+    },
+    statsDividerRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
+    },
+    stat: { alignItems: "center", flex: 1 },
+    statDivider: { width: 1, height: 32, backgroundColor: colors.borderSubtle },
+    statVal: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    statLbl: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textDisabled,
+      marginTop: 2,
+    },
 
-  // Daily reward
-  dailyCard: {
-    backgroundColor: "#FEF3F0",
-    borderWidth: 1,
-    borderColor: "#FECAB7",
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  dailyCardClaimed: {
-    backgroundColor: colors.surface,
-    borderColor: colors.borderSubtle,
-    opacity: 0.7,
-  },
-  dailyIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dailyTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  dailySub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  claimBtn: {
-    backgroundColor: "#D95D39",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  claimBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
+    // Daily reward
+    dailyCard: {
+      backgroundColor: "#FEF3F0",
+      borderWidth: 1,
+      borderColor: "#FECAB7",
+      borderRadius: 12,
+      padding: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+    },
+    dailyCardClaimed: {
+      backgroundColor: colors.surface,
+      borderColor: colors.borderSubtle,
+      opacity: 0.7,
+    },
+    dailyIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dailyTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    dailySub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    claimBtn: {
+      backgroundColor: "#D95D39",
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    claimBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
 
-  // Section cards
-  section: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  sectionTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  seeAll: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#D95D39" },
+    // Section cards
+    section: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 16,
+      gap: 12,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    sectionTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    seeAll: { fontFamily: fonts.bodyMedium, fontSize: 13, color: "#D95D39" },
 
-  // Badges
-  badgesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  badgeItem: {
-    width: "30%",
-    alignItems: "center",
-    gap: 4,
-    padding: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    backgroundColor: colors.surface,
-  },
-  badgeItemLocked: { opacity: 0.5 },
-  badgeName: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 10,
-    color: colors.textPrimary,
-    textAlign: "center",
-  },
+    // Badges
+    badgesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    badgeItem: {
+      width: "30%",
+      alignItems: "center",
+      gap: 4,
+      padding: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.surface,
+    },
+    badgeItemLocked: { opacity: 0.5 },
+    badgeName: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 10,
+      color: colors.textPrimary,
+      textAlign: "center",
+    },
 
-  // Redeem
-  redeemInfo: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  redeemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  redeemInput: {
-    flex: 1,
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 14,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  redeemValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#16A34A" },
-  redeemBtn: {
-    backgroundColor: "#D95D39",
-    borderRadius: 12,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  redeemBtnDisabled: { backgroundColor: colors.borderSubtle },
-  redeemBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "white" },
+    // Redeem
+    redeemInfo: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    redeemRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    redeemInput: {
+      flex: 1,
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      height: 52,
+      paddingHorizontal: 14,
+      fontFamily: fonts.body,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    redeemValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#16A34A" },
+    redeemBtn: {
+      backgroundColor: "#D95D39",
+      borderRadius: 12,
+      height: 52,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    redeemBtnDisabled: { backgroundColor: colors.borderSubtle },
+    redeemBtnText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "white" },
 
-  // Referral
-  referralCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  referralIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "#FEF3F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  referralTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  referralSub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  shareBtn: {
-    backgroundColor: "#D95D39",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  shareBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
-});
+    // Referral
+    referralCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+    },
+    referralIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: "#FEF3F0",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    referralTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    referralSub: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    shareBtn: {
+      backgroundColor: "#D95D39",
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    shareBtnText: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
+  });

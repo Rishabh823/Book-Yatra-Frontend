@@ -142,7 +142,11 @@ export default function DocumentVaultScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={themeColors.textPrimary}
+          />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Document Vault</Text>
@@ -158,7 +162,7 @@ export default function DocumentVaultScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grayBand} />
+      {/* <View style={styles.grayBand} /> */}
 
       {loading ? (
         <ActivityIndicator color="#D95D39" style={{ marginTop: 40 }} />
@@ -207,11 +211,20 @@ export default function DocumentVaultScreen() {
           }
         />
       )}
-      <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
       <ConfirmModal
         visible={!!pendingDeleteDoc}
         title="Delete Document"
-        message={'Delete "' + (pendingDeleteDoc?.title || "") + '"? This cannot be undone.'}
+        message={
+          'Delete "' +
+          (pendingDeleteDoc?.title || "") +
+          '"? This cannot be undone.'
+        }
         confirmText="Delete"
         onConfirm={handleDeleteConfirmed}
         onCancel={() => setPendingDeleteDoc(null)}
@@ -222,126 +235,131 @@ export default function DocumentVaultScreen() {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-    gap: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontFamily: "Philosopher_700Bold",
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  subtitle: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  grayBand: {
-    height: 10,
-    backgroundColor: colors.elevated,
-  },
-  docCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 14,
-  },
-  docIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  docHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
-  docTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "#DCFCE7",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  verifiedText: { fontFamily: fonts.bodyBold, fontSize: 10, color: "#16A34A" },
-  docType: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    textTransform: "capitalize",
-  },
-  docExpiry: { fontFamily: fonts.bodyMedium, fontSize: 11 },
-  deleteBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#FEE2E2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  empty: { alignItems: "center", paddingVertical: 60, gap: 12 },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
-  emptySub: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-    paddingHorizontal: 32,
-  },
-  addDocBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#D95D39",
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 24,
-  },
-  addDocText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.surface },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+      gap: 12,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    title: {
+      fontFamily: "Philosopher_700Bold",
+      fontSize: 20,
+      color: colors.textPrimary,
+    },
+    subtitle: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    addBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    grayBand: {
+      height: 10,
+      backgroundColor: colors.elevated,
+    },
+    docCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 14,
+    },
+    docIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    docHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
+    docTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+      flex: 1,
+    },
+    verifiedBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      backgroundColor: "#DCFCE7",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 999,
+    },
+    verifiedText: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 10,
+      color: "#16A34A",
+    },
+    docType: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+      textTransform: "capitalize",
+    },
+    docExpiry: { fontFamily: fonts.bodyMedium, fontSize: 11 },
+    deleteBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: "#FEE2E2",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    empty: { alignItems: "center", paddingVertical: 60, gap: 12 },
+    emptyIcon: {
+      width: 80,
+      height: 80,
+      borderRadius: 24,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 18,
+      color: colors.textPrimary,
+    },
+    emptySub: {
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      paddingHorizontal: 32,
+    },
+    addDocBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "#D95D39",
+      borderRadius: 12,
+      height: 52,
+      paddingHorizontal: 24,
+    },
+    addDocText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
+  });

@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { savePreferences } from "../../lib/onboarding";
 
-const STEP = 7;
+const STEP = 6;
 const TOTAL = 11;
 
 const INTERESTS = [

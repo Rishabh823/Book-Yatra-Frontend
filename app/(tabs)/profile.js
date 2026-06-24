@@ -606,9 +606,9 @@ export default function Profile() {
               color={isDark ? "#fff" : "#1A1A1A"}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={s.langBtn} onPress={toggleLang}>
+          {/* <TouchableOpacity style={s.langBtn} onPress={toggleLang}>
             <Text style={s.langBtnTxt}>{lang}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         <View style={s.gateBody}>
           <View
@@ -624,7 +624,9 @@ export default function Profile() {
           >
             <Ionicons name="person-outline" size={36} color={PRIMARY} />
           </View>
-          <Text style={[s.name, { marginTop: 16 }]}>Sign in to TripKart</Text>
+          <Text style={[s.name, { marginTop: 16, color: colors.textPrimary }]}>
+            Sign in to TripKart
+          </Text>
           <Text style={s.gateSub}>
             Sign in to manage bookings, track tours, and access your seva
             history.
@@ -665,9 +667,9 @@ export default function Profile() {
               color={isDark ? "#fff" : "#1A1A1A"}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={s.langBtn} onPress={toggleLang}>
+          {/* <TouchableOpacity style={s.langBtn} onPress={toggleLang}>
             <Text style={s.langBtnTxt}>{lang}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {loading ? (
@@ -701,7 +703,7 @@ export default function Profile() {
             </TouchableOpacity>
 
             {/* ── Name ────────────────────────────────────────────────────── */}
-            <Text style={[s.name, isDark && { color: "#fff" }]}>
+            <Text style={[s.name, { color: colors.textPrimary }]}>
               {user?.name || "—"}
             </Text>
 
@@ -784,11 +786,11 @@ export default function Profile() {
                   {SUPER_ADMIN_GRID.map((m, i) => (
                     <TouchableOpacity
                       key={i}
-                      style={[s.iconCard, { width: gridCardW }]}
+                      style={[s.iconCard, { width: gridCardW }, isDark && { backgroundColor: colors.elevated, borderColor: colors.borderSubtle }]}
                       onPress={() => handleAction(m.action)}
                       activeOpacity={0.8}
                     >
-                      <View style={[s.iconCircle, { backgroundColor: m.bg }]}>
+                      <View style={[s.iconCircle, { backgroundColor: isDark ? colors.surface : m.bg }]}>
                         <Ionicons name={m.icon} size={22} color={m.color} />
                       </View>
                       <Text
@@ -830,11 +832,11 @@ export default function Profile() {
                   {ADMIN_GRID.map((m, i) => (
                     <TouchableOpacity
                       key={i}
-                      style={[s.iconCard, { width: gridCardW }]}
+                      style={[s.iconCard, { width: gridCardW }, isDark && { backgroundColor: colors.elevated, borderColor: colors.borderSubtle }]}
                       onPress={() => handleAction(m.action)}
                       activeOpacity={0.8}
                     >
-                      <View style={[s.iconCircle, { backgroundColor: m.bg }]}>
+                      <View style={[s.iconCircle, { backgroundColor: isDark ? colors.surface : m.bg }]}>
                         <Ionicons name={m.icon} size={22} color={m.color} />
                       </View>
                       <Text
@@ -968,7 +970,6 @@ export default function Profile() {
         onCancel={() => setShowLogoutConfirm(false)}
         onDismiss={() => setShowLogoutConfirm(false)}
       />
-
     </SafeAreaView>
   );
 }
@@ -1081,7 +1082,7 @@ const s = StyleSheet.create({
   // ── Name / role / email ──────────────────────────────────────────────────
   name: {
     fontFamily: fonts.heading,
-    fontSize: 22, // page-heading level, same as countBadgeNum
+    fontSize: 22,
     color: "#111827",
     textAlign: "center",
     marginBottom: 6,

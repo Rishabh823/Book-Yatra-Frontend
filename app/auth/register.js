@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, fonts, radius, shadow } from '../../lib/theme';
 import { auth as authApi } from '../../lib/api';
+import { registerPushToken } from '../../lib/notifications';
 
 // ─── Step indicators ─────────────────────────────────────────────────────────
 const STEP_LABELS_REG = ['Email', 'Verify', 'Profile'];
@@ -150,6 +151,7 @@ export default function Register() {
         ? await authApi.loginManager(payload.email, payload.password)
         : await authApi.login(payload.email, payload.password);
       showToast('Welcome to TripKart!', 'success');
+      registerPushToken().catch(() => {});
 
       // Small delay so toast is visible, then navigate
       setTimeout(() => {

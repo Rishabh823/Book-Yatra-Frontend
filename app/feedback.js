@@ -95,7 +95,10 @@ export default function Feedback() {
   // ── Auth gate ──────────────────────────────────────────────────────────────
   if (authChecked && !authed) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: colors.bg }}
+        edges={["top"]}
+      >
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
             <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
@@ -103,7 +106,7 @@ export default function Feedback() {
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={s.grayBand} />
+        {/* <View style={s.grayBand} /> */}
         <View style={s.gateWrap}>
           <View style={s.gateCard}>
             <View style={s.gateIcon}>
@@ -132,7 +135,10 @@ export default function Feedback() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      edges={["top"]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -148,10 +154,14 @@ export default function Feedback() {
           <Text style={s.title}>Share Feedback</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={s.grayBand} />
+        {/* <View style={s.grayBand} /> */}
 
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, paddingTop: 24 }}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingBottom: 40,
+            paddingTop: 24,
+          }}
           showsVerticalScrollIndicator={false}
         >
           {/* Rating */}
@@ -224,7 +234,11 @@ export default function Feedback() {
             <View key={f.k} style={s.field}>
               <Text style={s.fieldLabel}>{f.label}</Text>
               <View style={s.inputWrap}>
-                <Ionicons name={f.icon} size={18} color={colors.textSecondary} />
+                <Ionicons
+                  name={f.icon}
+                  size={18}
+                  color={colors.textSecondary}
+                />
                 <TextInput
                   testID={`fb-${f.k}`}
                   style={s.input}
@@ -282,164 +296,165 @@ export default function Feedback() {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  head: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.elevated,
-  },
-  title: {
-    flex: 1,
-    textAlign: "center",
-    fontFamily: fonts.heading,
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  grayBand: { height: 10, backgroundColor: colors.elevated },
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    head: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+    },
+    iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.elevated,
+    },
+    title: {
+      flex: 1,
+      textAlign: "center",
+      fontFamily: fonts.heading,
+      fontSize: 20,
+      color: colors.textPrimary,
+    },
+    grayBand: { height: 10, backgroundColor: colors.elevated },
 
-  // ── Auth gate ──────────────────────────────────
-  gateWrap: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  gateCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 28,
-    alignItems: "center",
-    width: "100%",
-  },
-  gateIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: "#FEE8E2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  gateTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 20,
-    color: colors.textPrimary,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  gateSub: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: 21,
-    marginBottom: 28,
-  },
-  gateBtn: {
-    height: 52,
-    paddingHorizontal: 40,
-    backgroundColor: "#D95D39",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gateBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
-  gateLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#D95D39" },
+    // ── Auth gate ──────────────────────────────────
+    gateWrap: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    gateCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 28,
+      alignItems: "center",
+      width: "100%",
+    },
+    gateIcon: {
+      width: 80,
+      height: 80,
+      borderRadius: 24,
+      backgroundColor: "#FEE8E2",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 20,
+    },
+    gateTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 20,
+      color: colors.textPrimary,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    gateSub: {
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 21,
+      marginBottom: 28,
+    },
+    gateBtn: {
+      height: 52,
+      paddingHorizontal: 40,
+      backgroundColor: "#D95D39",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    gateBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#fff" },
+    gateLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#D95D39" },
 
-  // ── Form ──────────────────────────────────────
-  sectionLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 11,
-    color: colors.textDisabled,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 14,
-  },
-  stars: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 4,
-    justifyContent: "center",
-  },
-  catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 50,
-    backgroundColor: colors.elevated,
-  },
-  catChipActive: {
-    backgroundColor: "#D95D39",
-  },
-  catText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: colors.textPrimary,
-  },
+    // ── Form ──────────────────────────────────────
+    sectionLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 11,
+      color: colors.textDisabled,
+      letterSpacing: 1.5,
+      textTransform: "uppercase",
+      marginBottom: 14,
+    },
+    stars: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 4,
+      justifyContent: "center",
+    },
+    catChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 50,
+      backgroundColor: colors.elevated,
+    },
+    catChipActive: {
+      backgroundColor: "#D95D39",
+    },
+    catText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 12,
+      color: colors.textPrimary,
+    },
 
-  field: { marginBottom: 16 },
-  fieldLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  inputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    height: 56,
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    height: 56,
-  },
-  textarea: {
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textPrimary,
-    minHeight: 120,
-  },
+    field: { marginBottom: 16 },
+    fieldLabel: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+      color: colors.textPrimary,
+      marginBottom: 8,
+    },
+    inputWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingHorizontal: 14,
+      height: 56,
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+    },
+    input: {
+      flex: 1,
+      fontFamily: fonts.body,
+      fontSize: 15,
+      color: colors.textPrimary,
+      height: 56,
+    },
+    textarea: {
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textPrimary,
+      minHeight: 120,
+    },
 
-  cta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: "#D95D39",
-    marginTop: 8,
-  },
-  ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 15 },
-  note: {
-    textAlign: "center",
-    marginTop: 20,
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-});
+    cta: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      height: 52,
+      borderRadius: 12,
+      backgroundColor: "#D95D39",
+      marginTop: 8,
+    },
+    ctaText: { color: "#fff", fontFamily: fonts.bodyBold, fontSize: 15 },
+    note: {
+      textAlign: "center",
+      marginTop: 20,
+      fontFamily: fonts.body,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+  });
