@@ -13,6 +13,7 @@
     "eas:submit:ios": "npx eas-cli submit -p ios --latest --profile production"
   },
   "dependencies": {
+    "@react-native-voice/voice": "^3.2.4",
     "@expo-google-fonts/cinzel": "^0.4.2",
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo-google-fonts/philosopher": "^0.4.1",

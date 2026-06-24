@@ -124,8 +124,8 @@ const getUserMenu = (t) => [
   },
   {
     icon: "shield-checkmark-outline",
-    label: "Security",
-    sub: "PIN, biometrics, MFA & more",
+    label: "Account & Security",
+    sub: "Password, PIN, biometrics & more",
     action: "security",
     color: "#5C1615",
     bg: "#FEF2F2",
@@ -476,13 +476,12 @@ export default function Profile() {
   const colors = theme;
   const { width } = useWindowDimensions();
   const gridCols = width >= 500 ? 4 : 3;
-  const gridCardW = (width - 32 - 10 * (gridCols - 1)) / gridCols;
+  const gridCardW = (width - 40 - 10 * (gridCols - 1)) / gridCols;
 
   const [user, setUser] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const load = useCallback(async () => {
     const ok = await authApi.isAuthenticated();
@@ -921,17 +920,6 @@ export default function Profile() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Delete account */}
-                {!isGuest && (
-                  <TouchableOpacity
-                    style={s.deleteBtn}
-                    onPress={() => setShowDeleteConfirm(true)}
-                  >
-                    <Ionicons name="trash-outline" size={14} color="#DC2626" />
-                    <Text style={s.deleteTxt}>Delete My Account</Text>
-                  </TouchableOpacity>
-                )}
-
                 {isGuest && (
                   <View style={s.guestNote}>
                     <Ionicons
@@ -981,28 +969,6 @@ export default function Profile() {
         onDismiss={() => setShowLogoutConfirm(false)}
       />
 
-      <ConfirmModal
-        visible={showDeleteConfirm}
-        icon="trash-outline"
-        title="Delete Account?"
-        message="This will permanently delete your account and all data. This cannot be undone."
-        confirmText="Delete Permanently"
-        cancelText="Cancel"
-        destructive
-        onConfirm={async () => {
-          setShowDeleteConfirm(false);
-          try {
-            await authApi.deleteAccount();
-          } catch {}
-          await authApi.logout();
-          DeviceEventEmitter.emit("userPhotoChanged", null);
-          setAuthed(false);
-          setUser(null);
-          router.replace("/auth/login");
-        }}
-        onCancel={() => setShowDeleteConfirm(false)}
-        onDismiss={() => setShowDeleteConfirm(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -1201,7 +1167,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     borderRadius: 12,
     backgroundColor: "#FAFAFA",
     borderWidth: 1,

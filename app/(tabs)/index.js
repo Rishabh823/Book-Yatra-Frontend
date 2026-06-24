@@ -39,6 +39,7 @@ import { useTheme, useColors } from "../../lib/ThemeContext";
 import SearchModal from "../../components/SearchModal";
 
 const { width } = Dimensions.get("window");
+const BANNER_W = width - 32; // matches banner marginHorizontal: 16
 const BANNERS = [
   "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
   "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
@@ -300,6 +301,7 @@ export default function Home() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const scrollRef = useRef(null);
   const toursYRef = useRef(0);
+  const bannerRef = useRef(null);
 
   const TOUR_TYPES = [
     "All",
@@ -641,10 +643,13 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const i = setInterval(
-      () => setSlide((s) => (s + 1) % BANNERS.length),
-      4500,
-    );
+    const i = setInterval(() => {
+      setSlide((s) => {
+        const next = (s + 1) % BANNERS.length;
+        bannerRef.current?.scrollTo({ x: next * BANNER_W, animated: true });
+        return next;
+      });
+    }, 4500);
     return () => clearInterval(i);
   }, []);
 
@@ -765,13 +770,9 @@ export default function Home() {
   const renderOfferCard = (item, idx) => {
     const gradient = OFFER_GRADIENTS[idx % OFFER_GRADIENTS.length];
     const discountPct = item.discountPercent || 0;
-    const originalPrice =
-      item.originalPrice || item.pricePerPerson || item.price || 0;
-    const discountedPrice =
-      item.discountedPrice ||
-      (discountPct > 0
-        ? Math.round(originalPrice * (1 - discountPct / 100))
-        : null);
+    const originalPrice = item.originalPrice || item.pricePerPerson || item.price || 0;
+    const discountedPrice = item.discountedPrice || (discountPct > 0 ? Math.round(originalPrice * (1 - discountPct / 100)) : null);
+    const hasImage = !!item.coverPhotoUrl;
 
     return (
       <TouchableOpacity
@@ -780,80 +781,68 @@ export default function Home() {
         style={styles.offerCard}
         onPress={() => router.push(`/tour/${item._id || item.id}`)}
       >
+        {/* Background image */}
+        {hasImage && (
+          <Image
+            source={{ uri: item.coverPhotoUrl }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+          />
+        )}
+        {/* Gradient overlay */}
         <LinearGradient
-          colors={gradient}
+          colors={hasImage ? ["rgba(0,0,0,0.1)", "rgba(0,0,0,0.82)"] : gradient}
           style={StyleSheet.absoluteFillObject}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
         />
 
-        {/* Discount badge */}
-        {discountPct > 0 && (
-          <View style={styles.offerDiscountBadge}>
-            <Text style={styles.offerDiscountText}>{discountPct}% OFF</Text>
-          </View>
-        )}
-
-        <View style={styles.offerCardContent}>
-          <Text style={styles.offerTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          {(item.source || item.destination) && (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                marginTop: 4,
-              }}
-            >
-              <Ionicons
-                name="location-outline"
-                size={11}
-                color="rgba(255,255,255,0.8)"
-              />
-              <Text style={styles.offerRoute} numberOfLines={1}>
-                {item.source || ""}
-                {item.source && item.destination ? " → " : ""}
-                {item.destination || ""}
-              </Text>
+        {/* Top row: source + discount badges */}
+        <View style={styles.offerTopRow}>
+          {item.isExternal && item.externalSource ? (
+            <View style={styles.offerSourceBadge}>
+              <Ionicons name="globe-outline" size={9} color="#fff" />
+              <Text style={styles.offerSourceTxt} numberOfLines={1}>{item.externalSource}</Text>
+            </View>
+          ) : <View />}
+          {discountPct > 0 && (
+            <View style={styles.offerDiscountBadge}>
+              <Text style={styles.offerDiscountText}>{discountPct}% OFF</Text>
             </View>
           )}
-          {(item.startDate || item.endDate) && (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                marginTop: 4,
-              }}
-            >
-              <Ionicons
-                name="calendar-outline"
-                size={11}
-                color="rgba(255,255,255,0.8)"
-              />
-              <Text style={styles.offerDate} numberOfLines={1}>
-                {formatDate(item.startDate, item.endDate)}
+        </View>
+
+        {/* Bottom content */}
+        <View style={styles.offerCardContent}>
+          <Text style={styles.offerTitle} numberOfLines={2}>{item.title}</Text>
+          {(item.source || item.destination) && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 }}>
+              <Ionicons name="location-outline" size={10} color="rgba(255,255,255,0.75)" />
+              <Text style={styles.offerRoute} numberOfLines={1}>
+                {[item.source, item.destination].filter(Boolean).join(" → ")}
               </Text>
             </View>
           )}
           <View style={styles.offerPriceRow}>
-            {discountedPrice ? (
-              <>
-                <Text style={styles.offerOriginalPrice}>₹{originalPrice}</Text>
-                <Text style={styles.offerFinalPrice}>₹{discountedPrice}</Text>
-              </>
-            ) : (
-              <Text style={styles.offerFinalPrice}>{formatPrice(item)}</Text>
-            )}
+            <View>
+              {discountedPrice ? (
+                <>
+                  <Text style={styles.offerOriginalPrice}>₹{originalPrice}</Text>
+                  <Text style={styles.offerFinalPrice}>₹{discountedPrice}</Text>
+                </>
+              ) : (
+                <Text style={styles.offerFinalPrice}>{formatPrice(item)}</Text>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.offerBookBtn}
+              onPress={() => router.push(`/tour/${item._id || item.id}`)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.offerBookBtnText}>Book Now</Text>
+              <Ionicons name="arrow-forward" size={11} color="#fff" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.offerBookBtn}
-            onPress={() => router.push(`/tour/${item._id || item.id}`)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.offerBookBtnText}>Book Now</Text>
-            <Ionicons name="arrow-forward" size={13} color="#fff" />
-          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
@@ -1056,24 +1045,32 @@ export default function Home() {
 
         {/* Hero Banner */}
         <Animated.View style={[styles.banner, { opacity: fade }]}>
-          {BANNERS.map((b, i) => (
-            <Image
-              key={i}
-              source={{ uri: b }}
-              resizeMode="cover"
-              style={[
-                StyleSheet.absoluteFillObject,
-                { width: "100%", height: "100%", opacity: i === slide ? 1 : 0 },
-              ]}
-            />
-          ))}
-          <LinearGradient
-            colors={[
-              "rgba(0,0,0,0.08)",
-              "rgba(0,0,0,0.25)",
-              "rgba(0,0,0,0.75)",
-            ]}
+          {/* Swipable image track */}
+          <ScrollView
+            ref={bannerRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={(e) => {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / BANNER_W);
+              if (idx !== slide) setSlide(idx);
+            }}
             style={StyleSheet.absoluteFillObject}
+          >
+            {BANNERS.map((b, i) => (
+              <Image
+                key={i}
+                source={{ uri: b }}
+                resizeMode="cover"
+                style={{ width: BANNER_W, height: 320 }}
+              />
+            ))}
+          </ScrollView>
+          <LinearGradient
+            colors={["rgba(0,0,0,0.08)", "rgba(0,0,0,0.25)", "rgba(0,0,0,0.75)"]}
+            style={StyleSheet.absoluteFillObject}
+            pointerEvents="none"
           />
           <View style={styles.bannerContent}>
             <Text style={styles.bannerAccent}>{t.monthlyYatra}</Text>
@@ -1656,6 +1653,9 @@ export default function Home() {
                       horizontal
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={{ paddingRight: 24 }}
+                      snapToInterval={width * 0.72 + 16}
+                      decelerationRate="fast"
+                      snapToAlignment="start"
                     >
                       {visibleTours.map((tour, i) => (
                         <TouchableOpacity
@@ -2103,7 +2103,7 @@ const makeStyles = (colors) =>
       overflow: "hidden",
       backgroundColor: "#111827",
     },
-    bannerContent: { flex: 1, padding: 24, justifyContent: "flex-end" },
+    bannerContent: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, padding: 24, justifyContent: "flex-end" },
     bannerAccent: {
       color: "#FFE9C0",
       fontFamily: fonts.bodyMedium,
@@ -2514,83 +2514,100 @@ const makeStyles = (colors) =>
 
     // ── Special Offer cards ───────────────────────────────────────────────────
     offerCard: {
-      width: 260,
+      width: 230,
+      height: 175,
       marginRight: 14,
-      borderRadius: 24,
+      borderRadius: 20,
       overflow: "hidden",
+      justifyContent: "space-between",
+    },
+    offerTopRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      padding: 12,
+    },
+    offerSourceBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 999,
+    },
+    offerSourceTxt: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 9,
+      color: "#fff",
+      maxWidth: 90,
     },
     offerDiscountBadge: {
-      position: "absolute",
-      top: 14,
-      right: 14,
-      backgroundColor: "rgba(0,0,0,0.45)",
-      paddingHorizontal: 10,
-      paddingVertical: 5,
+      backgroundColor: "#EF4444",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
       borderRadius: 999,
-      zIndex: 2,
     },
     offerDiscountText: {
       fontFamily: fonts.bodyBold,
-      fontSize: 12,
+      fontSize: 10,
       color: "#fff",
       letterSpacing: 0.3,
     },
     offerCardContent: {
-      padding: 18,
-      paddingTop: 52,
-      paddingBottom: 18,
+      padding: 13,
+      paddingTop: 0,
     },
     offerTitle: {
       color: "#fff",
-      fontFamily: fonts.heading,
-      fontSize: 17,
-      lineHeight: 22,
+      fontFamily: fonts.bodyBold,
+      fontSize: 14,
+      lineHeight: 19,
     },
     offerRoute: {
-      color: "rgba(255,255,255,0.8)",
+      color: "rgba(255,255,255,0.72)",
       fontFamily: fonts.body,
-      fontSize: 11,
+      fontSize: 10,
       flex: 1,
     },
     offerDate: {
-      color: "rgba(255,255,255,0.75)",
+      color: "rgba(255,255,255,0.72)",
       fontFamily: fonts.body,
-      fontSize: 11,
+      fontSize: 10,
       flex: 1,
     },
     offerPriceRow: {
       flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      marginTop: 10,
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      marginTop: 8,
     },
     offerOriginalPrice: {
-      color: "rgba(255,255,255,0.6)",
+      color: "rgba(255,255,255,0.55)",
       fontFamily: fonts.bodyMedium,
-      fontSize: 13,
+      fontSize: 10,
       textDecorationLine: "line-through",
     },
     offerFinalPrice: {
       color: "#fff",
       fontFamily: fonts.bodyBold,
-      fontSize: 18,
+      fontSize: 17,
     },
     offerBookBtn: {
-      marginTop: 14,
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      backgroundColor: "rgba(255,255,255,0.22)",
+      gap: 4,
+      backgroundColor: "rgba(255,255,255,0.2)",
       borderRadius: 999,
-      paddingVertical: 10,
+      paddingVertical: 7,
+      paddingHorizontal: 12,
       borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.4)",
+      borderColor: "rgba(255,255,255,0.38)",
     },
     offerBookBtnText: {
       color: "#fff",
       fontFamily: fonts.bodyBold,
-      fontSize: 13,
+      fontSize: 11,
     },
 
     whyGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 16 },

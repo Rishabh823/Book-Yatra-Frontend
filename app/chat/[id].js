@@ -18,6 +18,7 @@ export default function ChatScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const flatRef = useRef(null);
+  const inputRef = useRef(null);
   const intervalRef = useRef(null);
 
   const loadMessages = useCallback(async (p = 1, append = false) => {
@@ -44,13 +45,25 @@ export default function ChatScreen() {
   const sendMessage = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
+
+    // Optimistic update — show message immediately, clear input
+    const tempId = 'temp_' + Date.now();
+    const tempMsg = { _id: tempId, text: trimmed, type: 'text', chatId, createdAt: new Date().toISOString(), _pending: true };
     setText('');
+    inputRef.current?.clear();
     setSending(true);
+    setMessages(prev => [...prev, tempMsg]);
+    setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 50);
+
     try {
       const res = await api.post('/chat/message', { chatId, text: trimmed, type: 'text' });
-      setMessages(prev => [...prev, res.data]);
-      setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
-    } catch { setText(trimmed); }
+      // Replace temp message with real one from server
+      setMessages(prev => prev.map(m => m._id === tempId ? (res.data || m) : m));
+    } catch {
+      // Remove optimistic message and restore text on failure
+      setMessages(prev => prev.filter(m => m._id !== tempId));
+      setText(trimmed);
+    }
     setSending(false);
   }, [text, chatId, sending]);
 
@@ -91,6 +104,7 @@ export default function ChatScreen() {
       />
       <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           value={text}
           onChangeText={setText}

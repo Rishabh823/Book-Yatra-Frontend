@@ -20,12 +20,9 @@ export default function EditProfile() {
   const router = useRouter();
   const colors = useColors();
   const [profile, setProfile] = useState({ name: '', email: '', mobile: '', photoUrl: '' });
-  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [loadingPw, setLoadingPw] = useState(false);
   const [loadingPhoto, setLoadingPhoto] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [showPw, setShowPw] = useState({ current: false, new: false, confirm: false });
 
   useEffect(() => {
     authApi.getProfile()
@@ -43,7 +40,6 @@ export default function EditProfile() {
   }, []);
 
   const { toast, showToast, hideToast } = useToast();
-  const setPw = (k, v) => setPwForm((f) => ({ ...f, [k]: v }));
   const setP = (k, v) => setProfile((f) => ({ ...f, [k]: v }));
 
   const pickPhoto = async () => {
@@ -90,22 +86,6 @@ export default function EditProfile() {
       showToast(e.message || 'Could not update profile.');
     } finally {
       setLoadingProfile(false);
-    }
-  };
-
-  const changePassword = async () => {
-    if (!pwForm.currentPassword || !pwForm.newPassword) { showToast('Current and new password are required.'); return; }
-    if (pwForm.newPassword !== pwForm.confirm) { showToast('New password and confirm password do not match.'); return; }
-    if (pwForm.newPassword.length < 6) { showToast('Password must be at least 6 characters.'); return; }
-    setLoadingPw(true);
-    try {
-      await authApi.changePassword(pwForm.currentPassword, pwForm.newPassword);
-      showToast('Password updated successfully.', 'success');
-      setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
-    } catch (e) {
-      showToast(e.message || 'Could not change password.');
-    } finally {
-      setLoadingPw(false);
     }
   };
 
@@ -187,46 +167,6 @@ export default function EditProfile() {
               <>
                 <Ionicons name="checkmark" size={18} color="#fff" />
                 <Text style={s.saveBtnTxt}>Save profile</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={s.divider} />
-
-          {/* Change Password */}
-          <Text style={s.sectionLabel}>CHANGE PASSWORD</Text>
-
-          {[
-            { k: 'currentPassword', label: 'Current password', showK: 'current' },
-            { k: 'newPassword', label: 'New password', showK: 'new' },
-            { k: 'confirm', label: 'Confirm new password', showK: 'confirm' },
-          ].map((f) => (
-            <View key={f.k} style={s.fieldWrap}>
-              <Text style={s.fieldLabel}>{f.label}</Text>
-              <View style={s.inputRow}>
-                <Ionicons name="lock-closed-outline" size={18} color={colors.textDisabled} />
-                <TextInput
-                  testID={`ep-${f.k}`}
-                  style={s.input}
-                  placeholder={f.label.charAt(0).toUpperCase() + f.label.slice(1)}
-                  placeholderTextColor="#C0C0C0"
-                  secureTextEntry={!showPw[f.showK]}
-                  value={pwForm[f.k]}
-                  onChangeText={(v) => setPw(f.k, v)}
-                />
-                <TouchableOpacity onPress={() => setShowPw((p) => ({ ...p, [f.showK]: !p[f.showK] }))} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name={showPw[f.showK] ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textDisabled} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-
-          <TouchableOpacity style={s.saveBtnOutlined} onPress={changePassword} disabled={loadingPw} testID="change-pw-btn">
-            {loadingPw ? <ActivityIndicator color={colors.textPrimary} /> : (
-              <>
-                <Ionicons name="lock-closed" size={16} color={colors.textPrimary} />
-                <Text style={s.saveBtnOutlinedTxt}>Change password</Text>
               </>
             )}
           </TouchableOpacity>

@@ -1138,6 +1138,7 @@ const makeStyles = (colors) =>
       flexDirection: "row",
       borderRadius: 12,
       overflow: "hidden",
+      height: 130,
       backgroundColor: colors.surface,
       borderWidth: 1.5,
       // borderColor: "#BFDBFE",
@@ -1148,7 +1149,7 @@ const makeStyles = (colors) =>
       elevation: 2,
     },
     extImgWrap: { width: 110, position: "relative" },
-    extImg: { width: 110, height: "100%" },
+    extImg: { width: 110, height: 130 },
     extInfo: { flex: 1, padding: 12, gap: 4 },
     extSourceBadge: {
       flexDirection: "row",

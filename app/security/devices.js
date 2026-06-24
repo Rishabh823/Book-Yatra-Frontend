@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   RefreshControl,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { securityApi } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -37,6 +37,8 @@ export default function DevicesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,19 +91,19 @@ export default function DevicesScreen() {
   }, [pendingRemove, showToast]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <LinearGradient
-        colors={["#1E0A0A", "#5C1615"]}
-        style={[styles.hero, { paddingTop: insets.top + 12 }]}
-      >
-        <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="white" />
+    <View style={s.container}>
+      <View style={[s.header, { paddingTop: insets.top }]}>
+        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.heroTitle}>Trusted Devices</Text>
-        <Text style={styles.heroSub}>
-          {devices.length} device{devices.length !== 1 ? "s" : ""} registered
-        </Text>
-      </LinearGradient>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={s.headerTitle}>Trusted Devices</Text>
+          <Text style={s.headerSub}>
+            {devices.length} device{devices.length !== 1 ? 's' : ''} registered
+          </Text>
+        </View>
+        <View style={{ width: 40 }} />
+      </View>
 
       <ScrollView
         contentContainerStyle={{
@@ -122,26 +124,26 @@ export default function DevicesScreen() {
           />
         }
       >
-        {loading && <Text style={styles.emptyText}>Loading devices…</Text>}
+        {loading && <Text style={s.emptyText}>Loading devices…</Text>}
         {!loading && devices.length === 0 && (
-          <View style={styles.emptyState}>
+          <View style={s.emptyState}>
             <Ionicons
               name="phone-portrait-outline"
               size={40}
               color={colors.textDisabled}
             />
-            <Text style={styles.emptyText}>No devices found.</Text>
+            <Text style={s.emptyText}>No devices found.</Text>
           </View>
         )}
         {devices.map((device) => (
-          <View key={device._id} style={[styles.card, shadow.soft]}>
+          <View key={device._id} style={[s.card, shadow.soft]}>
             <View
               style={[
-                styles.iconWrap,
+                s.iconWrap,
                 {
                   backgroundColor: device.trusted
                     ? colors.primaryLight
-                    : "#F3F4F6",
+                    : colors.elevated,
                 },
               ]}
             >
@@ -155,33 +157,33 @@ export default function DevicesScreen() {
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               >
-                <Text style={styles.deviceName} numberOfLines={1}>
+                <Text style={s.deviceName} numberOfLines={1}>
                   {device.deviceName}
                 </Text>
                 {device.trusted && (
-                  <View style={styles.trustedBadge}>
-                    <Text style={styles.trustedText}>Trusted</Text>
+                  <View style={s.trustedBadge}>
+                    <Text style={s.trustedText}>Trusted</Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.deviceMeta}>
+              <Text style={s.deviceMeta}>
                 {device.platform} · {device.ipAddress}
               </Text>
-              <Text style={styles.deviceDate}>
+              <Text style={s.deviceDate}>
                 Last seen {fmtDate(device.lastLoginAt)}
               </Text>
             </View>
             <View style={{ gap: 6 }}>
               {!device.trusted && (
                 <TouchableOpacity
-                  style={styles.trustBtn}
+                  style={s.trustBtn}
                   onPress={() => handleTrust(device._id)}
                 >
-                  <Text style={styles.trustBtnText}>Trust</Text>
+                  <Text style={s.trustBtnText}>Trust</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={styles.removeBtn}
+                style={s.removeBtn}
                 onPress={() => handleRemove(device._id, device.deviceName)}
               >
                 <Ionicons name="trash-outline" size={15} color={colors.error} />
@@ -190,13 +192,13 @@ export default function DevicesScreen() {
           </View>
         ))}
 
-        <View style={styles.infoCard}>
+        <View style={s.infoCard}>
           <Ionicons
             name="information-circle"
             size={18}
             color={colors.primary}
           />
-          <Text style={styles.infoText}>
+          <Text style={s.infoText}>
             Devices are registered automatically when you log in. Trust a device
             to skip extra verification on future logins from that device.
           </Text>
@@ -217,24 +219,13 @@ export default function DevicesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  hero: { paddingHorizontal: 20, paddingBottom: 28 },
-  back: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  heroTitle: { fontFamily: fonts.heading, fontSize: 24, color: "white" },
-  heroSub: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.65)",
-    marginTop: 4,
-  },
+const makeStyles = (colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSubtle },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.elevated, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontFamily: 'Philosopher_700Bold', fontSize: 18, color: colors.textPrimary },
+  headerSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 1 },
 
   card: {
     backgroundColor: colors.surface,
@@ -243,6 +234,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   iconWrap: {
     width: 44,
@@ -311,15 +304,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     alignItems: "flex-start",
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.elevated,
     borderRadius: radius.md,
     padding: 12,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
   },
   infoText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.secondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
 });

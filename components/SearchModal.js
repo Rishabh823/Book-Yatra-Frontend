@@ -312,6 +312,7 @@ export default function SearchModal({ visible, onClose }) {
   const [locLoading, setLocLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [isListening, setIsListening] = useState(false);
+  const [voiceUnsupported, setVoiceUnsupported] = useState(false);
 
   // ── Open / close animation ──────────────────────────────────────────────────
   useEffect(() => {
@@ -594,7 +595,8 @@ export default function SearchModal({ visible, onClose }) {
     }
 
     // No voice support available — show hint
-    alert("Voice search is not supported on this device/browser.");
+    setVoiceUnsupported(true);
+    setTimeout(() => setVoiceUnsupported(false), 3000);
   };
 
   // ── Derived flags ───────────────────────────────────────────────────────────
@@ -632,6 +634,12 @@ export default function SearchModal({ visible, onClose }) {
       <Animated.View
         style={[s.sheet, { transform: [{ translateY: slideAnim }] }]}
       >
+        {voiceUnsupported && (
+          <View style={s.voiceErrorBanner}>
+            <Ionicons name="mic-off-outline" size={15} color="#fff" />
+            <Text style={s.voiceErrorTxt}>Voice not available — try typing instead</Text>
+          </View>
+        )}
         {/* HEADER */}
         <View style={s.header}>
           <TouchableOpacity
@@ -1188,5 +1196,22 @@ const makeStyles = (colors) =>
       color: colors.textSecondary,
       textAlign: "center",
       lineHeight: 20,
+    },
+    voiceErrorBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "#DC2626",
+      marginHorizontal: 14,
+      marginTop: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 12,
+    },
+    voiceErrorTxt: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: "#fff",
+      flex: 1,
     },
   });
