@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
 import { useColors } from "../../lib/ThemeContext";
@@ -45,6 +46,11 @@ export default function ChatListScreen() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [myUserId, setMyUserId] = useState(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("userId").then((id) => setMyUserId(id));
+  }, []);
 
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -91,9 +97,8 @@ export default function ChatListScreen() {
 
   const renderItem = ({ item }) => {
     const name = getChatName(item);
-    const unread = item.unreadCounts?.get
-      ? item.unreadCounts.get("me") || 0
-      : 0;
+    // Mongoose Map serializes to plain object on API response
+    const unread = myUserId ? item.unreadCounts?.[myUserId] || 0 : 0;
     return (
       <TouchableOpacity
         style={styles.chatRow}
@@ -137,7 +142,11 @@ export default function ChatListScreen() {
           style={styles.composeBtn}
           onPress={() => router.push("/chat/new")}
         >
-          <Ionicons name="create-outline" size={22} color={themeColors.textPrimary} />
+          <Ionicons
+            name="create-outline"
+            size={22}
+            color={themeColors.textPrimary}
+          />
         </TouchableOpacity>
       </View>
       <View style={styles.searchWrap}>
@@ -192,114 +201,115 @@ export default function ChatListScreen() {
   );
 }
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderSubtle,
-  },
-  title: {
-    flex: 1,
-    fontFamily: "Philosopher_700Bold",
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  composeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.elevated,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
-    height: 46,
-    paddingHorizontal: 14,
-    margin: 12,
-    marginTop: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  chatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    padding: 14,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#D6E4FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1E3A5F" },
-  chatHeader: { flexDirection: "row", alignItems: "center" },
-  chatName: {
-    flex: 1,
-    fontFamily: fonts.bodyBold,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  chatTime: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  chatFooter: { flexDirection: "row", alignItems: "center" },
-  lastMessage: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  unreadMsg: { fontFamily: fonts.bodyBold, color: colors.textPrimary },
-  badge: {
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#D95D39",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-  badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: "white" },
-  empty: { alignItems: "center", paddingVertical: 60, gap: 10 },
-  emptyTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
-  emptySub: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  newChatBtn: {
-    backgroundColor: "#D95D39",
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  newChatText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
-});
+const makeStyles = (colors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.surface },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+    },
+    title: {
+      flex: 1,
+      fontFamily: "Philosopher_700Bold",
+      fontSize: 20,
+      color: colors.textPrimary,
+    },
+    composeBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    searchWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: colors.elevated,
+      borderRadius: 12,
+      height: 46,
+      paddingHorizontal: 14,
+      margin: 12,
+      marginTop: 8,
+    },
+    searchInput: {
+      flex: 1,
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    chatRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: 12,
+      padding: 14,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: "#D6E4FF",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarText: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#1E3A5F" },
+    chatHeader: { flexDirection: "row", alignItems: "center" },
+    chatName: {
+      flex: 1,
+      fontFamily: fonts.bodyBold,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    chatTime: {
+      fontFamily: fonts.body,
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
+    chatFooter: { flexDirection: "row", alignItems: "center" },
+    lastMessage: {
+      flex: 1,
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    unreadMsg: { fontFamily: fonts.bodyBold, color: colors.textPrimary },
+    badge: {
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: "#D95D39",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 4,
+    },
+    badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: "white" },
+    empty: { alignItems: "center", paddingVertical: 60, gap: 10 },
+    emptyTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 18,
+      color: colors.textPrimary,
+    },
+    emptySub: {
+      fontFamily: fonts.body,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    newChatBtn: {
+      backgroundColor: "#D95D39",
+      borderRadius: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      marginTop: 8,
+    },
+    newChatText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
+  });

@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import * as LocalAuthentication from "expo-local-authentication";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markSecurityDone } from "../../lib/onboarding";
+import { pinStorage } from "../../lib/security/secureStorage";
 
 const STEP = 7;
 const TOTAL = 10;
@@ -77,6 +78,7 @@ export default function SecurityScreen() {
         disableDeviceFallback: false,
       });
       if (result.success) {
+        await pinStorage.setBiometricEnabled(true, biometricType);
         setBiometricEnabled(true);
       }
     } catch {}

@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fonts, radius } from "../../lib/theme";
-import { auth as authApi } from "../../lib/api";
+import { auth as authApi, api } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { useTheme } from "../../lib/ThemeContext";
 
@@ -505,6 +505,7 @@ export default function Profile() {
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const load = useCallback(async () => {
     const ok = await authApi.isAuthenticated();
@@ -539,6 +540,10 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       load();
+      // Refresh unread count each time profile tab is focused
+      api.get('/chat/unread-count').then((res) => {
+        setUnreadChatCount(res?.count || 0);
+      }).catch(() => {});
     }, [load]),
   );
 
@@ -908,6 +913,7 @@ export default function Profile() {
                       item={m}
                       onPress={() => handleAction(m.action)}
                       isLast={i === menu.length - 1}
+                      badge={m.action === 'chat' && unreadChatCount > 0 ? unreadChatCount : 0}
                     />
                   ));
                 })()}
@@ -999,8 +1005,8 @@ export default function Profile() {
 }
 
 // ─── Flat menu item — no shadow, separator line between items ─────────────────
-function FlatMenuItem({ item, onPress, isLast }) {
-  const { isDark, theme } = useTheme();
+function FlatMenuItem({ item, onPress, isLast, badge = 0 }) {
+  const { isDark } = useTheme();
   return (
     <TouchableOpacity
       activeOpacity={0.6}
@@ -1031,6 +1037,11 @@ function FlatMenuItem({ item, onPress, isLast }) {
           {item.sub}
         </Text>
       </View>
+      {badge > 0 && (
+        <View style={s.menuBadge}>
+          <Text style={s.menuBadgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
       <Ionicons
         name="chevron-forward"
         size={16}
@@ -1236,6 +1247,22 @@ const s = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 13, // sub text — matches bookings cardSubTitle
     color: "#9CA3AF",
+  },
+
+  menuBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#D95D39",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+    marginRight: 4,
+  },
+  menuBadgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: "white",
   },
 
   // ── Logout row ────────────────────────────────────────────────────────────
