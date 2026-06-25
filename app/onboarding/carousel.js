@@ -17,7 +17,7 @@ import { colors, fonts, radius, shadow } from "../../lib/theme";
 
 const { width } = Dimensions.get("window");
 const STEP = 3;
-const TOTAL = 11;
+const TOTAL = 10;
 
 const SLIDES = [
   {

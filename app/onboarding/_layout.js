@@ -9,14 +9,14 @@ export default function OnboardingLayout() {
         gestureEnabled: false,
       }}
     >
-      <Stack.Screen name="language" />
       <Stack.Screen name="country" />
+      <Stack.Screen name="language" />
       <Stack.Screen name="carousel" />
       <Stack.Screen name="location" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="onboard-auth" />
-      <Stack.Screen name="personalization" />
       <Stack.Screen name="security" />
+      <Stack.Screen name="personalization" />
       <Stack.Screen name="emergency" />
       <Stack.Screen name="wallet" />
     </Stack>

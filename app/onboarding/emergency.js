@@ -16,8 +16,8 @@ import { useRouter } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { saveEmergencyContact } from "../../lib/onboarding";
 
-const STEP = 8;
-const TOTAL = 11;
+const STEP = 9;
+const TOTAL = 10;
 
 const RELATIONSHIPS = [
   "Spouse",
@@ -70,10 +70,10 @@ export default function EmergencyScreen() {
       relationship,
     });
     setSaving(false);
-    router.push("/onboarding/onboard-auth");
+    router.push("/onboarding/wallet");
   };
 
-  const handleSkip = () => router.push("/onboarding/onboard-auth");
+  const handleSkip = () => router.push("/onboarding/wallet");
 
   return (
     <SafeAreaView style={s.safe} edges={["top", "bottom"]}>

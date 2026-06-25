@@ -26,8 +26,8 @@ const LANGUAGES = [
   { code: "TE", name: "Telugu", native: "తెలుగు", icon: "🇮🇳" },
 ];
 
-const STEP = 1;
-const TOTAL = 11;
+const STEP = 2;
+const TOTAL = 10;
 
 function StepBar({ step, total }) {
   return (
@@ -74,7 +74,7 @@ export default function LanguageScreen() {
   const handleContinue = async () => {
     if (setLanguage) setLanguage(selected);
     else await AsyncStorage.setItem("app_language", selected);
-    router.push("/onboarding/country");
+    router.push("/onboarding/carousel");
   };
 
   return (

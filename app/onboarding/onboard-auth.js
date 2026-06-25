@@ -11,8 +11,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 
-const STEP = 9;
-const TOTAL = 11;
+const STEP = 6;
+const TOTAL = 10;
 
 function StepBar({ step, total }) {
   return (
@@ -49,7 +49,7 @@ export default function OnboardAuthScreen() {
       label: "Continue with Google",
       color: "#4285F4",
       bg: "#EBF3FE",
-      onPress: () => router.push("/onboarding/wallet"),
+      onPress: () => router.push("/onboarding/security"),
     },
     {
       icon: "call-outline",
@@ -57,7 +57,7 @@ export default function OnboardAuthScreen() {
       color: colors.primary,
       bg: colors.primaryLight,
       onPress: () =>
-        router.push("/auth/login?returnTo=/onboarding/wallet"),
+        router.push("/auth/login?returnTo=/onboarding/security"),
     },
     {
       icon: "mail-outline",
@@ -65,14 +65,14 @@ export default function OnboardAuthScreen() {
       color: "#374151",
       bg: "#F3F4F6",
       onPress: () =>
-        router.push("/auth/login?returnTo=/onboarding/wallet"),
+        router.push("/auth/login?returnTo=/onboarding/security"),
     },
     {
       icon: "person-add-outline",
       label: "Create Account",
       color: "#16A34A",
       bg: "#F0FDF4",
-      onPress: () => router.push("/auth/register?returnTo=/onboarding/wallet"),
+      onPress: () => router.push("/auth/register?returnTo=/onboarding/security"),
     },
   ];
 
@@ -129,7 +129,7 @@ export default function OnboardAuthScreen() {
       <TouchableOpacity
         style={s.signupRow}
         onPress={() =>
-          router.push("/auth/register?returnTo=/onboarding/wallet")
+          router.push("/auth/register?returnTo=/onboarding/security")
         }
       >
         <Text style={s.signupTxt}>

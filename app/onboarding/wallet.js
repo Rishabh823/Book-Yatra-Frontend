@@ -16,7 +16,7 @@ import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markOnboardingDone, markWalletSeen } from "../../lib/onboarding";
 
 const STEP = 10;
-const TOTAL = 11;
+const TOTAL = 10;
 
 const FEATURES = [
   {

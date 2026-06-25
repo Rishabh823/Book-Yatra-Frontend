@@ -15,7 +15,7 @@ import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
 const STEP = 4;
-const TOTAL = 11;
+const TOTAL = 10;
 
 const BENEFITS = [
   {

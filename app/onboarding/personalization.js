@@ -15,8 +15,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { savePreferences } from "../../lib/onboarding";
 
-const STEP = 6;
-const TOTAL = 11;
+const STEP = 8;
+const TOTAL = 10;
 
 const INTERESTS = [
   {
@@ -129,7 +129,7 @@ export default function PersonalizationScreen() {
     setSaving(true);
     await savePreferences({ interests, budget, destinations });
     setSaving(false);
-    router.push("/onboarding/security");
+    router.push("/onboarding/emergency");
   };
 
   return (
@@ -141,7 +141,7 @@ export default function PersonalizationScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/onboarding/security")}>
+        <TouchableOpacity onPress={() => router.push("/onboarding/emergency")}>
           <Text style={s.skipTxt}>Skip</Text>
         </TouchableOpacity>
       </View>

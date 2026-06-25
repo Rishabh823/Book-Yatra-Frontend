@@ -230,8 +230,8 @@ const COUNTRIES = [
   },
 ];
 
-const STEP = 2;
-const TOTAL = 11;
+const STEP = 1;
+const TOTAL = 10;
 
 function StepBar({ step, total }) {
   return (
@@ -270,7 +270,7 @@ export default function CountryScreen() {
       symbol: selected.symbol,
       timezone: selected.timezone,
     });
-    router.push("/onboarding/carousel");
+    router.push("/onboarding/language");
   };
 
   const popular = COUNTRIES.filter((c) => c.popular);

@@ -9,7 +9,7 @@ export default function Index() {
 
   useEffect(() => {
     isFirstLaunch().then((first) => {
-      setTarget(first ? '/onboarding/language' : '/(tabs)');
+      setTarget(first ? '/onboarding/country' : '/(tabs)');
     });
   }, []);
 

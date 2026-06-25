@@ -15,7 +15,7 @@ import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markSecurityDone } from "../../lib/onboarding";
 
 const STEP = 7;
-const TOTAL = 11;
+const TOTAL = 10;
 
 function StepBar({ step, total }) {
   return (
@@ -84,9 +84,9 @@ export default function SecurityScreen() {
 
   const handleNext = async () => {
     await markSecurityDone();
-    router.push("/onboarding/emergency");
+    router.push("/onboarding/personalization");
   };
-  const handleSkip = () => router.push("/onboarding/emergency");
+  const handleSkip = () => router.push("/onboarding/personalization");
 
   const biometricIcon =
     biometricType === "face" ? "scan-outline" : "finger-print-outline";
