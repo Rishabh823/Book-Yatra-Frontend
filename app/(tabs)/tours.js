@@ -635,9 +635,6 @@ export default function Tours() {
             paddingBottom: 32,
             paddingTop: 12,
             gap: 16,
-            maxWidth: 680,
-            alignSelf: "center",
-            width: "100%",
           }}
           refreshControl={
             <RefreshControl

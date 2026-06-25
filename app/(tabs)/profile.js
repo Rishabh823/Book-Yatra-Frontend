@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Image,
   ActivityIndicator,
   useWindowDimensions,
-  DeviceEventEmitter,
 } from "react-native";
 import Toast from "../../components/Toast";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -21,6 +20,8 @@ import { fonts, radius } from "../../lib/theme";
 import { auth as authApi, api } from "../../lib/api";
 import { useLang } from "../../lib/LanguageContext";
 import { useTheme } from "../../lib/ThemeContext";
+import { useSocket } from "../../lib/hooks/useSocket";
+import { eventBus } from "../../lib/eventBus";
 
 // ─── App primary color ────────────────────────────────────────────────────────
 const PRIMARY = "#D95D39";
@@ -508,6 +509,9 @@ export default function Profile() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
+  const myUserIdRef = useRef(null); // kept current via AsyncStorage load
+  const { connect, disconnect, on } = useSocket("/chat");
+
   const load = useCallback(async () => {
     const ok = await authApi.isAuthenticated();
     setAuthed(ok);
@@ -541,30 +545,69 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       load();
-      // Refresh total unread count each time profile tab is focused
-      api.get('/chat/unread-count').then((res) => {
+
+      // Load myUserId into ref so socket callbacks can reference it
+      AsyncStorage.getItem("userId").then((id) => {
+        myUserIdRef.current = id;
+      });
+
+      // Fetch accurate count on every focus
+      api.get("/chat/unread-count").then((res) => {
         setUnreadChatCount(res?.count || 0);
       }).catch(() => {});
 
-      // Real-time bump: increment badge when a new message arrives
-      const handleNewMsg = () => {
-        setUnreadChatCount((n) => n + 1);
-      };
-      // Real-time clear: re-fetch when user reads a chat
-      const handleRead = () => {
-        api.get('/chat/unread-count').then((res) => {
+      // ── Direct socket connection (works on web + native) ──────────────────
+      let socketOff = () => {};
+      connect().then((socket) => {
+        // Join all the user's chat rooms so we receive new_message events
+        api.get("/chat").then((res) => {
+          (res?.data || []).forEach((c) => socket.emit("join_chat", String(c._id)));
+        }).catch(() => {});
+
+        const offNew = on("new_message", (msg) => {
+          const myId = myUserIdRef.current;
+          const senderId = String(msg.senderId?._id || msg.senderId);
+          if (!myId || senderId !== String(myId)) {
+            setUnreadChatCount((n) => n + 1);
+          }
+        });
+
+        const offRead = on("messages_read", ({ readBy }) => {
+          const myId = myUserIdRef.current;
+          if (myId && String(readBy) === String(myId)) {
+            api.get("/chat/unread-count").then((res) => {
+              setUnreadChatCount(res?.count || 0);
+            }).catch(() => {});
+          }
+        });
+
+        socketOff = () => { offNew(); offRead(); };
+      }).catch(() => {});
+
+      // ── eventBus fallback (when chat list tab is active instead of profile) ─
+      // Chat list emits these when its own socket receives new_message/messages_read
+      const unsubNew = eventBus.on("chat_new_message", () =>
+        setUnreadChatCount((n) => n + 1),
+      );
+      const unsubRead = eventBus.on("chat_messages_read", () => {
+        api.get("/chat/unread-count").then((res) => {
           setUnreadChatCount(res?.count || 0);
         }).catch(() => {});
+      });
+
+      return () => {
+        socketOff();
+        disconnect();
+        unsubNew();
+        unsubRead();
       };
-      const { DeviceEventEmitter: DEE } = require('react-native');
-      const s1 = DEE.addListener('chat_new_message', handleNewMsg);
-      const s2 = DEE.addListener('chat_messages_read', handleRead);
-      return () => { s1.remove(); s2.remove(); };
-    }, [load]),
+    }, [load, connect, disconnect, on]),
   );
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("userPhotoChanged", (url) => {
+    // DeviceEventEmitter works fine here (native) — other screens emit this on photo change
+    const { DeviceEventEmitter: DEE } = require("react-native");
+    const sub = DEE.addListener("userPhotoChanged", (url) => {
       setUser((prev) => (prev ? { ...prev, photoUrl: url || "" } : prev));
     });
     return () => sub.remove();
@@ -601,7 +644,8 @@ export default function Profile() {
     await authApi.logout();
     setAuthed(false);
     setUser(null);
-    DeviceEventEmitter.emit("userPhotoChanged", null);
+    const { DeviceEventEmitter: DEE } = require("react-native");
+    DEE.emit("userPhotoChanged", null);
     showToast(
       wasGuest ? "Guest session ended." : "Logged out successfully.",
       "success",

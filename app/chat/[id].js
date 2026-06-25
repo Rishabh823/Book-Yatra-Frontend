@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../lib/api";
 import ChatBubble from "../../components/ChatBubble";
+import UserProfileModal from "../../components/UserProfileModal";
 import { fonts } from "../../lib/theme";
 import { useColors } from "../../lib/ThemeContext";
 import { useSocket } from "../../lib/hooks/useSocket";
@@ -35,19 +37,39 @@ export default function ChatScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [myUserId, setMyUserId] = useState(null);
   const [chatName, setChatName] = useState("");
-  // Message long-press context menu
-  const [deleteTarget, setDeleteTarget] = useState(null); // { _id, text, isMine }
+
+  // Recipient user info (for direct chats)
+  const [recipientUser, setRecipientUser] = useState(null);
+
+  // Block status
+  const [iBlocked, setIBlocked] = useState(false); // I blocked them
+  const [blockedByThem, setBlockedByThem] = useState(false); // they blocked me
+  const [blockLoading, setBlockLoading] = useState(false);
+
+  // User profile modal
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Delete context menu
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const flatRef = useRef(null);
   const intervalRef = useRef(null);
   const inFlightRef = useRef(new Set());
-  const socketConfirmedRef = useRef(new Set()); // tempIds confirmed by socket before API catch fires
+  const socketConfirmedRef = useRef(new Set());
+  const recipientIdRef = useRef(null);
+  const myUserIdRef = useRef(null); // stable ref so socket handlers don't need myUserId in deps
+
   const { connect, disconnect, on } = useSocket("/chat");
 
   useEffect(() => {
-    AsyncStorage.getItem("userId").then((id) => setMyUserId(id));
+    AsyncStorage.getItem("userId").then((id) => {
+      setMyUserId(id);
+      myUserIdRef.current = id;
+    });
   }, []);
 
+  // Load chat info + recipient profile + block status
   useEffect(() => {
     if (!myUserId) return;
     api
@@ -59,7 +81,26 @@ export default function ChatScreen() {
           (p) => String(p._id || p) !== String(myUserId),
         );
         if (chat.type === "direct" && others.length === 1) {
-          setChatName(others[0].name || "Chat");
+          const other = others[0];
+          setChatName(other.name || "Chat");
+          setRecipientUser(other);
+          recipientIdRef.current = String(other._id || other);
+
+          // Fetch full profile + block status in parallel
+          const rid = String(other._id || other);
+          setProfileLoading(true);
+          Promise.all([
+            api.get(`/users/${rid}/chat-profile`).catch(() => null),
+            api.get(`/users/${rid}/block-status`).catch(() => null),
+          ])
+            .then(([profileRes, blockRes]) => {
+              if (profileRes?.data) setRecipientUser(profileRes.data);
+              if (blockRes) {
+                setIBlocked(blockRes.iBlocked || false);
+                setBlockedByThem(blockRes.blockedByThem || false);
+              }
+            })
+            .finally(() => setProfileLoading(false));
         } else {
           setChatName(chat.name || "Group Chat");
         }
@@ -108,11 +149,16 @@ export default function ChatScreen() {
     loadMessages();
     markRead();
 
-    intervalRef.current = setInterval(() => loadMessages(1, false), 10000);
+    // Polling is a safety-net fallback only. Socket delivers messages instantly.
+    intervalRef.current = setInterval(() => loadMessages(1, false), 30000);
 
-    let cleanup = () => {};
+    let mounted = true;
+    let socketOff = () => {};
+
     connect()
       .then((socket) => {
+        if (!mounted) return; // cleanup ran before connect resolved — bail
+
         socket.emit("join_chat", chatId);
 
         const offNew = on("new_message", (msg) => {
@@ -129,7 +175,6 @@ export default function ChatScreen() {
             );
             if (matchIdx !== -1) {
               const next = [...prev];
-              // Tell the catch handler this tempId was confirmed — prevents false "failed" state
               socketConfirmedRef.current.add(next[matchIdx]._id);
               next[matchIdx] = { ...msg, _status: "sent" };
               return next;
@@ -144,15 +189,16 @@ export default function ChatScreen() {
         });
 
         const offRead = on("messages_read", ({ readBy }) => {
+          const myId = myUserIdRef.current; // ref — no dep needed, always current
           setMessages((prev) =>
             prev.map((m) => {
               if (m._local || m._status === "failed" || m._status === "sending")
                 return m;
               const senderId = String(m.senderId?._id || m.senderId);
-              if (!myUserId || senderId !== String(myUserId)) return m;
-              if (String(readBy) === String(myUserId)) return m;
+              if (!myId || senderId !== String(myId)) return m;
+              if (String(readBy) === String(myId)) return m;
               const alreadyRead = (m.readBy || []).some(
-                (r) => String(r.userId) !== String(myUserId),
+                (r) => String(r.userId) !== String(myId),
               );
               if (alreadyRead) return m;
               return {
@@ -166,7 +212,6 @@ export default function ChatScreen() {
           );
         });
 
-        // Mark message as deleted when someone deletes for everyone
         const offDel = on("message_deleted", ({ messageId }) => {
           setMessages((prev) =>
             prev.map((m) =>
@@ -177,20 +222,17 @@ export default function ChatScreen() {
           );
         });
 
-        cleanup = () => {
-          offNew();
-          offRead();
-          offDel();
-        };
+        socketOff = () => { offNew(); offRead(); offDel(); };
       })
       .catch(() => {});
 
     return () => {
+      mounted = false;
       clearInterval(intervalRef.current);
-      cleanup();
+      socketOff();
       disconnect();
     };
-  }, [loadMessages, chatId, markRead, myUserId]);
+  }, [loadMessages, chatId, markRead]); // myUserId removed — use ref inside handlers
 
   // ── Send logic ────────────────────────────────────────────────────────────────
   const dispatchSend = useCallback(
@@ -220,20 +262,21 @@ export default function ChatScreen() {
         .catch((error) => {
           clearTimeout(abortTimer);
 
-          // Case A: socket already confirmed this message — skip marking failed entirely
+          // If blocked (403), update block state immediately
+          if (error?.status === 403) {
+            setBlockedByThem(true);
+            setMessages((prev) => prev.filter((m) => m._id !== tempId));
+            return;
+          }
+
           if (socketConfirmedRef.current.has(tempId)) {
             socketConfirmedRef.current.delete(tempId);
             return;
           }
 
-          // Only mark failed for definitive failures:
-          //   - AbortError (30s timeout)
-          //   - Network error (device offline, no response at all)
-          //   - 4xx (server explicitly rejected the request)
-          // For 5xx the message was likely saved — socket or 10s poll will reconcile.
           const status = error?.status;
           const isAbort = error?.name === "AbortError";
-          const isNetworkFailure = !status; // no HTTP status = never reached server
+          const isNetworkFailure = !status;
           const isClientRejection = status >= 400 && status < 500;
 
           if (isAbort || isNetworkFailure || isClientRejection) {
@@ -245,7 +288,6 @@ export default function ChatScreen() {
               );
             });
           }
-          // 5xx: leave as "sending" — socket or periodic poll will confirm
         })
         .finally(() => inFlightRef.current.delete(tempId));
     },
@@ -254,7 +296,7 @@ export default function ChatScreen() {
 
   const sendMessage = useCallback(() => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || iBlocked || blockedByThem) return;
     setInput("");
     const tempId =
       "temp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
@@ -274,7 +316,7 @@ export default function ChatScreen() {
     ]);
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 40);
     dispatchSend(tempId, text);
-  }, [input, chatId, myUserId, dispatchSend]);
+  }, [input, chatId, myUserId, dispatchSend, iBlocked, blockedByThem]);
 
   const retryMessage = useCallback(
     (tempId, text) => {
@@ -293,6 +335,29 @@ export default function ChatScreen() {
     loadMessages(nextPage, true);
   }, [hasMore, page, loadMessages]);
 
+  // ── Block / Unblock ───────────────────────────────────────────────────────────
+  const handleBlock = useCallback(async () => {
+    if (!recipientIdRef.current) return;
+    setBlockLoading(true);
+    try {
+      await api.post(`/users/${recipientIdRef.current}/block`, {});
+      setIBlocked(true);
+    } catch {}
+    setBlockLoading(false);
+    setShowProfile(false);
+  }, []);
+
+  const handleUnblock = useCallback(async () => {
+    if (!recipientIdRef.current) return;
+    setBlockLoading(true);
+    try {
+      await api.post(`/users/${recipientIdRef.current}/unblock`, {});
+      setIBlocked(false);
+    } catch {}
+    setBlockLoading(false);
+    setShowProfile(false);
+  }, []);
+
   // ── Delete message ────────────────────────────────────────────────────────────
   const handleLongPress = useCallback(
     (msg) => {
@@ -310,14 +375,11 @@ export default function ChatScreen() {
       setDeleteTarget(null);
 
       if (scope === "me") {
-        // "Delete for me" — vanishes only from your view, no placeholder
         setMessages((prev) =>
           prev.filter((m) => String(m._id) !== String(_id)),
         );
         api.del("/chat/message/" + _id + "?scope=me").catch(() => {});
       } else {
-        // "Delete for everyone" — replace with deleted placeholder immediately;
-        // socket pushes the same update to all other participants
         setMessages((prev) =>
           prev.map((m) =>
             String(m._id) === String(_id)
@@ -341,13 +403,15 @@ export default function ChatScreen() {
   const isRead = (msg) =>
     (msg.readBy || []).some((r) => String(r.userId) !== String(myUserId));
 
-  if (loading) {
-    return (
-      <View style={[s.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color="#D95D39" />
-      </View>
-    );
-  }
+  // ── Derived UI ────────────────────────────────────────────────────────────────
+  const inputBlocked = iBlocked || blockedByThem;
+
+  const initials = (chatName || "U")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <KeyboardAvoidingView
@@ -358,7 +422,7 @@ export default function ChatScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={0}
     >
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <View
         style={[
           s.header,
@@ -374,60 +438,138 @@ export default function ChatScreen() {
         >
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text
-          style={[s.chatName, { color: colors.textPrimary }]}
-          numberOfLines={1}
+
+        {/* Tappable avatar → user profile modal */}
+        <TouchableOpacity
+          onPress={() => setShowProfile(true)}
+          activeOpacity={0.8}
+          style={s.headerAvatarWrap}
         >
-          {chatName || "Chat"}
-        </Text>
+          {recipientUser?.photoUrl ? (
+            <Image
+              source={{ uri: recipientUser.photoUrl }}
+              style={s.headerAvatar}
+            />
+          ) : (
+            <View
+              style={[s.headerAvatarFallback, { backgroundColor: "#D6E4FF" }]}
+            >
+              <Text style={s.headerAvatarInitials}>{initials}</Text>
+            </View>
+          )}
+          {/* Grey dot on avatar when blocked by them */}
+          {blockedByThem && !iBlocked && (
+            <View style={s.headerBlockDot}>
+              <Ionicons name="ban" size={9} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[s.chatName, { color: colors.textPrimary }]}
+            numberOfLines={1}
+          >
+            {chatName || "Chat"}
+          </Text>
+          {(iBlocked || blockedByThem) && (
+            <Text style={s.headerBlockedSub}>
+              {iBlocked ? "Blocked" : "Can't message"}
+            </Text>
+          )}
+        </View>
+
         <TouchableOpacity
           style={[s.iconBtn, { backgroundColor: colors.elevated }]}
+          onPress={() => setShowProfile(true)}
         >
           <Ionicons
-            name="ellipsis-vertical"
-            size={18}
+            name="information-circle-outline"
+            size={20}
             color={colors.textPrimary}
           />
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={flatRef}
-        data={messages}
-        keyExtractor={(item, idx) => String(item._id || idx)}
-        renderItem={({ item, index }) => (
-          <ChatBubble
-            message={item}
-            isOwn={isOwn(item)}
-            isRead={isOwn(item) ? isRead(item) : false}
-            showName={
-              !isOwn(item) &&
-              (index === 0 ||
-                messages[index - 1]?.senderId?._id !== item.senderId?._id)
-            }
-            senderName={item.senderId?.name}
-            onRetry={retryMessage}
-            onLongPress={handleLongPress}
+      {/* ── Block status banner ─────────────────────────────────────────────── */}
+      {blockedByThem && !iBlocked && (
+        <View style={s.blockedBanner}>
+          <Ionicons
+            name="ban-outline"
+            size={15}
+            color="#6B7280"
+            style={{ marginRight: 6 }}
           />
-        )}
-        contentContainerStyle={{ paddingVertical: 12 }}
-        onStartReached={loadMore}
-        onStartReachedThreshold={0.2}
-        ListEmptyComponent={
-          <View style={s.noMsg}>
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              size={40}
-              color={colors.textDisabled}
-            />
-            <Text style={[s.noMsgText, { color: colors.textSecondary }]}>
-              No messages yet. Say hi!
+          <Text style={s.blockedBannerText}>
+            You can't send messages to this user
+          </Text>
+        </View>
+      )}
+      {iBlocked && (
+        <View style={[s.blockedBanner, { backgroundColor: "#FFF0EB" }]}>
+          <Ionicons
+            name="ban-outline"
+            size={15}
+            color="#D95D39"
+            style={{ marginRight: 6 }}
+          />
+          <Text style={[s.blockedBannerText, { color: "#D95D39" }]}>
+            You blocked this user ·{" "}
+            <Text
+              style={{ fontFamily: fonts.bodyBold }}
+              onPress={handleUnblock}
+            >
+              Unblock
             </Text>
-          </View>
-        }
-      />
+          </Text>
+        </View>
+      )}
 
-      {/* Input row */}
+      {/* ── Message list ───────────────────────────────────────────────────── */}
+      {loading ? (
+        <View style={[s.center, { flex: 1 }]}>
+          <ActivityIndicator color="#D95D39" />
+        </View>
+      ) : (
+        <FlatList
+          ref={flatRef}
+          data={messages}
+          keyExtractor={(item, idx) => String(item._id || idx)}
+          extraData={myUserId}
+          renderItem={({ item, index }) => (
+            <ChatBubble
+              message={item}
+              isOwn={isOwn(item)}
+              isRead={isOwn(item) ? isRead(item) : false}
+              showName={
+                !isOwn(item) &&
+                (index === 0 ||
+                  messages[index - 1]?.senderId?._id !== item.senderId?._id)
+              }
+              senderName={item.senderId?.name}
+              onRetry={retryMessage}
+              onLongPress={handleLongPress}
+            />
+          )}
+          contentContainerStyle={{ paddingVertical: 12 }}
+          onStartReached={loadMore}
+          onStartReachedThreshold={0.2}
+          ListEmptyComponent={
+            <View style={s.noMsg}>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={40}
+                color={colors.textDisabled}
+              />
+              <Text style={[s.noMsgText, { color: colors.textSecondary }]}>
+                No messages yet. Say hi!
+              </Text>
+            </View>
+          }
+        />
+      )}
+
+      {/* ── Input row ──────────────────────────────────────────────────────── */}
       <View
         style={[
           s.inputRow,
@@ -438,31 +580,60 @@ export default function ChatScreen() {
           },
         ]}
       >
-        <TextInput
-          style={[
-            s.input,
-            { backgroundColor: colors.elevated, color: colors.textPrimary },
-          ]}
-          value={input}
-          onChangeText={setInput}
-          placeholder="Type a message..."
-          placeholderTextColor={colors.textSecondary}
-          multiline
-          maxLength={2000}
-          returnKeyType="send"
-          blurOnSubmit={false}
-        />
-        <TouchableOpacity
-          style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
-          onPress={sendMessage}
-          disabled={!input.trim()}
-          activeOpacity={0.75}
-        >
-          <Ionicons name="send" size={18} color="white" />
-        </TouchableOpacity>
+        {inputBlocked ? (
+          <View style={[s.blockedInput, { backgroundColor: colors.elevated }]}>
+            <Ionicons
+              name="ban-outline"
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={[s.blockedInputText, { color: colors.textSecondary }]}>
+              {iBlocked
+                ? "You blocked this user"
+                : "You can't reply to this conversation"}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <TextInput
+              style={[
+                s.input,
+                { backgroundColor: colors.elevated, color: colors.textPrimary },
+              ]}
+              value={input}
+              onChangeText={setInput}
+              placeholder="Type a message..."
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              maxLength={2000}
+              returnKeyType="send"
+              blurOnSubmit={false}
+            />
+            <TouchableOpacity
+              style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
+              onPress={sendMessage}
+              disabled={!input.trim()}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="send" size={18} color="white" />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
-      {/* ── Delete context menu (WhatsApp-style, no Alert) ─────────────────── */}
+      {/* ── User profile modal ─────────────────────────────────────────────── */}
+      <UserProfileModal
+        visible={showProfile}
+        user={recipientUser}
+        iBlocked={iBlocked}
+        blockedByThem={blockedByThem}
+        onBlock={handleBlock}
+        onUnblock={handleUnblock}
+        onClose={() => setShowProfile(false)}
+        loading={profileLoading || blockLoading}
+      />
+
+      {/* ── Delete context menu ─────────────────────────────────────────────── */}
       <Modal
         visible={!!deleteTarget}
         transparent
@@ -476,7 +647,6 @@ export default function ChatScreen() {
               <View
                 style={[s.deleteSheet, { backgroundColor: colors.surface }]}
               >
-                {/* Preview */}
                 {deleteTarget?.text ? (
                   <View
                     style={[s.previewBox, { backgroundColor: colors.elevated }]}
@@ -494,7 +664,6 @@ export default function ChatScreen() {
                   Delete message?
                 </Text>
 
-                {/* Delete for everyone — own messages only */}
                 {deleteTarget?.isMine && (
                   <TouchableOpacity
                     style={s.sheetBtn}
@@ -519,7 +688,6 @@ export default function ChatScreen() {
                   </TouchableOpacity>
                 )}
 
-                {/* Delete for me — always available */}
                 <TouchableOpacity
                   style={s.sheetBtn}
                   onPress={() => deleteMessage("me")}
@@ -551,7 +719,6 @@ export default function ChatScreen() {
                   </View>
                 </TouchableOpacity>
 
-                {/* Cancel */}
                 <TouchableOpacity
                   style={[s.cancelBtn, { borderTopColor: colors.borderSubtle }]}
                   onPress={() => setDeleteTarget(null)}
@@ -573,12 +740,14 @@ export default function ChatScreen() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+
+  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   iconBtn: {
@@ -588,9 +757,68 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  chatName: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 17 },
+  headerAvatarWrap: { position: "relative" },
+  headerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#D95D39",
+  },
+  headerAvatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#D95D39",
+  },
+  headerAvatarInitials: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 14,
+    color: "#1E3A5F",
+  },
+  headerBlockDot: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#6B7280",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "white",
+  },
+  chatName: { fontFamily: fonts.bodyBold, fontSize: 16 },
+  headerBlockedSub: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginTop: 1,
+  },
+
+  // Block banners
+  blockedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  blockedBannerText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: "#6B7280",
+    flex: 1,
+  },
+
   noMsg: { alignItems: "center", padding: 40, gap: 10 },
   noMsgText: { fontFamily: fonts.body, fontSize: 14 },
+
+  // Input
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -617,6 +845,16 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   sendBtnDisabled: { backgroundColor: "#E5E7EB" },
+  blockedInput: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  blockedInputText: { fontFamily: fonts.body, fontSize: 14, flex: 1 },
 
   // Delete sheet
   overlay: {
