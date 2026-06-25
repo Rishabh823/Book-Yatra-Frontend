@@ -41,6 +41,7 @@ export default function ChatScreen() {
   const flatRef = useRef(null);
   const intervalRef = useRef(null);
   const inFlightRef = useRef(new Set());
+  const socketConfirmedRef = useRef(new Set()); // tempIds confirmed by socket before API catch fires
   const { connect, disconnect, on } = useSocket("/chat");
 
   useEffect(() => {
@@ -128,6 +129,8 @@ export default function ChatScreen() {
             );
             if (matchIdx !== -1) {
               const next = [...prev];
+              // Tell the catch handler this tempId was confirmed — prevents false "failed" state
+              socketConfirmedRef.current.add(next[matchIdx]._id);
               next[matchIdx] = { ...msg, _status: "sent" };
               return next;
             }
@@ -214,15 +217,35 @@ export default function ChatScreen() {
             ),
           );
         })
-        .catch(() => {
+        .catch((error) => {
           clearTimeout(abortTimer);
-          setMessages((prev) => {
-            const msg = prev.find((m) => m._id === tempId);
-            if (!msg || !msg._local || msg._status === "sent") return prev;
-            return prev.map((m) =>
-              m._id === tempId ? { ...m, _status: "failed" } : m,
-            );
-          });
+
+          // Case A: socket already confirmed this message — skip marking failed entirely
+          if (socketConfirmedRef.current.has(tempId)) {
+            socketConfirmedRef.current.delete(tempId);
+            return;
+          }
+
+          // Only mark failed for definitive failures:
+          //   - AbortError (30s timeout)
+          //   - Network error (device offline, no response at all)
+          //   - 4xx (server explicitly rejected the request)
+          // For 5xx the message was likely saved — socket or 10s poll will reconcile.
+          const status = error?.status;
+          const isAbort = error?.name === "AbortError";
+          const isNetworkFailure = !status; // no HTTP status = never reached server
+          const isClientRejection = status >= 400 && status < 500;
+
+          if (isAbort || isNetworkFailure || isClientRejection) {
+            setMessages((prev) => {
+              const msg = prev.find((m) => m._id === tempId);
+              if (!msg || !msg._local || msg._status === "sent") return prev;
+              return prev.map((m) =>
+                m._id === tempId ? { ...m, _status: "failed" } : m,
+              );
+            });
+          }
+          // 5xx: leave as "sending" — socket or periodic poll will confirm
         })
         .finally(() => inFlightRef.current.delete(tempId));
     },
