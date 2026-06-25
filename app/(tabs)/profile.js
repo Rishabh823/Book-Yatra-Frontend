@@ -499,7 +499,8 @@ export default function Profile() {
   const colors = theme;
   const { width } = useWindowDimensions();
   const gridCols = width >= 500 ? 4 : 3;
-  const gridCardW = (width - 40 - 10 * (gridCols - 1)) / gridCols;
+  // Math.floor prevents fractional overflow that pushes 3rd card onto next line
+  const gridCardW = Math.floor((width - 40 - 10 * (gridCols - 1)) / gridCols) - 1;
 
   const [user, setUser] = useState(null);
   const [authed, setAuthed] = useState(false);
@@ -1196,7 +1197,8 @@ const s = StyleSheet.create({
   iconGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    columnGap: 10,
+    rowGap: 10,
     marginBottom: 10,
   },
   iconCard: {
