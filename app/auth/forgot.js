@@ -218,7 +218,7 @@ export default function Forgot() {
             <View style={s.logoBox}>
               <Ionicons name="key" size={30} color={colors.primary} />
             </View>
-            <Text style={s.appLabel}>BOOK YATRA</Text>
+            <Text style={s.appLabel}>TRIP KART</Text>
             <Text style={s.heroTitle}>Reset Password</Text>
             <Text style={s.heroSub}>
               {step === 1
