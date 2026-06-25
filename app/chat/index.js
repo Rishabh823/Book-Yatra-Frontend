@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -15,6 +21,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../../lib/api";
 import { fonts } from "../../lib/theme";
 import { useColors } from "../../lib/ThemeContext";
+import { useSocket } from "../../lib/hooks/useSocket";
+import { DeviceEventEmitter } from "react-native";
 
 const fmtTime = (d) => {
   if (!d) return "";
@@ -48,6 +56,9 @@ export default function ChatListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
 
+  const { connect, disconnect, on } = useSocket("/chat");
+  const socketCleanupRef = useRef(() => {});
+
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setMyUserId(id));
   }, []);
@@ -56,8 +67,9 @@ export default function ChatListScreen() {
     if (!isRefresh) setLoading(true);
     try {
       const res = await api.get("/chat");
-      setChats(res.data || []);
-      setFiltered(res.data || []);
+      const data = res.data || [];
+      setChats(data);
+      setFiltered(data);
     } catch {}
     setLoading(false);
     setRefreshing(false);
@@ -66,73 +78,150 @@ export default function ChatListScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load]),
+
+      // Socket: update unread counts + last message in real-time
+      connect()
+        .then((socket) => {
+          const offNew = on("new_message", (msg) => {
+            const isFromMe =
+              String(msg.senderId?._id || msg.senderId) === String(myUserId);
+            setChats((prev) => {
+              const idx = prev.findIndex(
+                (c) => String(c._id) === String(msg.chatId),
+              );
+              if (idx === -1) return prev;
+              const updated = [...prev];
+              const chat = { ...updated[idx] };
+              if (!isFromMe) {
+                const current = chat.unreadCounts?.[myUserId] || 0;
+                chat.unreadCounts = {
+                  ...(chat.unreadCounts || {}),
+                  [myUserId]: current + 1,
+                };
+              }
+              chat.lastMessage = {
+                text: msg.text || msg.type,
+                senderId: msg.senderId?._id || msg.senderId,
+                timestamp: msg.createdAt,
+                type: msg.type,
+              };
+              updated[idx] = chat;
+              updated.splice(idx, 1);
+              updated.unshift(chat);
+              return updated;
+            });
+            // Let profile tab badge know
+            if (!isFromMe) DeviceEventEmitter.emit("chat_new_message");
+          });
+
+          const offRead = on("messages_read", ({ chatId, readBy }) => {
+            if (String(readBy) === String(myUserId)) {
+              setChats((prev) =>
+                prev.map((c) =>
+                  String(c._id) === String(chatId)
+                    ? {
+                        ...c,
+                        unreadCounts: {
+                          ...(c.unreadCounts || {}),
+                          [myUserId]: 0,
+                        },
+                      }
+                    : c,
+                ),
+              );
+              DeviceEventEmitter.emit("chat_messages_read");
+            }
+          });
+
+          socketCleanupRef.current = () => {
+            offNew();
+            offRead();
+          };
+        })
+        .catch(() => {});
+
+      return () => {
+        socketCleanupRef.current();
+        disconnect();
+      };
+    }, [load, myUserId]),
   );
 
-  const handleSearch = useCallback(
-    (text) => {
-      setSearch(text);
-      if (!text) {
-        setFiltered(chats);
-        return;
-      }
+  // Keep filtered in sync when chats change
+  useEffect(() => {
+    if (!search) {
+      setFiltered(chats);
+    } else {
       setFiltered(
         chats.filter(
           (c) =>
-            (c.name || "").toLowerCase().includes(text.toLowerCase()) ||
+            (c.name || "").toLowerCase().includes(search.toLowerCase()) ||
             c.participants?.some((p) =>
-              (p.name || "").toLowerCase().includes(text.toLowerCase()),
+              (p.name || "").toLowerCase().includes(search.toLowerCase()),
             ),
         ),
       );
+    }
+  }, [chats, search]);
+
+  const handleSearch = useCallback((text) => {
+    setSearch(text);
+  }, []);
+
+  const getChatName = useCallback(
+    (chat) => {
+      if (chat.name) return chat.name;
+      const others = (chat.participants || []).filter(
+        (p) => String(p._id) !== String(myUserId),
+      );
+      return others.map((p) => p.name).join(", ") || "Chat";
     },
-    [chats],
+    [myUserId],
   );
 
-  const getChatName = (chat) => {
-    if (chat.name) return chat.name;
-    const others = chat.participants?.filter((p) => p._id !== chat.myId) || [];
-    return others.map((p) => p.name).join(", ") || "Chat";
-  };
-
-  const renderItem = ({ item }) => {
-    const name = getChatName(item);
-    // Mongoose Map serializes to plain object on API response
-    const unread = myUserId ? item.unreadCounts?.[myUserId] || 0 : 0;
-    return (
-      <TouchableOpacity
-        style={styles.chatRow}
-        onPress={() => router.push("/chat/" + item._id)}
-      >
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{getInitials(name)}</Text>
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <View style={styles.chatHeader}>
-            <Text style={styles.chatName} numberOfLines={1}>
-              {name}
-            </Text>
-            <Text style={styles.chatTime}>
-              {fmtTime(item.lastMessage?.timestamp)}
-            </Text>
+  const renderItem = useCallback(
+    ({ item }) => {
+      const name = getChatName(item);
+      const unread = myUserId ? item.unreadCounts?.[myUserId] || 0 : 0;
+      return (
+        <TouchableOpacity
+          style={styles.chatRow}
+          onPress={() => router.push("/chat/" + item._id)}
+          activeOpacity={0.75}
+        >
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{getInitials(name)}</Text>
           </View>
-          <View style={styles.chatFooter}>
-            <Text
-              style={[styles.lastMessage, unread > 0 && styles.unreadMsg]}
-              numberOfLines={1}
-            >
-              {item.lastMessage?.text || "No messages yet"}
-            </Text>
-            {unread > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unread}</Text>
-              </View>
-            )}
+          <View style={{ flex: 1, gap: 2 }}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.chatName} numberOfLines={1}>
+                {name}
+              </Text>
+              <Text style={styles.chatTime}>
+                {fmtTime(item.lastMessage?.timestamp)}
+              </Text>
+            </View>
+            <View style={styles.chatFooter}>
+              <Text
+                style={[styles.lastMessage, unread > 0 && styles.unreadMsg]}
+                numberOfLines={1}
+              >
+                {item.lastMessage?.text || "No messages yet"}
+              </Text>
+              {unread > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unread > 99 ? "99+" : unread}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        </TouchableOpacity>
+      );
+    },
+    [styles, getChatName, myUserId, router],
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -166,6 +255,8 @@ export default function ChatListScreen() {
           data={filtered}
           keyExtractor={(item) => String(item._id)}
           renderItem={renderItem}
+          // extraData ensures items re-render when myUserId loads from AsyncStorage
+          extraData={myUserId}
           contentContainerStyle={{
             padding: 16,
             gap: 8,
@@ -284,15 +375,15 @@ const makeStyles = (colors) =>
     },
     unreadMsg: { fontFamily: fonts.bodyBold, color: colors.textPrimary },
     badge: {
-      minWidth: 18,
-      height: 18,
-      borderRadius: 9,
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
       backgroundColor: "#D95D39",
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 4,
+      paddingHorizontal: 5,
     },
-    badgeText: { fontFamily: fonts.bodyBold, fontSize: 10, color: "white" },
+    badgeText: { fontFamily: fonts.bodyBold, fontSize: 11, color: "white" },
     empty: { alignItems: "center", paddingVertical: 60, gap: 10 },
     emptyTitle: {
       fontFamily: fonts.bodyBold,

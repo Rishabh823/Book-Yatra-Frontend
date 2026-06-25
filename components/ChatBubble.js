@@ -10,47 +10,61 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts, radius } from "../lib/theme";
 
-// Status indicator shown on own messages (bottom-right corner of bubble)
-function MessageStatus({ status, onRetry, text }) {
+/**
+ * WhatsApp-style tick indicator for own messages.
+ *
+ * sending  → clock spinner (grey)
+ * sent     → single grey tick  ✓
+ * read     → double orange tick ✓✓
+ * failed   → red alert icon + "Tap to retry"
+ */
+function MessageTick({ status, isRead, onRetry }) {
   if (status === "sending") {
     return (
-      <View style={st.statusRow}>
-        <ActivityIndicator size={10} color="rgba(255,255,255,0.7)" />
+      <View style={st.row}>
+        <ActivityIndicator size={10} color="rgba(255,255,255,0.6)" />
       </View>
     );
   }
+
   if (status === "failed") {
     return (
-      <TouchableOpacity
-        style={st.failedRow}
-        onPress={onRetry}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={st.row} onPress={onRetry} activeOpacity={0.7}>
         <Ionicons name="alert-circle" size={13} color="#FF6B6B" />
-        <Text style={st.failedText}>Tap to retry</Text>
+        <Text style={st.failText}>Tap to retry</Text>
       </TouchableOpacity>
     );
   }
-  if (status === "sent") {
+
+  // sent or delivered — show single tick; if read show double coloured tick
+  if (isRead) {
+    // Double tick — orange (read by recipient)
     return (
-      <View style={st.statusRow}>
-        <Ionicons
-          name="checkmark-done"
-          size={13}
-          color="rgba(255,255,255,0.75)"
-        />
+      <View style={st.row}>
+        <View style={st.doubleTick}>
+          <Ionicons name="checkmark" size={12} color="#D95D39" style={st.tick1} />
+          <Ionicons name="checkmark" size={12} color="#D95D39" style={st.tick2} />
+        </View>
       </View>
     );
   }
-  return null;
+
+  // Single tick — white/grey (delivered to server, not yet read)
+  return (
+    <View style={st.row}>
+      <Ionicons name="checkmark" size={13} color="rgba(255,255,255,0.7)" />
+    </View>
+  );
 }
 
 export default function ChatBubble({
   message,
   isOwn,
+  isRead,
   showName,
   senderName,
   onRetry,
+  onLongPress,
 }) {
   const time = message.createdAt
     ? new Date(message.createdAt).toLocaleTimeString("en-IN", {
@@ -59,7 +73,7 @@ export default function ChatBubble({
       })
     : "";
 
-  const status = message._status || null;
+  const status = message._status || "sent";
   const isFailed = status === "failed";
 
   if (message.type === "system") {
@@ -70,13 +84,39 @@ export default function ChatBubble({
     );
   }
 
+  // ── Deleted-for-everyone placeholder ────────────────────────────────────────
+  if (message.isDeleted || message.type === "deleted") {
+    const deletedLabel = isOwn ? "You deleted this message" : "This message was deleted";
+    return (
+      <View style={[styles.container, isOwn && styles.containerOwn]}>
+        <View style={[styles.deletedBubble, isOwn ? styles.deletedOwn : styles.deletedOther]}>
+          <Ionicons
+            name="ban-outline"
+            size={13}
+            color={isOwn ? "rgba(255,255,255,0.55)" : "#9CA3AF"}
+            style={{ marginRight: 5 }}
+          />
+          <Text style={[styles.deletedText, isOwn && styles.deletedTextOwn]}>
+            {deletedLabel}
+          </Text>
+          <Text style={[styles.time, isOwn ? styles.timeOwn : styles.timeOther, { marginLeft: 8 }]}>
+            {time}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, isOwn && styles.containerOwn]}>
       {!isOwn && showName && (
         <Text style={styles.senderName}>{senderName || "Unknown"}</Text>
       )}
 
-      <View
+      <TouchableOpacity
+        activeOpacity={0.85}
+        delayLongPress={350}
+        onLongPress={() => onLongPress?.(message)}
         style={[
           styles.bubble,
           isOwn ? styles.ownBubble : styles.otherBubble,
@@ -91,22 +131,26 @@ export default function ChatBubble({
           />
         ) : (
           <Text style={[styles.msgText, isOwn && styles.ownText]}>
-            {message.isDeleted ? "This message was deleted" : message.text}
+            {message.text}
           </Text>
         )}
 
+        {/* Time + tick row — only own messages show a tick */}
         <View style={styles.metaRow}>
-          <Text style={[styles.time, isOwn && styles.timeOwn]}>{time}</Text>
+          <Text style={[styles.time, isOwn ? styles.timeOwn : styles.timeOther]}>
+            {time}
+          </Text>
           {isOwn && (
-            <MessageStatus
+            <MessageTick
               status={status}
+              isRead={isRead}
               onRetry={() => onRetry?.(message._id, message.text)}
             />
           )}
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* Failed: show retry below the bubble */}
+      {/* Failed — extra retry banner below bubble */}
       {isFailed && isOwn && (
         <TouchableOpacity
           style={styles.retryBtn}
@@ -122,21 +166,29 @@ export default function ChatBubble({
 }
 
 const st = StyleSheet.create({
-  statusRow: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 4,
+    marginLeft: 3,
   },
-  failedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginLeft: 4,
-  },
-  failedText: {
+  failText: {
     fontFamily: fonts.body,
     fontSize: 10,
     color: "#FF6B6B",
+    marginLeft: 3,
+  },
+  doubleTick: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 18,
+  },
+  tick1: {
+    position: "absolute",
+    left: 0,
+  },
+  tick2: {
+    position: "absolute",
+    left: 5,
   },
 });
 
@@ -165,9 +217,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     borderBottomLeftRadius: 4,
   },
-  failedBubble: {
-    opacity: 0.75,
-  },
+  failedBubble: { opacity: 0.75 },
 
   msgText: {
     fontFamily: fonts.body,
@@ -187,11 +237,40 @@ const styles = StyleSheet.create({
   time: {
     fontFamily: fonts.body,
     fontSize: 10,
-    color: "rgba(0,0,0,0.35)",
   },
   timeOwn: { color: "rgba(255,255,255,0.65)" },
+  timeOther: { color: "rgba(0,0,0,0.35)" },
 
   messageImage: { width: 200, height: 150, borderRadius: 8 },
+
+  // Deleted-for-everyone placeholder
+  deletedBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    maxWidth: "78%",
+  },
+  deletedOwn: {
+    backgroundColor: "rgba(217,93,57,0.55)",
+    borderColor: "rgba(217,93,57,0.3)",
+    borderBottomRightRadius: 4,
+  },
+  deletedOther: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
+    borderBottomLeftRadius: 4,
+  },
+  deletedText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    fontStyle: "italic",
+    color: "#9CA3AF",
+    flex: 1,
+  },
+  deletedTextOwn: { color: "rgba(255,255,255,0.7)" },
 
   senderName: {
     fontFamily: fonts.bodyBold,

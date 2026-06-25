@@ -541,10 +541,25 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       load();
-      // Refresh unread count each time profile tab is focused
+      // Refresh total unread count each time profile tab is focused
       api.get('/chat/unread-count').then((res) => {
         setUnreadChatCount(res?.count || 0);
       }).catch(() => {});
+
+      // Real-time bump: increment badge when a new message arrives
+      const handleNewMsg = () => {
+        setUnreadChatCount((n) => n + 1);
+      };
+      // Real-time clear: re-fetch when user reads a chat
+      const handleRead = () => {
+        api.get('/chat/unread-count').then((res) => {
+          setUnreadChatCount(res?.count || 0);
+        }).catch(() => {});
+      };
+      const { DeviceEventEmitter: DEE } = require('react-native');
+      const s1 = DEE.addListener('chat_new_message', handleNewMsg);
+      const s2 = DEE.addListener('chat_messages_read', handleRead);
+      return () => { s1.remove(); s2.remove(); };
     }, [load]),
   );
 

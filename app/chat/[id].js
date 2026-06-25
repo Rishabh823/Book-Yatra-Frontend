@@ -6,9 +6,11 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,10 +34,12 @@ export default function ChatScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [myUserId, setMyUserId] = useState(null);
+  const [chatName, setChatName] = useState("");
+  // Message long-press context menu
+  const [deleteTarget, setDeleteTarget] = useState(null); // { _id, text, isMine }
 
   const flatRef = useRef(null);
   const intervalRef = useRef(null);
-  // Track tempIds currently in-flight to prevent duplicate sends
   const inFlightRef = useRef(new Set());
   const { connect, disconnect, on } = useSocket("/chat");
 
@@ -43,26 +47,41 @@ export default function ChatScreen() {
     AsyncStorage.getItem("userId").then((id) => setMyUserId(id));
   }, []);
 
+  useEffect(() => {
+    if (!myUserId) return;
+    api
+      .get("/chat/" + chatId)
+      .then((res) => {
+        const chat = res.data;
+        if (!chat) return;
+        const others = (chat.participants || []).filter(
+          (p) => String(p._id || p) !== String(myUserId),
+        );
+        if (chat.type === "direct" && others.length === 1) {
+          setChatName(others[0].name || "Chat");
+        } else {
+          setChatName(chat.name || "Group Chat");
+        }
+      })
+      .catch(() => {});
+  }, [chatId, myUserId]);
+
   const loadMessages = useCallback(
     async (p = 1, append = false) => {
       try {
         const res = await api.get("/chat/" + chatId + "/messages?page=" + p);
-        const msgs = res.data || [];
+        const msgs = (res.data || []).map((m) => ({ ...m, _status: "sent" }));
         if (append) {
           setMessages((prev) => [...msgs, ...prev]);
         } else {
           setMessages((prev) => {
             const optimistic = prev.filter((m) => m._local);
-            // Keep only optimistic messages the server hasn't confirmed yet.
-            // Match by text + creation time (within 60s) to catch messages that
-            // were marked 'failed' on the client but actually saved on the server.
             const stillPending = optimistic.filter((m) => {
               const serverHas = msgs.some(
                 (s) =>
                   s.text === m.text &&
-                  Math.abs(
-                    new Date(s.createdAt) - new Date(m.createdAt),
-                  ) < 60000,
+                  Math.abs(new Date(s.createdAt) - new Date(m.createdAt)) <
+                    60000,
               );
               return !serverHas;
             });
@@ -94,23 +113,18 @@ export default function ChatScreen() {
     connect()
       .then((socket) => {
         socket.emit("join_chat", chatId);
-        const off = on("new_message", (msg) => {
+
+        const offNew = on("new_message", (msg) => {
           setMessages((prev) => {
             const incomingId = String(msg._id);
-            // Already confirmed as a server message — skip duplicate
             if (prev.some((m) => !m._local && String(m._id) === incomingId))
               return prev;
-            // Replace any local message with matching text (regardless of status).
-            // This handles the race where the API failed on the client but the
-            // server actually saved the message and emitted the socket event —
-            // ensuring we never end up with both a 'failed' and a 'sent' copy.
             const matchIdx = prev.findIndex(
               (m) =>
                 m._local &&
                 m.text === msg.text &&
-                Math.abs(
-                  new Date(msg.createdAt) - new Date(m.createdAt),
-                ) < 60000,
+                Math.abs(new Date(msg.createdAt) - new Date(m.createdAt)) <
+                  60000,
             );
             if (matchIdx !== -1) {
               const next = [...prev];
@@ -125,7 +139,46 @@ export default function ChatScreen() {
           );
           markRead();
         });
-        cleanup = off;
+
+        const offRead = on("messages_read", ({ readBy }) => {
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m._local || m._status === "failed" || m._status === "sending")
+                return m;
+              const senderId = String(m.senderId?._id || m.senderId);
+              if (!myUserId || senderId !== String(myUserId)) return m;
+              if (String(readBy) === String(myUserId)) return m;
+              const alreadyRead = (m.readBy || []).some(
+                (r) => String(r.userId) !== String(myUserId),
+              );
+              if (alreadyRead) return m;
+              return {
+                ...m,
+                readBy: [
+                  ...(m.readBy || []),
+                  { userId: readBy, readAt: new Date().toISOString() },
+                ],
+              };
+            }),
+          );
+        });
+
+        // Mark message as deleted when someone deletes for everyone
+        const offDel = on("message_deleted", ({ messageId }) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              String(m._id) === String(messageId)
+                ? { ...m, isDeleted: true, type: "deleted", text: undefined }
+                : m,
+            ),
+          );
+        });
+
+        cleanup = () => {
+          offNew();
+          offRead();
+          offDel();
+        };
       })
       .catch(() => {});
 
@@ -134,47 +187,44 @@ export default function ChatScreen() {
       cleanup();
       disconnect();
     };
-  }, [loadMessages, chatId, markRead]);
+  }, [loadMessages, chatId, markRead, myUserId]);
 
-  // ── Core send logic (fire-and-forget after optimistic insert) ────────────────
+  // ── Send logic ────────────────────────────────────────────────────────────────
   const dispatchSend = useCallback(
     (tempId, text) => {
-      if (inFlightRef.current.has(tempId)) return; // guard: already in-flight
+      if (inFlightRef.current.has(tempId)) return;
       inFlightRef.current.add(tempId);
 
-      // 30-second hard timeout — only a real network hang should trigger this.
-      // Fast 5xx errors still reach .catch() immediately via the API client.
       const controller = new AbortController();
       const abortTimer = setTimeout(() => controller.abort(), 30000);
 
       api
-        .post("/chat/message", { chatId, text, type: "text" }, { signal: controller.signal })
+        .post(
+          "/chat/message",
+          { chatId, text, type: "text" },
+          { signal: controller.signal },
+        )
         .then((res) => {
           clearTimeout(abortTimer);
           const savedMsg = res.data;
-          if (!savedMsg?._id) return; // unexpected shape — let polling reconcile
+          if (!savedMsg?._id) return;
           setMessages((prev) =>
             prev.map((m) =>
               m._id === tempId ? { ...savedMsg, _status: "sent" } : m,
             ),
           );
         })
-        .catch((err) => {
+        .catch(() => {
           clearTimeout(abortTimer);
-          // If the request was aborted (our 30s timeout) or the server returned
-          // an error AND the socket hasn't already replaced this message, mark failed.
           setMessages((prev) => {
             const msg = prev.find((m) => m._id === tempId);
-            // Already replaced by socket (no longer _local or already 'sent') — skip
             if (!msg || !msg._local || msg._status === "sent") return prev;
             return prev.map((m) =>
               m._id === tempId ? { ...m, _status: "failed" } : m,
             );
           });
         })
-        .finally(() => {
-          inFlightRef.current.delete(tempId);
-        });
+        .finally(() => inFlightRef.current.delete(tempId));
     },
     [chatId],
   );
@@ -182,33 +232,27 @@ export default function ChatScreen() {
   const sendMessage = useCallback(() => {
     const text = input.trim();
     if (!text) return;
-
-    // 1. Clear input immediately — do NOT wait for API
     setInput("");
-
-    // 2. Build optimistic message
     const tempId =
       "temp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const optimisticMsg = {
-      _id: tempId,
-      _local: true, // marks this as client-only
-      _status: "sending", // 'sending' | 'sent' | 'failed'
-      text,
-      type: "text",
-      chatId,
-      createdAt: new Date().toISOString(),
-      senderId: { _id: myUserId },
-    };
-
-    // 3. Insert into list immediately
-    setMessages((prev) => [...prev, optimisticMsg]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        _id: tempId,
+        _local: true,
+        _status: "sending",
+        text,
+        type: "text",
+        chatId,
+        createdAt: new Date().toISOString(),
+        senderId: { _id: myUserId },
+        readBy: [],
+      },
+    ]);
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 40);
-
-    // 4. Fire API in background — no await here
     dispatchSend(tempId, text);
   }, [input, chatId, myUserId, dispatchSend]);
 
-  // Retry a failed message
   const retryMessage = useCallback(
     (tempId, text) => {
       setMessages((prev) =>
@@ -226,10 +270,53 @@ export default function ChatScreen() {
     loadMessages(nextPage, true);
   }, [hasMore, page, loadMessages]);
 
+  // ── Delete message ────────────────────────────────────────────────────────────
+  const handleLongPress = useCallback(
+    (msg) => {
+      const isMine =
+        String(msg.senderId?._id || msg.senderId) === String(myUserId);
+      setDeleteTarget({ _id: msg._id, text: msg.text, isMine });
+    },
+    [myUserId],
+  );
+
+  const deleteMessage = useCallback(
+    async (scope) => {
+      if (!deleteTarget) return;
+      const { _id } = deleteTarget;
+      setDeleteTarget(null);
+
+      if (scope === "me") {
+        // "Delete for me" — vanishes only from your view, no placeholder
+        setMessages((prev) =>
+          prev.filter((m) => String(m._id) !== String(_id)),
+        );
+        api.del("/chat/message/" + _id + "?scope=me").catch(() => {});
+      } else {
+        // "Delete for everyone" — replace with deleted placeholder immediately;
+        // socket pushes the same update to all other participants
+        setMessages((prev) =>
+          prev.map((m) =>
+            String(m._id) === String(_id)
+              ? { ...m, isDeleted: true, type: "deleted", text: undefined }
+              : m,
+          ),
+        );
+        api.del("/chat/message/" + _id + "?scope=everyone").catch(() => {
+          loadMessages(1, false);
+        });
+      }
+    },
+    [deleteTarget, loadMessages],
+  );
+
   const isOwn = (msg) => {
     const sid = msg.senderId?._id || msg.senderId;
     return myUserId && String(sid) === String(myUserId);
   };
+
+  const isRead = (msg) =>
+    (msg.readBy || []).some((r) => String(r.userId) !== String(myUserId));
 
   if (loading) {
     return (
@@ -268,7 +355,7 @@ export default function ChatScreen() {
           style={[s.chatName, { color: colors.textPrimary }]}
           numberOfLines={1}
         >
-          Chat
+          {chatName || "Chat"}
         </Text>
         <TouchableOpacity
           style={[s.iconBtn, { backgroundColor: colors.elevated }]}
@@ -289,6 +376,7 @@ export default function ChatScreen() {
           <ChatBubble
             message={item}
             isOwn={isOwn(item)}
+            isRead={isOwn(item) ? isRead(item) : false}
             showName={
               !isOwn(item) &&
               (index === 0 ||
@@ -296,6 +384,7 @@ export default function ChatScreen() {
             }
             senderName={item.senderId?.name}
             onRetry={retryMessage}
+            onLongPress={handleLongPress}
           />
         )}
         contentContainerStyle={{ paddingVertical: 12 }}
@@ -340,7 +429,6 @@ export default function ChatScreen() {
           returnKeyType="send"
           blurOnSubmit={false}
         />
-        {/* Send button: only disabled when input is empty */}
         <TouchableOpacity
           style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
           onPress={sendMessage}
@@ -350,6 +438,111 @@ export default function ChatScreen() {
           <Ionicons name="send" size={18} color="white" />
         </TouchableOpacity>
       </View>
+
+      {/* ── Delete context menu (WhatsApp-style, no Alert) ─────────────────── */}
+      <Modal
+        visible={!!deleteTarget}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteTarget(null)}
+        statusBarTranslucent
+      >
+        <TouchableWithoutFeedback onPress={() => setDeleteTarget(null)}>
+          <View style={s.overlay}>
+            <TouchableWithoutFeedback>
+              <View
+                style={[s.deleteSheet, { backgroundColor: colors.surface }]}
+              >
+                {/* Preview */}
+                {deleteTarget?.text ? (
+                  <View
+                    style={[s.previewBox, { backgroundColor: colors.elevated }]}
+                  >
+                    <Text
+                      style={[s.previewText, { color: colors.textSecondary }]}
+                      numberOfLines={2}
+                    >
+                      {deleteTarget.text}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <Text style={[s.sheetTitle, { color: colors.textPrimary }]}>
+                  Delete message?
+                </Text>
+
+                {/* Delete for everyone — own messages only */}
+                {deleteTarget?.isMine && (
+                  <TouchableOpacity
+                    style={s.sheetBtn}
+                    onPress={() => deleteMessage("everyone")}
+                    activeOpacity={0.75}
+                  >
+                    <View
+                      style={[s.sheetBtnIcon, { backgroundColor: "#FEE2E2" }]}
+                    >
+                      <Ionicons name="trash" size={18} color="#DC2626" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[s.sheetBtnLabel, { color: "#DC2626" }]}>
+                        Delete for Everyone
+                      </Text>
+                      <Text
+                        style={[s.sheetBtnSub, { color: colors.textSecondary }]}
+                      >
+                        Remove for all participants
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {/* Delete for me — always available */}
+                <TouchableOpacity
+                  style={s.sheetBtn}
+                  onPress={() => deleteMessage("me")}
+                  activeOpacity={0.75}
+                >
+                  <View
+                    style={[
+                      s.sheetBtnIcon,
+                      { backgroundColor: colors.elevated },
+                    ]}
+                  >
+                    <Ionicons
+                      name="eye-off-outline"
+                      size={18}
+                      color={colors.textPrimary}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[s.sheetBtnLabel, { color: colors.textPrimary }]}
+                    >
+                      Delete for Me
+                    </Text>
+                    <Text
+                      style={[s.sheetBtnSub, { color: colors.textSecondary }]}
+                    >
+                      Only you won't see this message
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Cancel */}
+                <TouchableOpacity
+                  style={[s.cancelBtn, { borderTopColor: colors.borderSubtle }]}
+                  onPress={() => setDeleteTarget(null)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.cancelText, { color: colors.textSecondary }]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -401,4 +594,55 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   sendBtnDisabled: { backgroundColor: "#E5E7EB" },
+
+  // Delete sheet
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  deleteSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingBottom: 28,
+    overflow: "hidden",
+  },
+  previewBox: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+    padding: 12,
+    borderRadius: 10,
+  },
+  previewText: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18 },
+  sheetTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 15,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    paddingTop: 4,
+  },
+  sheetBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  sheetBtnIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetBtnLabel: { fontFamily: fonts.bodyBold, fontSize: 14 },
+  sheetBtnSub: { fontFamily: fonts.body, fontSize: 12, marginTop: 1 },
+  cancelBtn: {
+    marginTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  cancelText: { fontFamily: fonts.bodyBold, fontSize: 15 },
 });
