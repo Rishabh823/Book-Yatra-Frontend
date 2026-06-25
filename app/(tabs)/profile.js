@@ -162,6 +162,14 @@ const getUserMenu = (t) => [
     color: "#5C1615",
     bg: "#FEF2F2",
   },
+  {
+    icon: "shield-checkmark-outline",
+    label: "Privacy Policy",
+    sub: "How we use your data",
+    action: "privacy",
+    color: "#0F766E",
+    bg: "#F0FDFA",
+  },
 ];
 
 const SUPER_ADMIN_GRID = [
@@ -550,6 +558,7 @@ export default function Profile() {
     if (a === "feedback") return router.push("/feedback");
     if (a === "contact") return router.push("/contact");
     if (a === "about") return router.push("/about");
+    if (a === "privacy") return router.push("/privacy-policy");
     if (a === "members") return router.push("/members");
     if (a === "select-operators") return router.push("/select-operators");
     if (a === "favorites") return router.push("/favorites");
