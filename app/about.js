@@ -307,10 +307,8 @@ export default function About() {
 
         {/* Footer */}
         <View style={s.footer}>
-          <Text style={s.footerMantra}>जय श्री श्याम 🙏</Text>
-          <Text style={s.footerCopy}>
-            © 2024 Shyam Sawariya Parivar · TripKart
-          </Text>
+          {/* <Text style={s.footerMantra}>Trip Kart</Text> */}
+          <Text style={s.footerCopy}>© TripKart</Text>
           <Text style={s.footerDev}>Powered by Cipher Infratech</Text>
         </View>
       </ScrollView>

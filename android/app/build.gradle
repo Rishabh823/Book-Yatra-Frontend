@@ -107,9 +107,9 @@ android {
         }
         release {
             storeFile file('tripkart-release.keystore')
-            storePassword 'tripkart@2024'
+            storePassword 'tripkart@2026'
             keyAlias 'tripkart'
-            keyPassword 'tripkart@2024'
+            keyPassword 'tripkart@2026'
         }
     }
     buildTypes {
