@@ -51,14 +51,21 @@ export default function ChatScreen() {
         if (append) {
           setMessages((prev) => [...msgs, ...prev]);
         } else {
-          // Preserve any locally-inserted optimistic messages that haven't been confirmed yet
           setMessages((prev) => {
             const optimistic = prev.filter((m) => m._local);
-            const serverIds = new Set(msgs.map((m) => String(m._id)));
-            // Drop optimistic messages that the server already confirmed
-            const stillPending = optimistic.filter(
-              (m) => !serverIds.has(String(m._id)),
-            );
+            // Keep only optimistic messages the server hasn't confirmed yet.
+            // Match by text + creation time (within 60s) to catch messages that
+            // were marked 'failed' on the client but actually saved on the server.
+            const stillPending = optimistic.filter((m) => {
+              const serverHas = msgs.some(
+                (s) =>
+                  s.text === m.text &&
+                  Math.abs(
+                    new Date(s.createdAt) - new Date(m.createdAt),
+                  ) < 60000,
+              );
+              return !serverHas;
+            });
             return [...msgs, ...stillPending];
           });
           setTimeout(
@@ -90,12 +97,20 @@ export default function ChatScreen() {
         const off = on("new_message", (msg) => {
           setMessages((prev) => {
             const incomingId = String(msg._id);
-            // Already have the real message — skip
+            // Already confirmed as a server message — skip duplicate
             if (prev.some((m) => !m._local && String(m._id) === incomingId))
               return prev;
-            // Replace matching optimistic message (same text, still sending)
+            // Replace any local message with matching text (regardless of status).
+            // This handles the race where the API failed on the client but the
+            // server actually saved the message and emitted the socket event —
+            // ensuring we never end up with both a 'failed' and a 'sent' copy.
             const matchIdx = prev.findIndex(
-              (m) => m._local && m._status === "sending" && m.text === msg.text,
+              (m) =>
+                m._local &&
+                m.text === msg.text &&
+                Math.abs(
+                  new Date(msg.createdAt) - new Date(m.createdAt),
+                ) < 60000,
             );
             if (matchIdx !== -1) {
               const next = [...prev];
@@ -127,22 +142,35 @@ export default function ChatScreen() {
       if (inFlightRef.current.has(tempId)) return; // guard: already in-flight
       inFlightRef.current.add(tempId);
 
+      // 30-second hard timeout — only a real network hang should trigger this.
+      // Fast 5xx errors still reach .catch() immediately via the API client.
+      const controller = new AbortController();
+      const abortTimer = setTimeout(() => controller.abort(), 30000);
+
       api
-        .post("/chat/message", { chatId, text, type: "text" })
+        .post("/chat/message", { chatId, text, type: "text" }, { signal: controller.signal })
         .then((res) => {
+          clearTimeout(abortTimer);
           const savedMsg = res.data;
+          if (!savedMsg?._id) return; // unexpected shape — let polling reconcile
           setMessages((prev) =>
             prev.map((m) =>
               m._id === tempId ? { ...savedMsg, _status: "sent" } : m,
             ),
           );
         })
-        .catch(() => {
-          setMessages((prev) =>
-            prev.map((m) =>
+        .catch((err) => {
+          clearTimeout(abortTimer);
+          // If the request was aborted (our 30s timeout) or the server returned
+          // an error AND the socket hasn't already replaced this message, mark failed.
+          setMessages((prev) => {
+            const msg = prev.find((m) => m._id === tempId);
+            // Already replaced by socket (no longer _local or already 'sent') — skip
+            if (!msg || !msg._local || msg._status === "sent") return prev;
+            return prev.map((m) =>
               m._id === tempId ? { ...m, _status: "failed" } : m,
-            ),
-          );
+            );
+          });
         })
         .finally(() => {
           inFlightRef.current.delete(tempId);
