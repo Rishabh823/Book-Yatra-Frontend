@@ -173,7 +173,7 @@ const SECTIONS = [
     content: [
       {
         sub: "",
-        text: "If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:\n\nEmail: support@tripkart.in\nCompany: CyberSigma CS\nAddress: India",
+        text: "If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:\n\nEmail: support@tripkart.in\nCompany: CipherInfraTech\nAddress: India",
       },
     ],
   },
@@ -250,7 +250,7 @@ export default function PrivacyPolicyScreen() {
         <View style={s.footer}>
           <Ionicons name="lock-closed" size={16} color={colors.textSecondary} />
           <Text style={s.footerText}>
-            © 2026 TripKart · CyberSigma CS · All rights reserved
+            © 2026 TripKart · CipherInfraTech · All rights reserved
           </Text>
         </View>
       </ScrollView>
