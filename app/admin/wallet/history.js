@@ -1,21 +1,22 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius } from "../../../lib/theme";
+import { fonts, radius } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 import { operatorWalletApi } from "../../../lib/api";
 
 const fmtCurrency = (n) => `₹${(n || 0).toLocaleString("en-IN")}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 const STATUS_META = {
-  pending:    { color: "#D97706", bg: "#FFFBEB", label: "Pending" },
-  processing: { color: "#2563EB", bg: "#EFF6FF", label: "Processing" },
-  completed:  { color: "#16A34A", bg: "#F0FDF4", label: "Completed" },
-  rejected:   { color: "#DC2626", bg: "#FEF2F2", label: "Rejected" },
+  pending:    { color: "#D97706", label: "Pending" },
+  processing: { color: "#2563EB", label: "Processing" },
+  completed:  { color: "#16A34A", label: "Completed" },
+  rejected:   { color: "#DC2626", label: "Rejected" },
 };
 
 const TABS = [
@@ -24,48 +25,66 @@ const TABS = [
 ];
 
 function WithdrawalRow({ item }) {
+  const colors = useColors();
   const meta = STATUS_META[item.status] || STATUS_META.pending;
   return (
-    <View style={s.row}>
-      <View style={[s.rowIcon, { backgroundColor: meta.bg }]}>
+    <View style={{
+      flexDirection: "row", alignItems: "flex-start", gap: 12,
+      backgroundColor: colors.surface, padding: 14, borderRadius: 20,
+      marginVertical: 4, borderWidth: 1, borderColor: colors.borderSubtle,
+    }}>
+      <View style={{
+        width: 42, height: 42, borderRadius: 21,
+        alignItems: "center", justifyContent: "center",
+        backgroundColor: meta.color + "18",
+      }}>
         <Ionicons name="arrow-up-circle" size={20} color={meta.color} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={s.rowTitle}>{fmtCurrency(item.amount)}</Text>
-        <Text style={s.rowSub}>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary }}>{fmtCurrency(item.amount)}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
           {item.bankAccountId?.bankName || "Bank"} · ****{item.bankAccountId?.accountNumber?.slice(-4) || "----"}
         </Text>
-        <Text style={s.rowDate}>{fmtDate(item.createdAt)}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 }}>{fmtDate(item.createdAt)}</Text>
         {item.utrNumber && (
-          <Text style={s.rowUtr}>UTR: {item.utrNumber}</Text>
+          <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 11, color: "#16A34A", marginTop: 4 }}>UTR: {item.utrNumber}</Text>
         )}
         {item.rejectionReason && (
-          <Text style={s.rowReject}>Reason: {item.rejectionReason}</Text>
+          <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 }}>Reason: {item.rejectionReason}</Text>
         )}
       </View>
-      <View style={[s.badge, { backgroundColor: meta.bg }]}>
-        <Text style={[s.badgeTxt, { color: meta.color }]}>{meta.label}</Text>
+      <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: meta.color + "18" }}>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 11, color: meta.color }}>{meta.label}</Text>
       </View>
     </View>
   );
 }
 
 function SettlementRow({ item }) {
+  const colors = useColors();
   return (
-    <View style={s.row}>
-      <View style={[s.rowIcon, { backgroundColor: "#F0FDF4" }]}>
+    <View style={{
+      flexDirection: "row", alignItems: "flex-start", gap: 12,
+      backgroundColor: colors.surface, padding: 14, borderRadius: 20,
+      marginVertical: 4, borderWidth: 1, borderColor: colors.borderSubtle,
+    }}>
+      <View style={{
+        width: 42, height: 42, borderRadius: 21,
+        alignItems: "center", justifyContent: "center",
+        backgroundColor: "#16A34A18",
+      }}>
         <Ionicons name="checkmark-circle" size={20} color="#16A34A" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={s.rowTitle} numberOfLines={1}>{item.tourId?.title || "Tour Booking"}</Text>
-        <Text style={s.rowSub}>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary }} numberOfLines={1}>{item.tourId?.title || "Tour Booking"}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
           Booking: {fmtCurrency(item.bookingAmount)} · Commission: {fmtCurrency(item.commissionAmount)}
         </Text>
-        <Text style={s.rowDate}>{fmtDate(item.createdAt)}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 }}>{fmtDate(item.createdAt)}</Text>
       </View>
       <View style={{ alignItems: "flex-end" }}>
-        <Text style={[s.rowAmt, { color: "#16A34A" }]}>+{fmtCurrency(item.operatorAmount)}</Text>
-        <Text style={s.rowComm}>{item.commissionRate || 10}% comm.</Text>
+        <Text style={{ fontFamily: fonts.bodyBold, fontSize: 14, color: "#16A34A" }}>+{fmtCurrency(item.operatorAmount)}</Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled }}>{item.commissionRate || 10}% comm.</Text>
       </View>
     </View>
   );
@@ -73,6 +92,8 @@ function SettlementRow({ item }) {
 
 export default function WalletHistoryScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [activeTab, setActiveTab] = useState("withdrawals");
   const [withdrawals, setWithdrawals] = useState([]);
   const [settlements, setSettlements] = useState([]);
@@ -120,8 +141,8 @@ export default function WalletHistoryScreen() {
   return (
     <SafeAreaView style={s.container} edges={["top"]}>
       <View style={s.head}>
-        <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={s.title}>History</Text>
         <View style={{ width: 40 }} />
@@ -157,7 +178,9 @@ export default function WalletHistoryScreen() {
           ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginTop: 12 }} color={colors.primary} /> : null}
           ListEmptyComponent={
             <View style={s.empty}>
-              <Ionicons name="receipt-outline" size={48} color={colors.textDisabled} />
+              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.elevated, alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
+                <Ionicons name="receipt-outline" size={36} color={colors.textDisabled} />
+              </View>
               <Text style={s.emptyTxt}>
                 {activeTab === "withdrawals" ? "No withdrawal requests yet" : "No settlements yet"}
               </Text>
@@ -174,28 +197,30 @@ export default function WalletHistoryScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
-  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
+  head: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingBottom: 12, paddingTop: 4,
+    backgroundColor: colors.bg, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle,
+    marginBottom: 4,
+  },
+  backBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle,
+  },
+  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   tabsRow: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
-  tabActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+  tab: {
+    flex: 1, paddingVertical: 10, borderRadius: 999,
+    backgroundColor: colors.surface, alignItems: "center",
+    borderWidth: 1.5, borderColor: colors.borderSubtle,
+  },
+  tabActive: { backgroundColor: colors.primary + "18", borderColor: colors.primary },
   tabTxt: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
   tabTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: colors.surface, padding: 14, borderRadius: 20, marginVertical: 4, borderWidth: 1, borderColor: "#E5E7EB" },
-  rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
-  rowTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
-  rowSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  rowDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 },
-  rowUtr: { fontFamily: fonts.bodyMedium, fontSize: 11, color: "#16A34A", marginTop: 4 },
-  rowReject: { fontFamily: fonts.body, fontSize: 11, color: colors.error, marginTop: 4 },
-  rowAmt: { fontFamily: fonts.bodyBold, fontSize: 14 },
-  rowComm: { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  badgeTxt: { fontFamily: fonts.bodyBold, fontSize: 11 },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
   withdrawBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 },

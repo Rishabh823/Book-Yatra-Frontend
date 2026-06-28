@@ -11,18 +11,18 @@ import { useColors } from '../../../lib/ThemeContext';
 import { superAdmin as superApi } from '../../../lib/api';
 
 const NAV = [
-  { icon: 'business',         label: 'Operators', route: '/admin/super/operators', color: '#7C3AED', bg: '#F5F3FF' },
-  { icon: 'people',           label: 'Users',     route: '/admin/super/users',     color: '#0284C7', bg: '#EFF6FF' },
-  { icon: 'bus',              label: 'Tours',     route: '/admin/super/tours',     color: '#16A34A', bg: '#F0FDF4' },
-  { icon: 'ticket',           label: 'Bookings',  route: '/admin/super/bookings',  color: '#D95D39', bg: '#FDECE7' },
-  { icon: 'shield-checkmark', label: 'Roles',     route: '/admin/super/roles',     color: '#D97706', bg: '#FFFBEB' },
-  { icon: 'settings',         label: 'Settings',  route: '/admin/settings',        color: '#374151', bg: '#FEF2F2' },
+  { icon: 'business',         label: 'Operators', route: '/admin/super/operators', color: '#7C3AED' },
+  { icon: 'people',           label: 'Users',     route: '/admin/super/users',     color: '#0284C7' },
+  { icon: 'bus',              label: 'Tours',     route: '/admin/super/tours',     color: '#16A34A' },
+  { icon: 'ticket',           label: 'Bookings',  route: '/admin/super/bookings',  color: '#D95D39' },
+  { icon: 'shield-checkmark', label: 'Roles',     route: '/admin/super/roles',     color: '#D97706' },
+  { icon: 'settings',         label: 'Settings',  route: '/admin/settings',        color: '#374151' },
 ];
 
 const getStatusColor = (s, colors) => ({
-  confirmed: { bg: '#DCFCE7', text: '#16A34A' },
-  pending:   { bg: '#FEF9C3', text: '#CA8A04' },
-  cancelled: { bg: '#FEE2E2', text: '#DC2626' },
+  confirmed: { bg: '#16A34A18', text: '#16A34A' },
+  pending:   { bg: '#CA8A0418', text: '#CA8A04' },
+  cancelled: { bg: '#DC262618', text: '#DC2626' },
 }[s] || { bg: colors.elevated, text: colors.textSecondary });
 
 export default function SuperDashboard() {
@@ -101,7 +101,7 @@ export default function SuperDashboard() {
                 onPress={() => router.push(n.route)}
                 activeOpacity={0.8}
               >
-                <View style={[s.navIcon, { backgroundColor: n.bg }]}>
+                <View style={[s.navIcon, { backgroundColor: n.color + '18' }]}>
                   <Ionicons name={n.icon} size={24} color={n.color} />
                 </View>
                 <Text style={s.navLabel} numberOfLines={1}>{n.label}</Text>
@@ -115,8 +115,8 @@ export default function SuperDashboard() {
           <View style={{ paddingHorizontal: px, marginTop: 8 }}>
             <Text style={[s.sectionLabel, { marginTop: 8 }]}>· Platform Stats ·</Text>
             <View style={s.statsRow}>
-              <StatCard label="Upcoming Tours" value={stats.upcomingTours ?? 0} icon="calendar" color="#0891B2" bg="#ECFEFF" s={s} colors={colors} />
-              <StatCard label="Active Tours"   value={stats.activeTours ?? 0}   icon="bus"      color="#16A34A" bg="#F0FDF4" s={s} colors={colors} />
+              <StatCard label="Upcoming Tours" value={stats.upcomingTours ?? 0} icon="calendar" color="#0891B2" bg="#0891B218" s={s} colors={colors} />
+              <StatCard label="Active Tours"   value={stats.activeTours ?? 0}   icon="bus"      color="#16A34A" bg="#16A34A18" s={s} colors={colors} />
             </View>
           </View>
         )}
@@ -148,7 +148,7 @@ export default function SuperDashboard() {
                   <Text style={s.rowName} numberOfLines={1}>{op.businessName || op.name || '—'}</Text>
                   <Text style={s.rowSub} numberOfLines={1}>{op.email || op.phone || '—'}</Text>
                 </View>
-                <View style={[s.statusPill, { backgroundColor: op.isActive ? '#DCFCE7' : '#FEE2E2' }]}>
+                <View style={[s.statusPill, { backgroundColor: op.isActive ? '#16A34A18' : '#DC262618' }]}>
                   <View style={[s.statusDot, { backgroundColor: op.isActive ? '#16A34A' : '#DC2626' }]} />
                   <Text style={[s.statusTxt, { color: op.isActive ? '#16A34A' : '#DC2626' }]}>
                     {op.isActive ? 'Active' : 'Off'}

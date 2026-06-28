@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "../../lib/api";
-import { colors, fonts, radius, shadow } from "../../lib/theme";
+import { fonts, radius, shadow } from "../../lib/theme";
+import { useColors } from "../../lib/ThemeContext";
 import Toast from "../../components/Toast";
 import { useToast } from "../../lib/hooks/useToast";
 
@@ -29,6 +30,8 @@ const DOC_TYPES = [
 export default function AddDocumentScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { toast, showToast, hideToast } = useToast();
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
@@ -177,7 +180,7 @@ export default function AddDocumentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: "row",
@@ -187,7 +190,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.borderSubtle,
   },
   cancelBtn: {},
   cancelText: {
@@ -208,7 +211,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radius.pill,
   },
-  saveBtnDisabled: { backgroundColor: "#E5E7EB" },
+  saveBtnDisabled: { backgroundColor: colors.borderSubtle },
   saveBtnText: { fontFamily: fonts.bodyBold, fontSize: 14, color: "white" },
   label: {
     fontFamily: fonts.bodyMedium,
@@ -225,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   typeCardActive: {
     backgroundColor: colors.primary,
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
   },
   uploadBtn: {
     backgroundColor: colors.surface,
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderWidth: 2,
-    borderColor: "#E5E7EB",
+    borderColor: colors.borderSubtle,
     borderStyle: "dashed",
   },
   uploadBtnSuccess: { borderColor: "#16A34A", borderStyle: "solid" },

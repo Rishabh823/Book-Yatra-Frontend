@@ -205,8 +205,8 @@ const makeStyles = (colors) => StyleSheet.create({
   changeBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   empty:      { textAlign: 'center', fontFamily: fonts.body, color: colors.textSecondary, marginTop: 40 },
 
-  overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end', alignItems: 'center' },
-  sheet:      { width: '100%', backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, maxHeight: '90%' },
+  overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  sheet:      { width: '100%', backgroundColor: colors.surface, borderRadius: 28, padding: 20, maxHeight: '90%' },
   sheetHead:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   sheetTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary },
   sheetSub:   { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },

@@ -14,9 +14,9 @@ import { fmtDate, fmtCurrency } from "../../lib/utils";
 
 const STATUSES = ["all", "confirmed", "pending", "cancelled"];
 const SC = {
-  confirmed: { bg: "#DCFCE7", text: "#16A34A" },
-  pending:   { bg: "#FEF9C3", text: "#CA8A04" },
-  cancelled: { bg: "#FEE2E2", text: "#DC2626" },
+  confirmed: { bg: "#16A34A20", text: "#16A34A" },
+  pending:   { bg: "#CA8A0420", text: "#CA8A04" },
+  cancelled: { bg: "#DC262620", text: "#DC2626" },
 };
 
 export default function AdminBookings() {
@@ -231,7 +231,7 @@ function StripStat({ label, value, color, s }) {
 const makeStyles = (colors) => StyleSheet.create({
   statsStrip: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 16, padding: 12, marginBottom: 10, marginTop: 2, borderWidth: 1, borderColor: colors.borderSubtle },
   stripDiv:   { width: 1, backgroundColor: colors.borderSubtle, height: 24, marginHorizontal: 6 },
-  exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primaryLight, borderRadius: 16 },
+  exportBtn:  { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.primary + "18", borderRadius: 16 },
   exportTxt:  { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
   stripVal:   { fontFamily: fonts.heading, fontSize: 18 },
   stripLbl:   { fontFamily: fonts.body, fontSize: 10, color: colors.textSecondary, marginTop: 1 },
@@ -247,7 +247,7 @@ const makeStyles = (colors) => StyleSheet.create({
   cardTop:   { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   idBadge:   { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary + "14", alignItems: "center", justifyContent: "center" },
   idTxt:     { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.primary },
-  tourName:  { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
+  tourName:  { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   passengerName: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   sBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   sBadgeTxt: { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: "capitalize" },
@@ -260,7 +260,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   cardFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderSubtle },
   amount:     { fontFamily: fonts.heading, fontSize: 20, color: colors.primary },
-  viewBtn:    { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primaryLight || "#FFEEE8", borderRadius: 999 },
+  viewBtn:    { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primary + "18", borderRadius: 999 },
   viewBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.primary },
 
   empty:    { alignItems: "center", paddingTop: 60, gap: 10 },

@@ -17,13 +17,14 @@ import { AdminShell } from "../../../lib/AdminScreen";
 import { colors, fonts, radius } from "../../../lib/theme";
 import { api, auth as authApi } from "../../../lib/api";
 import { useColors } from "../../../lib/ThemeContext";
+import ConfirmModal from "../../../components/ConfirmModal";
 
 const ROLES = ["user", "volunteer", "manager", "admin"];
 const ROLE_COLORS = {
   admin: "#DC2626",
   manager: "#EA580C",
   volunteer: "#16A34A",
-  user: colors.textSecondary,
+  user: "#6B7280",
 };
 
 export default function AdminUserDetail() {
@@ -39,6 +40,7 @@ export default function AdminUserDetail() {
   const [currentRole, setCurrentRole] = useState("manager");
   const [myOperatorId, setMyOperatorId] = useState(null);
   const [blocking, setBlocking]   = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", age: "", role: "user" });
   const [pwdForm, setPwdForm] = useState({ newPassword: "", confirmPassword: "" });
   const [showNewPwd, setShowNewPwd]       = useState(false);
@@ -174,30 +176,18 @@ export default function AdminUserDetail() {
     }
   };
 
-  const deleteUser = () => {
-    Alert.alert(
-      "Delete User",
-      `Permanently delete "${user?.name}"? This action cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await api.del(`/users/${id}`);
-              Alert.alert("Deleted", "User has been removed", [
-                { text: "OK", onPress: () => router.back() },
-              ]);
-            } catch (e) {
-              Alert.alert("Error", e.message || "Failed to delete user");
-              setDeleting(false);
-            }
-          },
-        },
-      ],
-    );
+  const deleteUser = () => setShowDeleteConfirm(true);
+
+  const performDelete = async () => {
+    setShowDeleteConfirm(false);
+    setDeleting(true);
+    try {
+      await api.del(`/users/${id}`);
+      router.back();
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to delete user");
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -513,6 +503,17 @@ export default function AdminUserDetail() {
           </>
         )}
       </ScrollView>
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete User"
+        message={`Permanently delete "${user?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onDismiss={() => setShowDeleteConfirm(false)}
+        destructive
+      />
     </AdminShell>
   );
 }
@@ -531,7 +532,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   avatar: { width: 72, height: 72, borderRadius: 36 },
   avatarPlaceholder: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary + "40",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -658,7 +659,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primary + "18",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -693,7 +694,7 @@ const makeStyles = (colors) => StyleSheet.create({
   opRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
   opIcon: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: colors.primaryLight || "#FFEEE8",
+    backgroundColor: colors.primary + "18",
     alignItems: "center", justifyContent: "center",
   },
   opName: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.textPrimary },
@@ -702,8 +703,8 @@ const makeStyles = (colors) => StyleSheet.create({
   blockBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, height: 48, borderRadius: 999, marginBottom: 20,
-    borderWidth: 1.5, borderColor: "#FCA5A5", backgroundColor: "#FEF2F2",
+    borderWidth: 1.5, borderColor: "#DC262640", backgroundColor: "#DC262618",
   },
-  blockBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight || "#FFEEE8" },
+  blockBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + "18" },
   blockBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#DC2626" },
 });

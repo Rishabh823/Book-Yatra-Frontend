@@ -7,10 +7,10 @@ import {
   StyleSheet,
   Platform,
   Pressable,
-  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, fonts, radius } from "../lib/theme";
+import { fonts, radius } from "../lib/theme";
+import { useColors } from "../lib/ThemeContext";
 
 let DateTimePicker = null;
 if (Platform.OS !== "web") {
@@ -20,18 +20,8 @@ if (Platform.OS !== "web") {
 }
 
 const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
 function parseDisplay(value) {
@@ -51,6 +41,7 @@ function toISO(d) {
 // value: "YYYY-MM-DD" string | ""
 // onChange: (v: string) => void
 export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
+  const themeColors = useColors();
   const [show, setShow] = useState(false);
   const [iosTemp, setIosTemp] = useState(null);
 
@@ -71,16 +62,18 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
     setIosTemp(null);
   };
 
-  // Web: native HTML date input (gives clean YYYY-MM-DD, no malformed strings)
+  // Web: native HTML date input
   if (Platform.OS === "web" || !DateTimePicker) {
     return (
       <View style={style}>
-        {!!label && <Text style={cs.label}>{label}</Text>}
-        <View style={[cs.btn, !!value && cs.btnActive]}>
+        {!!label && (
+          <Text style={[cs.label, { color: themeColors.textSecondary }]}>{label}</Text>
+        )}
+        <View style={[cs.btn, { backgroundColor: themeColors.elevated, borderColor: themeColors.borderSubtle }, !!value && { borderColor: themeColors.primary + "80" }]}>
           <Ionicons
             name="calendar-outline"
             size={16}
-            color={value ? colors.secondary : colors.textDisabled}
+            color={value ? themeColors.primary : themeColors.textDisabled}
           />
           <input
             type="date"
@@ -93,7 +86,7 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
               background: "transparent",
               fontFamily: "inherit",
               fontSize: 13,
-              color: value ? colors.textPrimary : colors.textDisabled,
+              color: value ? themeColors.textPrimary : themeColors.textDisabled,
               cursor: "pointer",
               width: "100%",
             }}
@@ -105,9 +98,11 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
 
   return (
     <View style={style}>
-      {!!label && <Text style={cs.label}>{label}</Text>}
+      {!!label && (
+        <Text style={[cs.label, { color: themeColors.textSecondary }]}>{label}</Text>
+      )}
       <TouchableOpacity
-        style={[cs.btn, !!value && cs.btnActive]}
+        style={[cs.btn, { backgroundColor: themeColors.elevated, borderColor: themeColors.borderSubtle }, !!value && { borderColor: themeColors.primary + "80" }]}
         onPress={() => {
           setIosTemp(null);
           setShow(true);
@@ -117,15 +112,15 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
         <Ionicons
           name="calendar-outline"
           size={16}
-          color={value ? colors.secondary : colors.textDisabled}
+          color={value ? themeColors.primary : themeColors.textDisabled}
         />
-        <Text style={[cs.btnTxt, !value && cs.placeholder]}>
+        <Text style={[cs.btnTxt, { color: themeColors.textPrimary }, !value && { color: themeColors.textDisabled }]}>
           {parseDisplay(value)}
         </Text>
         <Ionicons
           name="chevron-down-outline"
           size={13}
-          color={colors.textDisabled}
+          color={themeColors.textDisabled}
         />
       </TouchableOpacity>
 
@@ -138,12 +133,12 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
           onRequestClose={cancelIos}
         >
           <Pressable style={cs.overlay} onPress={cancelIos} />
-          <View style={cs.sheet}>
-            <View style={cs.bar}>
+          <View style={[cs.sheet, { backgroundColor: themeColors.surface }]}>
+            <View style={[cs.bar, { borderBottomColor: themeColors.borderSubtle }]}>
               <TouchableOpacity onPress={cancelIos}>
-                <Text style={cs.cancelTxt}>Cancel</Text>
+                <Text style={[cs.cancelTxt, { color: themeColors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
-              <Text style={cs.barTitle}>{label || "Select Date"}</Text>
+              <Text style={[cs.barTitle, { color: themeColors.textPrimary }]}>{label || "Select Date"}</Text>
               <TouchableOpacity onPress={confirmIos}>
                 <Text style={cs.doneTxt}>Done</Text>
               </TouchableOpacity>
@@ -155,7 +150,7 @@ export function DateInput({ label, value, onChange, minDate, maxDate, style }) {
               onChange={(_, d) => d && setIosTemp(d)}
               minimumDate={minDate}
               maximumDate={maxDate}
-              style={{ backgroundColor: "#fff" }}
+              style={{ backgroundColor: themeColors.surface }}
             />
           </View>
         </Modal>
@@ -184,7 +179,6 @@ const cs = StyleSheet.create({
   label: {
     fontFamily: fonts.accent,
     fontSize: 9,
-    color: colors.textSecondary,
     letterSpacing: 1.5,
     textTransform: "uppercase",
     marginBottom: 5,
@@ -195,28 +189,17 @@ const cs = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    backgroundColor: colors.bg,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
   },
-  btnActive: { borderColor: colors.secondary + "80" },
   btnTxt: {
     flex: 1,
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: colors.textPrimary,
-  },
-  placeholder: { color: colors.textDisabled },
-  webInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textPrimary,
   },
 
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
-  sheet: { backgroundColor: "#fff", paddingBottom: 34 },
+  sheet: { paddingBottom: 34 },
   bar: {
     flexDirection: "row",
     alignItems: "center",
@@ -224,13 +207,8 @@ const cs = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
   },
-  barTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: "#1F2937" },
-  cancelTxt: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  doneTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.primary },
+  barTitle: { fontFamily: fonts.bodyBold, fontSize: 16 },
+  cancelTxt: { fontFamily: fonts.bodyMedium, fontSize: 15 },
+  doneTxt: { fontFamily: fonts.bodyBold, fontSize: 15, color: "#D95D39" },
 });

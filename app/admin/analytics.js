@@ -93,7 +93,7 @@ export default function AnalyticsScreen() {
       sub: 'This month: ' + fmtCurrency(summary?.monthRevenue),
       icon: 'cash',
       color: '#16A34A',
-      bg: '#DCFCE7',
+      bg: '#16A34A15',
     },
     {
       label: 'Bookings',
@@ -101,7 +101,7 @@ export default function AnalyticsScreen() {
       sub: summary?.monthlyGrowth != null ? pct(Number(summary.monthlyGrowth)) + ' MoM' : '',
       icon: 'calendar',
       color: '#2563EB',
-      bg: '#DBEAFE',
+      bg: '#2563EB15',
     },
     {
       label: 'Tours',
@@ -109,7 +109,7 @@ export default function AnalyticsScreen() {
       sub: 'Total created',
       icon: 'bus',
       color: '#7C3AED',
-      bg: '#EDE9FE',
+      bg: '#7C3AED15',
     },
     {
       label: 'This Month',
@@ -117,7 +117,7 @@ export default function AnalyticsScreen() {
       sub: 'Revenue',
       icon: 'trending-up',
       color: '#D97706',
-      bg: '#FEF3C7',
+      bg: '#D9770615',
     },
   ];
 
@@ -223,7 +223,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.sectionTitle}>Top Tours by Revenue</Text>
               {topTours.map((t, i) => (
                 <View key={t._id || i} style={styles.tourRow}>
-                  <View style={[styles.tourRankBadge, { backgroundColor: i === 0 ? '#FDE68A' : colors.borderSubtle }]}>
+                  <View style={[styles.tourRankBadge, { backgroundColor: i === 0 ? '#D9770625' : colors.elevated }]}>
                     <Text style={[styles.tourRankTxt, { color: i === 0 ? '#D97706' : colors.textSecondary }]}>#{i + 1}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -241,10 +241,10 @@ export default function AnalyticsScreen() {
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {[
-                { label: 'All Bookings', icon: 'ticket', route: '/admin/bookings', color: '#2563EB', bg: '#DBEAFE' },
-                { label: 'My Tours', icon: 'bus', route: '/admin/tours', color: '#7C3AED', bg: '#EDE9FE' },
-                { label: 'Members', icon: 'people', route: '/admin/members', color: '#16A34A', bg: '#DCFCE7' },
-                { label: 'Enquiries', icon: 'chatbubble', route: '/admin/enquiries', color: '#D97706', bg: '#FEF3C7' },
+                { label: 'All Bookings', icon: 'ticket', route: '/admin/bookings', color: '#2563EB', bg: '#2563EB18' },
+                { label: 'My Tours', icon: 'bus', route: '/admin/tours', color: '#7C3AED', bg: '#7C3AED18' },
+                { label: 'Members', icon: 'people', route: '/admin/members', color: '#16A34A', bg: '#16A34A18' },
+                { label: 'Enquiries', icon: 'chatbubble', route: '/admin/enquiries', color: '#D97706', bg: '#D9770618' },
               ].map(a => (
                 <TouchableOpacity
                   key={a.label}

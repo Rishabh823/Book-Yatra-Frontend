@@ -57,8 +57,8 @@ export default function LiveDashboard() {
   };
 
   const STATS = [
-    { label: 'Active Tours', value: trackings.length, icon: 'bus', color: '#16A34A', bg: '#DCFCE7' },
-    { label: 'Active SOS', value: activeSOS.filter(s => s.status === 'active').length, icon: 'alert-circle', color: '#DC2626', bg: '#FEE2E2' },
+    { label: 'Active Tours', value: trackings.length, icon: 'bus', color: '#16A34A', bg: '#16A34A20' },
+    { label: 'Active SOS', value: activeSOS.filter(s => s.status === 'active').length, icon: 'alert-circle', color: '#DC2626', bg: '#DC262620' },
   ];
 
   return (
@@ -100,7 +100,7 @@ export default function LiveDashboard() {
                       <Text style={styles.sosUser}>{sos.userId?.name || 'Unknown User'}</Text>
                       <Text style={styles.sosMeta}>{sos.type} • {fmtTime(sos.createdAt)}</Text>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: sos.status === 'active' ? '#FEE2E2' : '#FEF3C7' }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: sos.status === 'active' ? '#DC262620' : '#D9770620' }]}>
                       <Text style={[styles.statusText, { color: sos.status === 'active' ? '#DC2626' : '#D97706' }]}>{sos.status}</Text>
                     </View>
                   </View>
@@ -136,7 +136,7 @@ export default function LiveDashboard() {
                     <Text style={styles.trackTour} numberOfLines={1}>{t.tourId?.title || 'Tour'}</Text>
                     <Text style={styles.trackMeta}>{t.tourId?.source} → {t.tourId?.destination}</Text>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: '#DCFCE7' }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: '#16A34A20' }]}>
                     <Text style={[styles.statusText, { color: '#16A34A' }]}>Live</Text>
                   </View>
                 </View>
@@ -220,7 +220,7 @@ const makeStyles = (colors) => StyleSheet.create({
   sosActions: { flexDirection: 'row', gap: 8 },
   viewBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: colors.elevated, alignItems: 'center' },
   viewBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textPrimary },
-  ackBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#FFFBEB', alignItems: 'center' },
+  ackBtn: { flex: 1, paddingVertical: 8, borderRadius: 16, backgroundColor: '#D9770620', alignItems: 'center' },
   ackBtnText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: '#D97706' },
   trackCard: {
     backgroundColor: colors.surface,

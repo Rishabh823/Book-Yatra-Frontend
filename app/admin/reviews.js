@@ -15,9 +15,9 @@ import { useColors } from '../../lib/ThemeContext';
 const FILTERS = ['all', 'pending', 'approved', 'rejected'];
 
 const STATUS_CONFIG = {
-  pending:  { color: '#D97706', bg: '#FFFBEB', label: 'Pending'  },
-  approved: { color: '#16A34A', bg: '#F0FDF4', label: 'Approved' },
-  rejected: { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
+  pending:  { color: '#D97706', bg: '#D9770618', label: 'Pending'  },
+  approved: { color: '#16A34A', bg: '#16A34A18', label: 'Approved' },
+  rejected: { color: '#DC2626', bg: '#DC262618', label: 'Rejected' },
 };
 
 // ─── Utility helpers ──────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ function StarRow({ rating, size = 13 }) {
 function StatusBadge({ status }) {
   const themeColors = useColors();
   const s = useMemo(() => makeStyles(themeColors), [themeColors]);
-  const cfg = STATUS_CONFIG[status] || { color: colors.textSecondary, bg: themeColors.surface, label: status || '—' };
+  const cfg = STATUS_CONFIG[status] || { color: themeColors.textSecondary, bg: themeColors.surface, label: status || '—' };
   return (
     <View style={[s.statusBadge, { backgroundColor: cfg.bg }]}>
       <View style={[s.statusDot, { backgroundColor: cfg.color }]} />
@@ -98,7 +98,7 @@ function ReviewCard({ item, onApprove, onReject, onViewTour }) {
       {/* Tour info */}
       <View style={s.cardTourRow}>
         <View style={s.tourIconWrap}>
-          <Ionicons name="bus" size={14} color={colors.secondary} />
+          <Ionicons name="bus" size={14} color={themeColors.primary} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.tourName} numberOfLines={1}>{tourName}</Text>
@@ -146,7 +146,7 @@ function ReviewCard({ item, onApprove, onReject, onViewTour }) {
         <TextInput
           style={s.noteInput}
           placeholder="Reason for rejection (optional)..."
-          placeholderTextColor={colors.textDisabled}
+          placeholderTextColor={themeColors.textDisabled}
           value={note}
           onChangeText={setNote}
           multiline
@@ -197,8 +197,8 @@ function ReviewCard({ item, onApprove, onReject, onViewTour }) {
             style={[s.actionBtn, s.viewTourBtn]}
             onPress={() => onViewTour(item.tourId || item.tour?._id)}
           >
-            <Ionicons name="eye-outline" size={14} color={colors.secondary} />
-            <Text style={[s.actionBtnTxt, { color: colors.secondary }]}>View Tour</Text>
+            <Ionicons name="eye-outline" size={14} color={themeColors.primary} />
+            <Text style={[s.actionBtnTxt, { color: themeColors.primary }]}>View Tour</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -294,7 +294,7 @@ export default function AdminReviews() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg, alignItems: 'center', justifyContent: 'center', padding: 32 }} edges={['top']}>
         <View style={s.lockIcon}>
-          <Ionicons name="lock-closed-outline" size={32} color={colors.primary} />
+          <Ionicons name="lock-closed-outline" size={32} color={themeColors.primary} />
         </View>
         <Text style={s.lockTitle}>Access Restricted</Text>
         <Text style={s.lockSub}>This section is for admins and managers only.</Text>
@@ -309,7 +309,7 @@ export default function AdminReviews() {
   const headerEl = (
     <View style={s.header}>
       <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={8}>
-        <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+        <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <Text style={s.headerTitle}>Reviews</Text>
@@ -328,7 +328,7 @@ export default function AdminReviews() {
   const statsEl = !loading && !error && items.length > 0 && (
     <View style={s.statsBanner}>
       {[
-        { label: 'Total',    value: stats.total,    color: colors.secondary },
+        { label: 'Total',    value: stats.total,    color: themeColors.primary },
         { label: 'Pending',  value: stats.pending,  color: '#D97706' },
         { label: 'Approved', value: stats.approved, color: '#16A34A' },
         { label: 'Rejected', value: stats.rejected, color: '#DC2626' },
@@ -355,15 +355,15 @@ export default function AdminReviews() {
         return (
           <TouchableOpacity
             key={f}
-            style={[s.filterPill, isActive && { backgroundColor: (cfg?.color || colors.secondary) + '18', borderColor: cfg?.color || colors.secondary }]}
+            style={[s.filterPill, isActive && { backgroundColor: (cfg?.color || themeColors.primary) + '18', borderColor: cfg?.color || themeColors.primary }]}
             onPress={() => setActiveFilter(f)}
           >
-            <Text style={[s.filterTxt, isActive && { color: cfg?.color || colors.secondary, fontFamily: fonts.bodyBold }]}>
+            <Text style={[s.filterTxt, isActive && { color: cfg?.color || themeColors.primary, fontFamily: fonts.bodyBold }]}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </Text>
             {f !== 'all' && (
-              <View style={[s.filterCount, { backgroundColor: (cfg?.color || colors.secondary) + (isActive ? '22' : '12') }]}>
-                <Text style={[s.filterCountTxt, { color: cfg?.color || colors.secondary }]}>
+              <View style={[s.filterCount, { backgroundColor: (cfg?.color || themeColors.primary) + (isActive ? '22' : '12') }]}>
+                <Text style={[s.filterCountTxt, { color: cfg?.color || themeColors.primary }]}>
                   {f === 'pending' ? stats.pending : f === 'approved' ? stats.approved : stats.rejected}
                 </Text>
               </View>
@@ -382,7 +382,7 @@ export default function AdminReviews() {
         <ActivityIndicator color={colors.primary} style={{ marginTop: 60 }} />
       ) : error ? (
         <View style={s.errorWrap}>
-          <Ionicons name="cloud-offline-outline" size={48} color={colors.textDisabled} />
+          <Ionicons name="cloud-offline-outline" size={48} color={themeColors.textDisabled} />
           <Text style={s.errorTxt}>{error}</Text>
           <TouchableOpacity style={s.retryBtn} onPress={() => { setLoading(true); load(); }}>
             <Text style={s.retryBtnTxt}>Retry</Text>
@@ -399,7 +399,7 @@ export default function AdminReviews() {
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
             ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.primary} />
             }
             ListEmptyComponent={
               <View style={s.emptyWrap}>
@@ -431,8 +431,8 @@ export default function AdminReviews() {
 
 const makeStyles = (colors) => StyleSheet.create({
   // Access denied
-  lockIcon:    { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  lockTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.secondary, marginTop: 14, marginBottom: 8 },
+  lockIcon:    { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary + "18", alignItems: 'center', justifyContent: 'center' },
+  lockTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, marginTop: 14, marginBottom: 8 },
   lockSub:     { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   lockBack:    { marginTop: 24, backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 999 },
   lockBackTxt: { color: '#fff', fontFamily: fonts.bodyBold },
@@ -442,7 +442,7 @@ const makeStyles = (colors) => StyleSheet.create({
   backBtn:       { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
   headerTitle:   { fontFamily: fonts.heading, fontSize: 22, color: colors.textPrimary, letterSpacing: -0.3 },
   headerSubtitle:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  headerBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FFFBEB', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: '#F59E0B30' },
+  headerBadge:   { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F59E0B18', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: '#F59E0B30' },
   headerBadgeTxt:{ fontFamily: fonts.bodyBold, fontSize: 10, color: '#F59E0B', letterSpacing: 0.5 },
 
   // Stats banner
@@ -461,7 +461,7 @@ const makeStyles = (colors) => StyleSheet.create({
   card:           { backgroundColor: colors.surface, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: colors.borderSubtle },
 
   cardTourRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  tourIconWrap:   { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.secondary + '15', alignItems: 'center', justifyContent: 'center' },
+  tourIconWrap:   { width: 32, height: 32, borderRadius: 12, backgroundColor: colors.primary + '18', alignItems: 'center', justifyContent: 'center' },
   tourName:       { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   operatorTxt:    { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
 
@@ -470,7 +470,7 @@ const makeStyles = (colors) => StyleSheet.create({
   avatarLetter:   { fontFamily: fonts.heading, fontSize: 15, color: colors.primary },
   reviewerName:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, marginBottom: 3 },
 
-  verifiedBadge:  { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#DCFCE7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
+  verifiedBadge:  { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#16A34A18', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 999 },
   verifiedTxt:    { fontFamily: fonts.bodyBold, fontSize: 9, color: '#16A34A' },
   dateTxt:        { fontFamily: fonts.bodyBold, fontSize: 9, color: colors.textDisabled, letterSpacing: 0.5 },
 
@@ -478,15 +478,15 @@ const makeStyles = (colors) => StyleSheet.create({
   statusDot:      { width: 6, height: 6, borderRadius: 3 },
   statusTxt:      { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  reviewTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary, marginBottom: 4 },
+  reviewTitle:    { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary, marginBottom: 4 },
   reviewBody:     { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, lineHeight: 19, marginBottom: 8 },
 
-  adminNoteWrap:  { flexDirection: 'row', alignItems: 'flex-start', gap: 5, backgroundColor: '#FEF2F2', borderRadius: 12, padding: 8, marginBottom: 10 },
+  adminNoteWrap:  { flexDirection: 'row', alignItems: 'flex-start', gap: 5, backgroundColor: '#DC262618', borderRadius: 12, padding: 8, marginBottom: 10 },
   adminNoteTxt:   { flex: 1, fontFamily: fonts.body, fontSize: 11, color: '#DC2626', lineHeight: 16 },
 
   // Reject expand
   rejectExpand:   { overflow: 'hidden' },
-  noteInput:      { borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, padding: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, backgroundColor: '#FFF5F5', marginTop: 10, minHeight: 60, textAlignVertical: 'top' },
+  noteInput:      { borderWidth: 1, borderColor: '#DC262640', borderRadius: 12, padding: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, backgroundColor: colors.elevated, marginTop: 10, minHeight: 60, textAlignVertical: 'top' },
   rejectConfirmRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   cancelBtn:      { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 16, backgroundColor: colors.borderSubtle },
   cancelBtnTxt:   { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textSecondary },
@@ -499,7 +499,7 @@ const makeStyles = (colors) => StyleSheet.create({
   actionBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: '#fff' },
   approveBtn: { backgroundColor: '#16A34A' },
   rejectBtn:  { backgroundColor: '#DC2626' },
-  viewTourBtn:{ backgroundColor: colors.secondary + '15', borderWidth: 1, borderColor: colors.secondary + '30' },
+  viewTourBtn:{ backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.primary + '30' },
 
   // Error
   errorWrap:  { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12, paddingBottom: 60 },
@@ -509,6 +509,6 @@ const makeStyles = (colors) => StyleSheet.create({
 
   // Empty
   emptyWrap:  { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
+  emptyTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   emptySub:   { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
 });

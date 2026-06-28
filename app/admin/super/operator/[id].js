@@ -167,7 +167,7 @@ export default function OperatorDetail() {
             <View style={{ flex: 1 }}>
               <Text style={s.profileName}>{operator.businessName || operator.name}</Text>
               {operator.businessName ? <Text style={s.profileSub}>{operator.name}</Text> : null}
-              <View style={[s.statusBadge, { backgroundColor: isActive ? '#DCFCE7' : '#FEE2E2' }]}>
+              <View style={[s.statusBadge, { backgroundColor: isActive ? '#16A34A18' : '#DC262618' }]}>
                 <View style={[s.statusDot, { backgroundColor: isActive ? '#16A34A' : '#DC2626' }]} />
                 <Text style={[s.statusTxt, { color: isActive ? '#16A34A' : '#DC2626' }]}>
                   {isActive ? 'Active' : 'Inactive'}
@@ -340,9 +340,9 @@ export default function OperatorDetail() {
               <EmptyState icon="ticket-outline" text="No bookings for this operator's tours" s={s} colors={colors} />
             ) : (
               allBookings.map(b => {
-                const sc = b.status === 'confirmed' ? { bg: '#DCFCE7', text: '#16A34A' }
-                  : b.status === 'cancelled' ? { bg: '#FEE2E2', text: '#DC2626' }
-                  : { bg: '#FEF9C3', text: '#CA8A04' };
+                const sc = b.status === 'confirmed' ? { bg: '#16A34A18', text: '#16A34A' }
+                  : b.status === 'cancelled' ? { bg: '#DC262618', text: '#DC2626' }
+                  : { bg: '#CA8A0418', text: '#CA8A04' };
                 return (
                   <TouchableOpacity
                     key={b._id}
@@ -436,8 +436,8 @@ const makeStyles = (colors) => StyleSheet.create({
   profileCard:      { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.borderSubtle, marginTop: 8, marginBottom: 4 },
   profileRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
   profileAvatar:    { width: 60, height: 60, borderRadius: 30 },
-  profileAvatarFallback: { backgroundColor: colors.secondary + '18', alignItems: 'center', justifyContent: 'center' },
-  profileAvatarTxt: { fontFamily: fonts.bodyBold, fontSize: 24, color: colors.secondary },
+  profileAvatarFallback: { backgroundColor: colors.primary + '18', alignItems: 'center', justifyContent: 'center' },
+  profileAvatarTxt: { fontFamily: fonts.bodyBold, fontSize: 24, color: colors.primary },
   profileName:      { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, marginBottom: 2 },
   profileSub:       { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, marginBottom: 6 },
   statusBadge:      { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
@@ -456,7 +456,7 @@ const makeStyles = (colors) => StyleSheet.create({
   actionsWrap:      { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 12 },
   actionBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 16, borderWidth: 1 },
   actionEdit:       { backgroundColor: colors.primary + '10', borderColor: colors.primary + '40' },
-  actionDelete:     { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
+  actionDelete:     { backgroundColor: '#DC262618', borderColor: '#DC262640' },
   actionBtnTxt:     { fontFamily: fonts.bodyBold, fontSize: 13 },
   actionToggle:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: colors.borderSubtle },
   actionToggleTxt:  { fontFamily: fonts.bodyMedium || fonts.body, fontSize: 12, color: colors.textSecondary },
@@ -486,7 +486,7 @@ const makeStyles = (colors) => StyleSheet.create({
 
   commissionCard:       { backgroundColor: colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.borderSubtle },
   commissionHead:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  commissionIcon:       { width: 38, height: 38, borderRadius: 19, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
+  commissionIcon:       { width: 38, height: 38, borderRadius: 19, backgroundColor: '#16A34A18', alignItems: 'center', justifyContent: 'center' },
   commissionTitle:      { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   commissionSub:        { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   commissionRow:        { flexDirection: 'row', alignItems: 'center', gap: 8 },

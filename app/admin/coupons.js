@@ -26,9 +26,9 @@ import ConfirmModal from "../../components/ConfirmModal";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DISCOUNT_TYPES = [
-  { key: 'percentage', label: '% Percent',   icon: 'percent',      color: '#7C3AED', bg: '#F5F3FF' },
-  { key: 'fixed',      label: '₹ Fixed',     icon: 'cash-outline', color: '#0284C7', bg: '#EFF6FF' },
-  { key: 'free_seats', label: 'Free Seats',  icon: 'people',       color: '#16A34A', bg: '#F0FDF4' },
+  { key: 'percentage', label: '% Percent',   icon: 'percent',      color: '#7C3AED', bg: '#7C3AED18' },
+  { key: 'fixed',      label: '₹ Fixed',     icon: 'cash-outline', color: '#0284C7', bg: '#0284C718' },
+  { key: 'free_seats', label: 'Free Seats',  icon: 'people',       color: '#16A34A', bg: '#16A34A18' },
 ];
 
 const EMPTY_FORM = {
@@ -262,7 +262,7 @@ export default function AdminCouponsScreen() {
           {/* Top row: code + type badge */}
           <View style={styles.cardTopRow}>
             <Text style={styles.couponCode}>{item.code}</Text>
-            <View style={[styles.typeBadge, { backgroundColor: typeInfo.bg }]}>
+            <View style={[styles.typeBadge, { backgroundColor: typeInfo.color + '18' }]}>
               <Ionicons name={typeInfo.icon} size={11} color={typeInfo.color} />
               <Text style={[styles.typeBadgeText, { color: typeInfo.color }]}>{typeInfo.label}</Text>
             </View>
@@ -302,7 +302,7 @@ export default function AdminCouponsScreen() {
             <Ionicons
               name="calendar-outline"
               size={12}
-              color={expired ? colors.error : expiringSoon ? colors.warning : colors.textSecondary}
+              color={expired ? themeColors.error : expiringSoon ? themeColors.warning : themeColors.textSecondary}
             />
             <Text style={[
               styles.expiryText,
@@ -322,11 +322,11 @@ export default function AdminCouponsScreen() {
             <Switch
               value={item.isActive}
               onValueChange={() => handleToggleActive(item)}
-              trackColor={{ false: themeColors.borderSubtle, true: colors.success + '60' }}
-              thumbColor={item.isActive ? colors.success : themeColors.textDisabled}
+              trackColor={{ false: themeColors.borderSubtle, true: themeColors.success + '60' }}
+              thumbColor={item.isActive ? themeColors.success : themeColors.textDisabled}
               style={styles.toggleSwitch}
             />
-            <Text style={[styles.activeLabel, { color: item.isActive ? colors.success : colors.textDisabled }]}>
+            <Text style={[styles.activeLabel, { color: item.isActive ? themeColors.success : themeColors.textDisabled }]}>
               {item.isActive ? 'Active' : 'Inactive'}
             </Text>
           </View>
@@ -336,15 +336,15 @@ export default function AdminCouponsScreen() {
               style={styles.actionBtn}
               onPress={() => openEdit(item)}
             >
-              <Ionicons name="pencil" size={14} color={colors.primary} />
+              <Ionicons name="pencil" size={14} color={themeColors.primary} />
               <Text style={styles.actionText}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, styles.actionBtnDanger]}
               onPress={() => handleDelete(item)}
             >
-              <Ionicons name="trash-outline" size={14} color={colors.error} />
-              <Text style={[styles.actionText, { color: colors.error }]}>Delete</Text>
+              <Ionicons name="trash-outline" size={14} color={themeColors.error} />
+              <Text style={[styles.actionText, { color: themeColors.error }]}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -359,11 +359,11 @@ export default function AdminCouponsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.title}>Coupons</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Ionicons name="add" size={22} color={colors.primary} />
+          <Ionicons name="add" size={22} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -385,7 +385,7 @@ export default function AdminCouponsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="pricetag-outline" size={44} color={colors.textDisabled} />
+              <Ionicons name="pricetag-outline" size={44} color={themeColors.textDisabled} />
               <Text style={styles.emptyTitle}>No coupons yet</Text>
               <Text style={styles.emptyText}>Tap + to create your first coupon.</Text>
             </View>
@@ -530,8 +530,8 @@ export default function AdminCouponsScreen() {
                 <Switch
                   value={form.isActive}
                   onValueChange={v => f('isActive', v)}
-                  trackColor={{ false: themeColors.borderSubtle, true: colors.success + '60' }}
-                  thumbColor={form.isActive ? colors.success : themeColors.textDisabled}
+                  trackColor={{ false: themeColors.borderSubtle, true: themeColors.success + '60' }}
+                  thumbColor={form.isActive ? themeColors.success : themeColors.textDisabled}
                 />
               </View>
 
@@ -566,7 +566,7 @@ export default function AdminCouponsScreen() {
             </View>
 
             {statsLoading ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: 40 }} />
+              <ActivityIndicator color={themeColors.primary} style={{ marginVertical: 40 }} />
             ) : statsData ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.statsGrid}>
@@ -575,28 +575,28 @@ export default function AdminCouponsScreen() {
                     label="Total Uses"
                     value={statsData.totalUses ?? statsCoupon?.usageCount ?? '—'}
                     color="#7C3AED"
-                    bg="#F5F3FF"
+                    bg="#7C3AED18"
                   />
                   <StatCard
                     icon="people"
                     label="Unique Users"
                     value={statsData.uniqueUsers ?? '—'}
                     color="#0284C7"
-                    bg="#EFF6FF"
+                    bg="#0284C718"
                   />
                   <StatCard
                     icon="cash"
                     label="Total Saved"
                     value={statsData.totalDiscountGiven != null ? `₹${statsData.totalDiscountGiven}` : '—'}
                     color="#16A34A"
-                    bg="#F0FDF4"
+                    bg="#16A34A18"
                   />
                   <StatCard
                     icon="trending-up"
                     label="Revenue"
                     value={statsData.revenueGenerated != null ? `₹${statsData.revenueGenerated}` : '—'}
                     color="#D97706"
-                    bg="#FFFBEB"
+                    bg="#D9770618"
                   />
                 </View>
 
@@ -623,7 +623,7 @@ export default function AdminCouponsScreen() {
               </ScrollView>
             ) : (
               <View style={styles.empty}>
-                <Ionicons name="bar-chart-outline" size={36} color={colors.textDisabled} />
+                <Ionicons name="bar-chart-outline" size={36} color={themeColors.textDisabled} />
                 <Text style={styles.emptyText}>No stats available yet.</Text>
               </View>
             )}
@@ -650,21 +650,25 @@ export default function AdminCouponsScreen() {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHead({ label }) {
+  const themeColors = useColors();
   return (
-    <View style={styles.sectionHead}>
-      <Text style={styles.sectionHeadTxt}>{label}</Text>
+    <View style={{ marginTop: 12, marginBottom: 6 }}>
+      <Text style={{ fontFamily: fonts.bodyBold, fontSize: 10, color: themeColors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+        {label}
+      </Text>
     </View>
   );
 }
 
 function StatCard({ icon, label, value, color, bg }) {
+  const themeColors = useColors();
   return (
-    <View style={[styles.statCard, { backgroundColor: bg }]}>
-      <View style={[styles.statIcon, { backgroundColor: color + '1A' }]}>
+    <View style={{ flex: 1, minWidth: '44%', borderRadius: 16, padding: 14, alignItems: 'center', gap: 6, backgroundColor: bg }}>
+      <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: color + '1A' }}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={{ fontFamily: fonts.bodyBold, fontSize: 18, color: themeColors.textPrimary }}>{value}</Text>
+      <Text style={{ fontFamily: fonts.body, fontSize: 11, color: themeColors.textSecondary, textAlign: 'center' }}>{label}</Text>
     </View>
   );
 }
@@ -684,6 +688,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.elevated,
     alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: colors.borderSubtle,
   },
   title: { flex: 1, fontFamily: 'Philosopher_700Bold', fontSize: 22, color: colors.textPrimary },
   addBtn: {
@@ -721,7 +726,7 @@ const makeStyles = (colors) => StyleSheet.create({
   typeBadgeText: { fontFamily: fonts.bodyBold, fontSize: 11 },
 
   discountRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  discountValue: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.secondary },
+  discountValue: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.primary },
   minOrder: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
 
   cardDesc: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },

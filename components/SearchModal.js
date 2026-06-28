@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Keyboard,
   Platform,
+  PermissionsAndroid,
 } from "react-native";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -549,6 +550,28 @@ export default function SearchModal({ visible, onClose }) {
         } catch {}
         setIsListening(false);
       } else {
+        // Request microphone permission on Android before starting
+        if (Platform.OS === "android") {
+          try {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+              {
+                title: "Microphone Permission",
+                message: "T Yatra needs microphone access for voice search.",
+                buttonPositive: "Allow",
+                buttonNegative: "Deny",
+              },
+            );
+            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+              setVoiceUnsupported(true);
+              setTimeout(() => setVoiceUnsupported(false), 3000);
+              return;
+            }
+          } catch {
+            setIsListening(false);
+            return;
+          }
+        }
         try {
           setIsListening(true);
           await Voice.start("en-IN");

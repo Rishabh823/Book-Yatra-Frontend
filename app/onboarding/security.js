@@ -14,6 +14,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markSecurityDone } from "../../lib/onboarding";
 import { pinStorage } from "../../lib/security/secureStorage";
+import { securityApi } from "../../lib/api";
 
 const STEP = 7;
 const TOTAL = 10;
@@ -79,6 +80,8 @@ export default function SecurityScreen() {
       });
       if (result.success) {
         await pinStorage.setBiometricEnabled(true, biometricType);
+        // Persist to account so security page reflects the setting
+        securityApi.enableBiometric({ biometricType }).catch(() => {});
         setBiometricEnabled(true);
       }
     } catch {}

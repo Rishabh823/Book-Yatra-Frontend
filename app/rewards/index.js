@@ -480,9 +480,9 @@ const makeStyles = (colors) =>
 
     // Daily reward
     dailyCard: {
-      backgroundColor: "#FEF3F0",
+      backgroundColor: colors.primary + "15",
       borderWidth: 1,
-      borderColor: "#FECAB7",
+      borderColor: colors.primary + "40",
       borderRadius: 12,
       padding: 14,
       flexDirection: "row",
@@ -605,7 +605,7 @@ const makeStyles = (colors) =>
       width: 48,
       height: 48,
       borderRadius: 14,
-      backgroundColor: "#FEF3F0",
+      backgroundColor: colors.primary + "18",
       alignItems: "center",
       justifyContent: "center",
     },

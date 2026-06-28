@@ -116,7 +116,7 @@ export default function DraftsScreen() {
         >
           <View style={s.cardTop}>
             <View style={s.iconBox}>
-              <Ionicons name="document-text" size={22} color={colors.primary} />
+              <Ionicons name="document-text" size={22} color={themeColors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={s.tourTitle} numberOfLines={1}>
@@ -134,7 +134,7 @@ export default function DraftsScreen() {
               </Text>
             </View>
             <View style={s.editChip}>
-              <Ionicons name="pencil" size={12} color={colors.primary} />
+              <Ionicons name="pencil" size={12} color={themeColors.primary} />
               <Text style={s.editChipTxt}>Edit</Text>
             </View>
           </View>
@@ -170,9 +170,9 @@ export default function DraftsScreen() {
               disabled={isDeleting}
             >
               {isDeleting ? (
-                <ActivityIndicator size="small" color={colors.error} />
+                <ActivityIndicator size="small" color={themeColors.error} />
               ) : (
-                <Ionicons name="trash-outline" size={14} color={colors.error} />
+                <Ionicons name="trash-outline" size={14} color={themeColors.error} />
               )}
             </TouchableOpacity>
           </View>
@@ -185,7 +185,7 @@ export default function DraftsScreen() {
     <View style={[s.container, { paddingTop: insets.top }]}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={s.title}>Draft Tours</Text>
@@ -197,12 +197,12 @@ export default function DraftsScreen() {
           style={s.newBtn}
           onPress={() => router.push("/admin/tour/create")}
         >
-          <Ionicons name="add" size={20} color={colors.primary} />
+          <Ionicons name="add" size={20} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={themeColors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={drafts}
@@ -222,7 +222,7 @@ export default function DraftsScreen() {
           }
           ListEmptyComponent={
             <View style={s.empty}>
-              <Ionicons name="document-outline" size={56} color={colors.textDisabled} />
+              <Ionicons name="document-outline" size={56} color={themeColors.textDisabled} />
               <Text style={s.emptyTitle}>No drafts yet</Text>
               <Text style={s.emptySub}>
                 Start creating a tour and save it as a draft to continue later.
@@ -281,6 +281,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.elevated,
     alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: colors.borderSubtle,
   },
   title: { fontFamily: "Philosopher_700Bold", fontSize: 20, color: colors.textPrimary },
   subtitle: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
@@ -306,7 +307,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   iconBox: {
     width: 44, height: 44, borderRadius: 16,
-    backgroundColor: "#FEE8E2",
+    backgroundColor: colors.primary + "18",
     alignItems: "center", justifyContent: "center",
   },
   tourTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
@@ -315,7 +316,7 @@ const makeStyles = (colors) => StyleSheet.create({
   tourDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   editChip: {
     flexDirection: "row", alignItems: "center", gap: 3,
-    backgroundColor: "#FEE8E2",
+    backgroundColor: colors.primary + "18",
     paddingHorizontal: 8, paddingVertical: 4,
     borderRadius: 999,
   },
@@ -345,14 +346,14 @@ const makeStyles = (colors) => StyleSheet.create({
   actionBtns: { flexDirection: "row", alignItems: "center", gap: 8 },
   publishBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#16A34A18",
     paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 999,
   },
   publishBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#16A34A" },
   deleteBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#DC262618",
     alignItems: "center", justifyContent: "center",
   },
 

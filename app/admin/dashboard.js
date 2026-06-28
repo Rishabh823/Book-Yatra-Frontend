@@ -11,15 +11,15 @@ import { useColors } from '../../lib/ThemeContext';
 import { api } from '../../lib/api';
 
 const MODULES = [
-  { icon: 'ticket',         label: 'Bookings',  route: '/admin/bookings',  color: '#D95D39',  bg: '#FDECE7' },
-  { icon: 'bus',            label: 'Tours',     route: '/admin/tours',     color: '#7C3AED',  bg: '#F5F3FF' },
-  { icon: 'people',         label: 'Members',   route: '/admin/members',   color: '#16A34A',  bg: '#F0FDF4' },
-  { icon: 'person',         label: 'Users',     route: '/admin/users',     color: '#0284C7',  bg: '#EFF6FF' },
-  { icon: 'chatbubble',     label: 'Enquiries', route: '/admin/enquiries', color: '#D97706',  bg: '#FFFBEB' },
-  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',  color: '#EA580C',  bg: '#FFF7ED' },
-  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',   color: '#0891B2',  bg: '#ECFEFF' },
-  { icon: 'shield-checkmark', label: 'Moderate', route: '/admin/community', color: '#7C3AED', bg: '#F5F3FF' },
-  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',  color: '#374151',  bg: '#FEF2F2' },
+  { icon: 'ticket',         label: 'Bookings',  route: '/admin/bookings',  color: '#D95D39',  bg: '#D95D3920' },
+  { icon: 'bus',            label: 'Tours',     route: '/admin/tours',     color: '#7C3AED',  bg: '#7C3AED20' },
+  { icon: 'people',         label: 'Members',   route: '/admin/members',   color: '#16A34A',  bg: '#16A34A20' },
+  { icon: 'person',         label: 'Users',     route: '/admin/users',     color: '#0284C7',  bg: '#0284C720' },
+  { icon: 'chatbubble',     label: 'Enquiries', route: '/admin/enquiries', color: '#D97706',  bg: '#D9770620' },
+  { icon: 'star',           label: 'Feedback',  route: '/admin/feedback',  color: '#EA580C',  bg: '#EA580C20' },
+  { icon: 'images',         label: 'Gallery',   route: '/admin/gallery',   color: '#0891B2',  bg: '#0891B220' },
+  { icon: 'shield-checkmark', label: 'Moderate', route: '/admin/community', color: '#7C3AED', bg: '#7C3AED20' },
+  { icon: 'settings',       label: 'Settings',  route: '/admin/settings',  color: '#374151',  bg: '#37415120' },
 ];
 
 export default function AdminDashboard() {
@@ -65,9 +65,9 @@ export default function AdminDashboard() {
 
   const fmt = (n) => n >= 1000 ? `₹${(n / 1000).toFixed(1)}k` : `₹${n}`;
   const statusColor = (st) => ({
-    confirmed: { bg: '#DCFCE7', text: '#16A34A' },
-    pending:   { bg: '#FEF9C3', text: '#CA8A04' },
-    cancelled: { bg: '#FEE2E2', text: '#DC2626' },
+    confirmed: { bg: '#16A34A20', text: '#16A34A' },
+    pending:   { bg: '#CA8A0420', text: '#CA8A04' },
+    cancelled: { bg: '#DC262620', text: '#DC2626' },
   }[st] || { bg: colors.elevated, text: colors.textSecondary });
 
   return (
@@ -121,9 +121,9 @@ export default function AdminDashboard() {
           <View style={{ paddingHorizontal: px, marginTop: 8 }}>
             <Text style={[s.sectionLabel, { marginTop: 8 }]}>· Booking Summary ·</Text>
             <View style={s.statsRow}>
-              <StatPill icon="checkmark-circle" label="Confirmed" value={stats.confirmed} color="#16A34A" bg="#F0FDF4" s={s} colors={colors} />
-              <StatPill icon="time"             label="Pending"   value={stats.pending}   color="#D97706" bg="#FFFBEB" s={s} colors={colors} />
-              <StatPill icon="close-circle"     label="Cancelled" value={stats.cancelled} color="#DC2626" bg="#FEF2F2" s={s} colors={colors} />
+              <StatPill icon="checkmark-circle" label="Confirmed" value={stats.confirmed} color="#16A34A" bg="#16A34A18" s={s} colors={colors} />
+              <StatPill icon="time"             label="Pending"   value={stats.pending}   color="#D97706" bg="#D9770618" s={s} colors={colors} />
+              <StatPill icon="close-circle"     label="Cancelled" value={stats.cancelled} color="#DC2626" bg="#DC262618" s={s} colors={colors} />
             </View>
           </View>
         )}

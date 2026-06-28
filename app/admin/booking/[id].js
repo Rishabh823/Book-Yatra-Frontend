@@ -177,7 +177,7 @@ export default function AdminBookingDetail() {
               </TouchableOpacity>
             )}
             <TouchableOpacity style={s.editBtn} onPress={() => setEditMode(v => !v)}>
-              <Ionicons name={editMode ? "close" : "create-outline"} size={16} color={colors.secondary} />
+              <Ionicons name={editMode ? "close" : "create-outline"} size={16} color={colors.textPrimary} />
               <Text style={s.editBtnTxt}>{editMode ? "Discard" : "Edit"}</Text>
             </TouchableOpacity>
           </View>
@@ -331,7 +331,7 @@ function Field({ label, icon, value, onChangeText, kb = "default", s, colors }) 
 
 const makeStyles = (colors) => StyleSheet.create({
   statusCard:    { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: colors.borderSubtle },
-  statusCardId:  { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary },
+  statusCardId:  { fontFamily: fonts.heading, fontSize: 18, color: colors.primary },
   statusCardDate:{ fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
 
   payRow:    { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
@@ -342,18 +342,18 @@ const makeStyles = (colors) => StyleSheet.create({
   actionRow:   { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 },
   confirmBtn:  { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#16A34A", borderRadius: 999 },
   confirmBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 12, color: "#fff" },
-  cashBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.primaryLight, borderRadius: 999 },
+  cashBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.primary + "18", borderRadius: 999 },
   cashBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.primary },
-  cancelBtn:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#FEE2E2", borderRadius: 999 },
+  cancelBtn:   { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#DC262618", borderRadius: 999 },
   cancelBtnTxt:{ fontFamily: fonts.bodyBold, fontSize: 12, color: "#DC2626" },
   editBtn:     { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.borderSubtle, borderRadius: 999 },
-  editBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.secondary },
+  editBtnTxt:  { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.textPrimary },
 
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 11, color: colors.textSecondary, letterSpacing: 3, marginBottom: 12, marginTop: 4 },
   card:         { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: colors.borderSubtle },
 
   infoRow:   { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle, gap: 12 },
-  infoIcon:  { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  infoIcon:  { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.primary + "18", alignItems: "center", justifyContent: "center" },
   infoLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary, width: 80, paddingTop: 6 },
   infoValue: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary, flex: 1, paddingTop: 6 },
 
@@ -364,14 +364,14 @@ const makeStyles = (colors) => StyleSheet.create({
 
   passengerItem:   { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
   passengerBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
-  passengerNum:    { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.secondary, alignItems: "center", justifyContent: "center" },
+  passengerNum:    { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.primary + "30", alignItems: "center", justifyContent: "center" },
   passengerNumTxt: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#fff" },
   passengerName:   { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.textPrimary },
   passengerMeta:   { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 
   statusRow:      { flexDirection: "row", gap: 8, marginBottom: 20 },
   statusChip:     { flex: 1, height: 44, borderRadius: 999, borderWidth: 1, borderColor: colors.borderSubtle, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
-  statusChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  statusChipActive: { borderColor: colors.primary, backgroundColor: colors.primary + "18" },
   statusChipTxt:  { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary },
 
   saveCta:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, borderRadius: 999, backgroundColor: colors.primary, marginTop: 4 },
