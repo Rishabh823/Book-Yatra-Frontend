@@ -42,6 +42,7 @@ export default function Tours() {
   const [q, setQ] = useState("");
   const [role, setRole] = useState("user");
   const [userJoinedOps, setUserJoinedOps] = useState([]);
+  const [userDataReady, setUserDataReady] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [advFilters, setAdvFilters] = useState(DEFAULT_FILTERS);
@@ -111,6 +112,8 @@ export default function Tours() {
         ),
       );
     }
+    // Signal that user profile + joinedOps are fully loaded
+    setUserDataReady(true);
   }, []);
 
   const load = useCallback(async () => {
@@ -599,7 +602,8 @@ export default function Tours() {
             <Text style={s.guestRegTxt}>Create Account</Text>
           </TouchableOpacity>
         </View>
-      ) : authChecked &&
+      ) : userDataReady &&
+        !loading &&
         isLoggedIn &&
         !isOperator &&
         userJoinedOps.length === 0 ? (

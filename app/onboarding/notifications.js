@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import * as Notifications from "expo-notifications";
+import { registerPushToken } from "../../lib/notifications";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 
 const STEP = 5;
@@ -76,8 +76,7 @@ export default function NotificationsScreen() {
   const handleEnable = async () => {
     setLoading(true);
     try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      // status may be 'granted' or 'denied'; either way proceed
+      await registerPushToken();
     } catch {}
     setLoading(false);
     router.push("/onboarding/onboard-auth");

@@ -32,7 +32,7 @@ import { AppLockProvider, useAppLock } from "../lib/security/appLockContext";
 import AppLockScreen from "../components/AppLockScreen";
 import { ThemeProvider, useTheme } from "../lib/ThemeContext";
 import {
-  registerPushToken,
+  registerTokenIfGranted,
   addNotificationListener,
   addResponseListener,
 } from "../lib/notifications";
@@ -47,7 +47,7 @@ function AppNavigator() {
   useNotificationPolling();
 
   useEffect(() => {
-    registerPushToken().catch(() => {});
+    registerTokenIfGranted().catch(() => {});
 
     const notifSub = addNotificationListener(() => {});
     const responseSub = addResponseListener((response) => {
