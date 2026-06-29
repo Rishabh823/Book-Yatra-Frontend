@@ -70,7 +70,7 @@ export default function Membership() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <View style={s.head}>
           <TouchableOpacity onPress={() => router.back()} style={s.iconBtn} testID="member-back">
             <Ionicons name="arrow-back" size={20} color={colors.secondary} />

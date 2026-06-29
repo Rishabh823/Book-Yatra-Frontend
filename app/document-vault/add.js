@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -96,6 +97,7 @@ export default function AddDocumentScreen() {
           )}
         </TouchableOpacity>
       </View>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
         contentContainerStyle={{
           padding: 20,
@@ -175,6 +177,7 @@ export default function AddDocumentScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
     </View>
   );

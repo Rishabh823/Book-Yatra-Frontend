@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
   ActivityIndicator,
   Platform,
 } from "react-native";
@@ -321,6 +322,7 @@ export default function DonatePage() {
       {/* Gray band */}
       {/* <View style={s.grayBand} /> */}
 
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 32 }}
@@ -448,6 +450,7 @@ export default function DonatePage() {
           80G tax benefits may apply where applicable.
         </Text>
       </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

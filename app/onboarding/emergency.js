@@ -7,10 +7,11 @@ import {
   StyleSheet,
   StatusBar,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
@@ -19,14 +20,7 @@ import { saveEmergencyContact } from "../../lib/onboarding";
 const STEP = 9;
 const TOTAL = 10;
 
-const RELATIONSHIPS = [
-  "Spouse",
-  "Parent",
-  "Sibling",
-  "Child",
-  "Friend",
-  "Other",
-];
+const RELATIONSHIPS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"];
 
 function StepBar({ step, total }) {
   return (
@@ -56,6 +50,7 @@ function StepBar({ step, total }) {
 
 export default function EmergencyScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [relationship, setRelationship] = useState("");
@@ -76,117 +71,133 @@ export default function EmergencyScreen() {
   const handleSkip = () => router.push("/onboarding/wallet");
 
   return (
-    <SafeAreaView style={s.safe} edges={["top", "bottom"]}>
+    // Only top edge — bottom is handled by the ScrollView's paddingBottom
+    <SafeAreaView style={s.safe} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       <StepBar step={STEP} total={TOTAL} />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={s.topBar}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleSkip}>
-            <Text style={s.skipTxt}>Skip</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={s.header}>
-          <View style={s.iconCircle}>
-            <Ionicons name="heart" size={40} color="#DC2626" />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          contentContainerStyle={[
+            s.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, 16) },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top bar */}
+          <View style={s.topBar}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSkip}>
+              <Text style={s.skipTxt}>Skip</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={s.title}>Emergency Contact</Text>
-          <Text style={s.sub}>
-            Add someone we can contact in case of an emergency during your
-            travel
-          </Text>
-        </View>
 
-        <View style={s.form}>
-          {/* Name */}
-          <View style={s.field}>
-            <Text style={s.label}>Full Name *</Text>
-            <View style={s.inputWrap}>
-              <Ionicons
-                name="person-outline"
-                size={16}
-                color={colors.textSecondary}
-              />
-              <TextInput
-                style={s.input}
-                placeholder="Enter full name"
-                placeholderTextColor={colors.textDisabled}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
+          {/* Header */}
+          <View style={s.header}>
+            <View style={s.iconCircle}>
+              <Ionicons name="heart" size={40} color="#DC2626" />
             </View>
+            <Text style={s.title}>Emergency Contact</Text>
+            <Text style={s.sub}>
+              Add someone we can contact in case of an emergency during your
+              travel
+            </Text>
           </View>
 
-          {/* Phone */}
-          <View style={s.field}>
-            <Text style={s.label}>Phone Number *</Text>
-            <View style={s.inputWrap}>
-              <Ionicons
-                name="call-outline"
-                size={16}
-                color={colors.textSecondary}
-              />
-              <TextInput
-                style={s.input}
-                placeholder="+91 98765 43210"
-                placeholderTextColor={colors.textDisabled}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
+          {/* Form */}
+          <View style={s.form}>
+            <View style={s.field}>
+              <Text style={s.label}>Full Name *</Text>
+              <View style={s.inputWrap}>
+                <Ionicons
+                  name="person-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                />
+                <TextInput
+                  style={s.input}
+                  placeholder="Enter full name"
+                  placeholderTextColor={colors.textDisabled}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                />
+              </View>
             </View>
-          </View>
 
-          {/* Relationship */}
-          <View style={s.field}>
-            <Text style={s.label}>Relationship</Text>
-            <View style={s.relWrap}>
-              {RELATIONSHIPS.map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={[s.relChip, relationship === r && s.relChipActive]}
-                  onPress={() => setRelationship(r)}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[s.relLabel, relationship === r && s.relLabelActive]}
+            <View style={s.field}>
+              <Text style={s.label}>Phone Number *</Text>
+              <View style={s.inputWrap}>
+                <Ionicons
+                  name="call-outline"
+                  size={16}
+                  color={colors.textSecondary}
+                />
+                <TextInput
+                  style={s.input}
+                  placeholder="+91 98765 43210"
+                  placeholderTextColor={colors.textDisabled}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  returnKeyType="done"
+                />
+              </View>
+            </View>
+
+            <View style={s.field}>
+              <Text style={s.label}>Relationship</Text>
+              <View style={s.relWrap}>
+                {RELATIONSHIPS.map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    style={[s.relChip, relationship === r && s.relChipActive]}
+                    onPress={() => setRelationship(r)}
+                    activeOpacity={0.7}
                   >
-                    {r}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        s.relLabel,
+                        relationship === r && s.relLabelActive,
+                      ]}
+                    >
+                      {r}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={s.bottom}>
-          <TouchableOpacity
-            style={[s.btn, (!name.trim() || !phone.trim()) && s.btnDisabled]}
-            onPress={handleSave}
-            activeOpacity={0.85}
-            disabled={!name.trim() || !phone.trim() || saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Text style={s.btnText}>Save & Continue</Text>
-                <Ionicons name="arrow-forward" size={18} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={s.skipFull} onPress={handleSkip}>
-            <Text style={s.skipTxt}>Skip for Now</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Spacer pushes button to bottom when content is shorter than screen */}
+          <View style={{ flex: 1, minHeight: 24 }} />
+
+          {/* Button — always scrollable into view when keyboard opens */}
+          <View style={s.bottom}>
+            <TouchableOpacity
+              style={[s.btn, (!name.trim() || !phone.trim()) && s.btnDisabled]}
+              onPress={handleSave}
+              activeOpacity={0.85}
+              disabled={!name.trim() || !phone.trim() || saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Text style={s.btnText}>Save & Continue</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#fff" />
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={s.skipFull} onPress={handleSkip}>
+              <Text style={s.skipTxt}>Skip for Now</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -194,6 +205,7 @@ export default function EmergencyScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  scrollContent: { flexGrow: 1 },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -230,7 +242,7 @@ const s = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
   },
-  form: { paddingHorizontal: 20, gap: 16, flex: 1 },
+  form: { paddingHorizontal: 20, gap: 16 },
   field: { gap: 6 },
   label: {
     fontFamily: fonts.bodySemiBold,
@@ -274,7 +286,7 @@ const s = StyleSheet.create({
     color: colors.textSecondary,
   },
   relLabelActive: { color: colors.primary, fontFamily: fonts.bodySemiBold },
-  bottom: { padding: 20, paddingBottom: 8, gap: 8 },
+  bottom: { paddingHorizontal: 20, paddingTop: 8, gap: 8 },
   btn: {
     flexDirection: "row",
     alignItems: "center",

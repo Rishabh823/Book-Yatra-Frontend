@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -111,6 +111,7 @@ export default function GroupBookingScreen() {
         ))}
       </View>
 
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: insets.bottom + 100 }}>
         {/* Step 0: Type */}
         {step === 0 && (
@@ -237,6 +238,7 @@ export default function GroupBookingScreen() {
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       <ConfirmModal

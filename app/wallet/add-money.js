@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -103,6 +104,7 @@ export default function AddMoneyScreen() {
         <View style={{ width: 38 }} />
       </View>
 
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
@@ -193,6 +195,7 @@ export default function AddMoneyScreen() {
           )}
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
 
       <RazorpayCheckout
         visible={!!checkout}

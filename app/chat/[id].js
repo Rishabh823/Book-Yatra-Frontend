@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -7,12 +13,12 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
   Keyboard,
   Platform,
   ActivityIndicator,
   Modal,
   Image,
+  Animated,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -38,20 +44,14 @@ export default function ChatScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [myUserId, setMyUserId] = useState(null);
   const [chatName, setChatName] = useState("");
+  const [newMsgCount, setNewMsgCount] = useState(0);
 
-  // Recipient user info (for direct chats)
   const [recipientUser, setRecipientUser] = useState(null);
-
-  // Block status
-  const [iBlocked, setIBlocked] = useState(false); // I blocked them
-  const [blockedByThem, setBlockedByThem] = useState(false); // they blocked me
+  const [iBlocked, setIBlocked] = useState(false);
+  const [blockedByThem, setBlockedByThem] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
-
-  // User profile modal
   const [showProfile, setShowProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
-
-  // Delete context menu
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const flatRef = useRef(null);
@@ -59,7 +59,10 @@ export default function ChatScreen() {
   const inFlightRef = useRef(new Set());
   const socketConfirmedRef = useRef(new Set());
   const recipientIdRef = useRef(null);
-  const myUserIdRef = useRef(null); // stable ref so socket handlers don't need myUserId in deps
+  const myUserIdRef = useRef(null);
+  const isAtBottom = useRef(true);
+  // Animated value tracks keyboard height — drives paddingBottom on content area
+  const keyboardHeight = useRef(new Animated.Value(0)).current;
 
   const { connect, disconnect, on } = useSocket("/chat");
 
@@ -70,7 +73,40 @@ export default function ChatScreen() {
     });
   }, []);
 
-  // Load chat info + recipient profile + block status
+  // ── Keyboard animation ──────────────────────────────────────────────────────
+  // No KAV. Instead, animate paddingBottom of the content area to keyboard height.
+  // This gives zero residual gap when keyboard closes (Animated resets to 0 exactly).
+  useEffect(() => {
+    const showEvt =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const onShow = (e) => {
+      Animated.timing(keyboardHeight, {
+        toValue: e.endCoordinates.height,
+        duration: Platform.OS === "ios" ? (e.duration ?? 250) : 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const onHide = (e) => {
+      Animated.timing(keyboardHeight, {
+        toValue: 0,
+        duration: Platform.OS === "ios" ? (e.duration ?? 250) : 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSub = Keyboard.addListener(showEvt, onShow);
+    const hideSub = Keyboard.addListener(hideEvt, onHide);
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardHeight]);
+
+  // ── Load chat info ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!myUserId) return;
     api
@@ -87,7 +123,6 @@ export default function ChatScreen() {
           setRecipientUser(other);
           recipientIdRef.current = String(other._id || other);
 
-          // Fetch full profile + block status in parallel
           const rid = String(other._id || other);
           setProfileLoading(true);
           Promise.all([
@@ -115,6 +150,7 @@ export default function ChatScreen() {
         const res = await api.get("/chat/" + chatId + "/messages?page=" + p);
         const msgs = (res.data || []).map((m) => ({ ...m, _status: "sent" }));
         if (append) {
+          // Older page prepended — appears at visual top (end of inverted list)
           setMessages((prev) => [...msgs, ...prev]);
         } else {
           setMessages((prev) => {
@@ -130,10 +166,8 @@ export default function ChatScreen() {
             });
             return [...msgs, ...stillPending];
           });
-          setTimeout(
-            () => flatRef.current?.scrollToEnd({ animated: false }),
-            100,
-          );
+          // Inverted FlatList always shows index-0 (newest) at visual bottom.
+          // No scrollToEnd needed — the position is correct by default.
         }
         setHasMore(msgs.length === 30);
       } catch {}
@@ -150,7 +184,6 @@ export default function ChatScreen() {
     loadMessages();
     markRead();
 
-    // Polling is a safety-net fallback only. Socket delivers messages instantly.
     intervalRef.current = setInterval(() => loadMessages(1, false), 30000);
 
     let mounted = true;
@@ -158,11 +191,16 @@ export default function ChatScreen() {
 
     connect()
       .then((socket) => {
-        if (!mounted) return; // cleanup ran before connect resolved — bail
+        if (!mounted) return;
 
         socket.emit("join_chat", chatId);
 
         const offNew = on("new_message", (msg) => {
+          // Determine if incoming before setMessages (senderId available synchronously)
+          const isIncoming =
+            String(msg.senderId?._id || msg.senderId) !==
+            String(myUserIdRef.current);
+
           setMessages((prev) => {
             const incomingId = String(msg._id);
             if (prev.some((m) => !m._local && String(m._id) === incomingId))
@@ -182,15 +220,29 @@ export default function ChatScreen() {
             }
             return [...prev, { ...msg, _status: "sent" }];
           });
-          setTimeout(
-            () => flatRef.current?.scrollToEnd({ animated: true }),
-            50,
-          );
+
+          // Smart scroll: auto-scroll to bottom only if user is already there.
+          // If reading old messages, show a "new messages" badge instead.
+          if (isIncoming) {
+            if (isAtBottom.current) {
+              setTimeout(
+                () =>
+                  flatRef.current?.scrollToOffset({
+                    offset: 0,
+                    animated: true,
+                  }),
+                50,
+              );
+            } else {
+              setNewMsgCount((c) => c + 1);
+            }
+          }
+
           markRead();
         });
 
         const offRead = on("messages_read", ({ readBy }) => {
-          const myId = myUserIdRef.current; // ref — no dep needed, always current
+          const myId = myUserIdRef.current;
           setMessages((prev) =>
             prev.map((m) => {
               if (m._local || m._status === "failed" || m._status === "sending")
@@ -237,9 +289,9 @@ export default function ChatScreen() {
       socketOff();
       disconnect();
     };
-  }, [loadMessages, chatId, markRead]); // myUserId removed — use ref inside handlers
+  }, [loadMessages, chatId, markRead]);
 
-  // ── Send logic ────────────────────────────────────────────────────────────────
+  // ── Send ───────────────────────────────────────────────────────────────────
   const dispatchSend = useCallback(
     (tempId, text) => {
       if (inFlightRef.current.has(tempId)) return;
@@ -267,7 +319,6 @@ export default function ChatScreen() {
         .catch((error) => {
           clearTimeout(abortTimer);
 
-          // If blocked (403), update block state immediately
           if (error?.status === 403) {
             setBlockedByThem(true);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
@@ -319,7 +370,12 @@ export default function ChatScreen() {
         readBy: [],
       },
     ]);
-    setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 40);
+    // Always jump to own sent message (offset 0 = newest in inverted list)
+    setTimeout(
+      () => flatRef.current?.scrollToOffset({ offset: 0, animated: true }),
+      40,
+    );
+    setNewMsgCount(0);
     dispatchSend(tempId, text);
   }, [input, chatId, myUserId, dispatchSend, iBlocked, blockedByThem]);
 
@@ -340,7 +396,7 @@ export default function ChatScreen() {
     loadMessages(nextPage, true);
   }, [hasMore, page, loadMessages]);
 
-  // ── Block / Unblock ───────────────────────────────────────────────────────────
+  // ── Block / Unblock ────────────────────────────────────────────────────────
   const handleBlock = useCallback(async () => {
     if (!recipientIdRef.current) return;
     setBlockLoading(true);
@@ -363,7 +419,7 @@ export default function ChatScreen() {
     setShowProfile(false);
   }, []);
 
-  // ── Delete message ────────────────────────────────────────────────────────────
+  // ── Delete message ─────────────────────────────────────────────────────────
   const handleLongPress = useCallback(
     (msg) => {
       const isMine =
@@ -400,31 +456,24 @@ export default function ChatScreen() {
     [deleteTarget, loadMessages],
   );
 
-  const isOwn = (msg) => {
-    const sid = msg.senderId?._id || msg.senderId;
-    return myUserId && String(sid) === String(myUserId);
-  };
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const isOwn = useCallback(
+    (msg) => {
+      const sid = msg.senderId?._id || msg.senderId;
+      return myUserId && String(sid) === String(myUserId);
+    },
+    [myUserId],
+  );
 
-  const isRead = (msg) =>
-    (msg.readBy || []).some((r) => String(r.userId) !== String(myUserId));
+  const isRead = useCallback(
+    (msg) =>
+      (msg.readBy || []).some((r) => String(r.userId) !== String(myUserId)),
+    [myUserId],
+  );
 
-  // Scroll to bottom whenever keyboard appears/disappears (WhatsApp-style)
-  useEffect(() => {
-    const showEvt =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvt =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const onShow = () => flatRef.current?.scrollToEnd({ animated: true });
-    const onHide = () => flatRef.current?.scrollToEnd({ animated: false });
-    const showSub = Keyboard.addListener(showEvt, onShow);
-    const hideSub = Keyboard.addListener(hideEvt, onHide);
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
+  // Newest message at index 0 — displayed at visual bottom by inverted FlatList
+  const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
-  // ── Derived UI ────────────────────────────────────────────────────────────────
   const inputBlocked = iBlocked || blockedByThem;
 
   const initials = (chatName || "U")
@@ -435,21 +484,15 @@ export default function ChatScreen() {
     .toUpperCase();
 
   return (
-    <KeyboardAvoidingView
-      style={[
-        s.container,
-        { backgroundColor: colors.bg, paddingTop: insets.top },
-      ]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={0}
-    >
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+    <View style={[s.container, { backgroundColor: colors.bg }]}>
+      {/* ── Header — top safe area applied here since KAV is gone ─────────── */}
       <View
         style={[
           s.header,
           {
             backgroundColor: colors.surface,
             borderBottomColor: colors.borderSubtle,
+            paddingTop: insets.top + 10,
           },
         ]}
       >
@@ -460,7 +503,6 @@ export default function ChatScreen() {
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        {/* Tappable avatar → user profile modal */}
         <TouchableOpacity
           onPress={() => setShowProfile(true)}
           activeOpacity={0.8}
@@ -478,7 +520,6 @@ export default function ChatScreen() {
               <Text style={s.headerAvatarInitials}>{initials}</Text>
             </View>
           )}
-          {/* Grey dot on avatar when blocked by them */}
           {blockedByThem && !iBlocked && (
             <View style={s.headerBlockDot}>
               <Ionicons name="ban" size={9} color="white" />
@@ -512,7 +553,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Block status banner ─────────────────────────────────────────────── */}
+      {/* ── Block banners ─────────────────────────────────────────────────── */}
       {blockedByThem && !iBlocked && (
         <View style={s.blockedBanner}>
           <Ionicons
@@ -546,105 +587,144 @@ export default function ChatScreen() {
         </View>
       )}
 
-      {/* ── Message list ───────────────────────────────────────────────────── */}
-      {loading ? (
-        <View style={[s.center, { flex: 1 }]}>
-          <ActivityIndicator color="#D95D39" />
-        </View>
-      ) : (
-        <FlatList
-          ref={flatRef}
-          data={messages}
-          keyExtractor={(item, idx) => String(item._id || idx)}
-          extraData={myUserId}
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item, index }) => (
-            <ChatBubble
-              message={item}
-              isOwn={isOwn(item)}
-              isRead={isOwn(item) ? isRead(item) : false}
-              showName={
-                !isOwn(item) &&
-                (index === 0 ||
-                  messages[index - 1]?.senderId?._id !== item.senderId?._id)
-              }
-              senderName={item.senderId?.name}
-              onRetry={retryMessage}
-              onLongPress={handleLongPress}
-            />
-          )}
-          contentContainerStyle={{ paddingVertical: 12 }}
-          onStartReached={loadMore}
-          onStartReachedThreshold={0.2}
-          ListEmptyComponent={
-            <View style={s.noMsg}>
-              <Ionicons
-                name="chatbubble-ellipses-outline"
-                size={40}
-                color={colors.textDisabled}
-              />
-              <Text style={[s.noMsgText, { color: colors.textSecondary }]}>
-                No messages yet. Say hi!
-              </Text>
-            </View>
-          }
-        />
-      )}
-
-      {/* ── Input row ──────────────────────────────────────────────────────── */}
-      <View
-        style={[
-          s.inputRow,
-          {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.borderSubtle,
-            paddingBottom: Math.max(insets.bottom, 8),
-          },
-        ]}
-      >
-        {inputBlocked ? (
-          <View style={[s.blockedInput, { backgroundColor: colors.elevated }]}>
-            <Ionicons
-              name="ban-outline"
-              size={16}
-              color={colors.textSecondary}
-            />
-            <Text style={[s.blockedInputText, { color: colors.textSecondary }]}>
-              {iBlocked
-                ? "You blocked this user"
-                : "You can't reply to this conversation"}
-            </Text>
+      {/* ── Content area: shrinks above keyboard via animated paddingBottom ── */}
+      <Animated.View style={[s.content, { paddingBottom: keyboardHeight }]}>
+        {/* Message list */}
+        {loading ? (
+          <View style={s.center}>
+            <ActivityIndicator color="#D95D39" />
           </View>
         ) : (
-          <>
-            <TextInput
-              style={[
-                s.input,
-                { backgroundColor: colors.elevated, color: colors.textPrimary },
-              ]}
-              value={input}
-              onChangeText={setInput}
-              placeholder="Type a message..."
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              maxLength={2000}
-              returnKeyType="send"
-              blurOnSubmit={false}
-            />
-            <TouchableOpacity
-              style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
-              onPress={sendMessage}
-              disabled={!input.trim()}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="send" size={18} color="white" />
-            </TouchableOpacity>
-          </>
+          <FlatList
+            ref={flatRef}
+            inverted
+            data={reversedMessages}
+            keyExtractor={(item, idx) => String(item._id || idx)}
+            extraData={myUserId}
+            // "none" on Android keeps keyboard open while scrolling.
+            // "interactive" on iOS lets the keyboard follow the finger.
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "none"}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item, index }) => (
+              <ChatBubble
+                message={item}
+                isOwn={isOwn(item)}
+                isRead={isOwn(item) ? isRead(item) : false}
+                // With inverted list, index+1 is the older (visually above) message.
+                // Show sender name at the top of each consecutive block.
+                showName={
+                  !isOwn(item) &&
+                  (index === reversedMessages.length - 1 ||
+                    reversedMessages[index + 1]?.senderId?._id !==
+                      item.senderId?._id)
+                }
+                senderName={item.senderId?.name}
+                onRetry={retryMessage}
+                onLongPress={handleLongPress}
+              />
+            )}
+            contentContainerStyle={{ paddingVertical: 12 }}
+            // End = visual top = older messages → trigger pagination
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.2}
+            onScroll={(e) => {
+              const atBottom = e.nativeEvent.contentOffset.y < 60;
+              if (atBottom && !isAtBottom.current) setNewMsgCount(0);
+              isAtBottom.current = atBottom;
+            }}
+            scrollEventThrottle={100}
+            ListEmptyComponent={
+              // Counter-rotate to cancel the inverted scaleY(-1) applied to the list
+              <View style={[s.noMsg, { transform: [{ scaleY: -1 }] }]}>
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={40}
+                  color={colors.textDisabled}
+                />
+                <Text style={[s.noMsgText, { color: colors.textSecondary }]}>
+                  No messages yet. Say hi!
+                </Text>
+              </View>
+            }
+          />
         )}
-      </View>
+
+        {/* New messages badge — appears when user is reading old messages */}
+        {newMsgCount > 0 && (
+          <TouchableOpacity
+            style={s.newMsgBadge}
+            onPress={() => {
+              flatRef.current?.scrollToOffset({ offset: 0, animated: true });
+              setNewMsgCount(0);
+            }}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="chevron-down" size={14} color="white" />
+            <Text style={s.newMsgText}>
+              {newMsgCount} new {newMsgCount === 1 ? "message" : "messages"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* ── Input row ─────────────────────────────────────────────────── */}
+        <View
+          style={[
+            s.inputRow,
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.borderSubtle,
+              paddingBottom: Math.max(insets.bottom, 8),
+            },
+          ]}
+        >
+          {inputBlocked ? (
+            <View
+              style={[s.blockedInput, { backgroundColor: colors.elevated }]}
+            >
+              <Ionicons
+                name="ban-outline"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text
+                style={[s.blockedInputText, { color: colors.textSecondary }]}
+              >
+                {iBlocked
+                  ? "You blocked this user"
+                  : "You can't reply to this conversation"}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <TextInput
+                style={[
+                  s.input,
+                  {
+                    backgroundColor: colors.elevated,
+                    color: colors.textPrimary,
+                  },
+                ]}
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type a message..."
+                placeholderTextColor={colors.textSecondary}
+                multiline
+                maxLength={2000}
+                returnKeyType="send"
+                blurOnSubmit={false}
+              />
+              <TouchableOpacity
+                style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
+                onPress={sendMessage}
+                disabled={!input.trim()}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="send" size={18} color="white" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </Animated.View>
 
       {/* ── User profile modal ─────────────────────────────────────────────── */}
       <UserProfileModal
@@ -658,7 +738,7 @@ export default function ChatScreen() {
         loading={profileLoading || blockLoading}
       />
 
-      {/* ── Delete context menu ─────────────────────────────────────────────── */}
+      {/* ── Delete context menu ────────────────────────────────────────────── */}
       <Modal
         visible={!!deleteTarget}
         transparent
@@ -758,12 +838,13 @@ export default function ChatScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1 },
+  content: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   // Header
@@ -772,7 +853,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   iconBtn: {
@@ -842,6 +923,30 @@ const s = StyleSheet.create({
 
   noMsg: { alignItems: "center", padding: 40, gap: 10 },
   noMsgText: { fontFamily: fonts.body, fontSize: 14 },
+
+  // New messages badge
+  newMsgBadge: {
+    position: "absolute",
+    bottom: 70,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#D95D39",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  newMsgText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    color: "white",
+  },
 
   // Input
   inputRow: {

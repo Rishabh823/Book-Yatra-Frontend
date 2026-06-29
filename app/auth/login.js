@@ -154,7 +154,7 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0D0D0D" }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"

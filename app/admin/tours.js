@@ -355,7 +355,7 @@ export default function AdminTours() {
       >
         <KeyboardAvoidingView
           style={s.overlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
         >
           <View
             style={[

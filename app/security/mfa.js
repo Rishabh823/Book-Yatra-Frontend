@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Image, Clipboard,
+  KeyboardAvoidingView, TextInput, Image, Clipboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -124,6 +124,7 @@ export default function MFAScreen() {
           </View>
           <View style={{ width: 40 }} />
         </View>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ padding: 20, paddingBottom: insets.bottom + 32, gap: 16 }}>
           <TextInput
             style={s.otpInput}
@@ -144,6 +145,7 @@ export default function MFAScreen() {
             <Text style={s.primaryBtnText}>{saving ? 'Verifying…' : 'Verify & Enable'}</Text>
           </TouchableOpacity>
         </View>
+        </KeyboardAvoidingView>
         <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );
@@ -210,6 +212,7 @@ export default function MFAScreen() {
           </View>
           <View style={{ width: 40 }} />
         </View>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ padding: 20, paddingBottom: insets.bottom + 32, gap: 16 }}>
           <TextInput
             style={s.otpInput}
@@ -230,6 +233,7 @@ export default function MFAScreen() {
             <Text style={s.primaryBtnText}>{saving ? 'Disabling…' : 'Disable MFA'}</Text>
           </TouchableOpacity>
         </View>
+        </KeyboardAvoidingView>
         <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
       </View>
     );

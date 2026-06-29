@@ -141,7 +141,7 @@ export default function Feedback() {
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
       >
         <View style={s.head}>
           <TouchableOpacity
