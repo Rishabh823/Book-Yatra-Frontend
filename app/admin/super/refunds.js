@@ -18,9 +18,9 @@ const FILTERS = [
 ];
 
 const STATUS_COLORS = {
-  pending:  { bg: '#FFFBEB', text: '#D97706' },
-  approved: { bg: '#F0FDF4', text: '#16A34A' },
-  rejected: { bg: '#FEF2F2', text: '#DC2626' },
+  pending:  { bg: '#D9770618', text: '#D97706' },
+  approved: { bg: '#16A34A18', text: '#16A34A' },
+  rejected: { bg: '#DC262618', text: '#DC2626' },
 };
 
 export default function SuperRefunds() {
@@ -117,7 +117,7 @@ export default function SuperRefunds() {
             <Text style={s.amountVal}>₹{paid.toLocaleString()}</Text>
           </View>
           {b.refundAmount > 0 && (
-            <View style={[s.amountChip, { backgroundColor: '#F0FDF4' }]}>
+            <View style={[s.amountChip, { backgroundColor: '#16A34A18' }]}>
               <Text style={[s.amountLabel, { color: '#16A34A' }]}>Refund Approved</Text>
               <Text style={[s.amountVal, { color: '#16A34A' }]}>₹{b.refundAmount?.toLocaleString()}</Text>
             </View>
@@ -243,8 +243,8 @@ export default function SuperRefunds() {
 }
 
 const makeStyles = (colors) => StyleSheet.create({
-  filterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  chip:        { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
+  filterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, alignItems: 'center' },
+  chip:        { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.borderSubtle },
   chipActive:  { backgroundColor: colors.primary, borderColor: colors.primary },
   chipTxt:     { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
   chipTxtActive: { color: '#fff' },
@@ -267,13 +267,13 @@ const makeStyles = (colors) => StyleSheet.create({
   amountLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginBottom: 2 },
   amountVal: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
 
-  reasonBox: { flexDirection: 'row', gap: 6, backgroundColor: '#FFF7F0', borderRadius: 12, padding: 10, marginBottom: 8, alignItems: 'flex-start' },
+  reasonBox: { flexDirection: 'row', gap: 6, backgroundColor: colors.elevated, borderRadius: 12, padding: 10, marginBottom: 8, alignItems: 'flex-start' },
   reasonTxt: { fontFamily: fonts.body, fontSize: 13, color: colors.textSecondary, flex: 1 },
   dateTxt: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginBottom: 12 },
 
   actionRow: { flexDirection: 'row', gap: 10 },
-  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' },
-  rejectBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' },
+  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#16A34A18', borderWidth: 1, borderColor: '#16A34A40' },
+  rejectBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 16, backgroundColor: '#DC262618', borderWidth: 1, borderColor: '#DC262640' },
   actionTxt: { fontFamily: fonts.bodyMedium, fontSize: 14 },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 40 },

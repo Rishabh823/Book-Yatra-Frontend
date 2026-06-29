@@ -6,16 +6,16 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { AdminShell, SectionHeader } from '../../../lib/AdminScreen';
-import { colors, fonts } from '../../../lib/theme';
+import { fonts } from '../../../lib/theme';
 import { crawlApi } from '../../../lib/api';
 import { useColors } from '../../../lib/ThemeContext';
 
 const STATUS_COLOR = {
-  success:  { bg: '#F0FDF4', text: '#16A34A' },
-  failed:   { bg: '#FEF2F2', text: '#DC2626' },
-  running:  { bg: '#EFF6FF', text: '#2563EB' },
-  pending:  { bg: '#FFFBEB', text: '#D97706' },
-  cancelled:{ bg: '#F3F4F6', text: '#6B7280' },
+  success:  { bg: '#16A34A18', text: '#16A34A' },
+  failed:   { bg: '#DC262618', text: '#DC2626' },
+  running:  { bg: '#2563EB18', text: '#2563EB' },
+  pending:  { bg: '#D9770618', text: '#D97706' },
+  cancelled:{ bg: '#6B728018', text: '#6B7280' },
 };
 
 export default function CrawlDashboard() {
@@ -41,16 +41,16 @@ export default function CrawlDashboard() {
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const QUICK = [
-    { icon: 'globe-outline',    label: 'Sources',        route: '/admin/crawl/sources',  color: '#7C3AED', bg: '#F5F3FF' },
-    { icon: 'time-outline',     label: 'History',        route: '/admin/crawl/history',  color: '#0284C7', bg: '#EFF6FF' },
-    { icon: 'layers-outline',   label: 'Review Tours',   route: '/admin/crawl/imported', color: '#D95D39', bg: '#FDECE7' },
+    { icon: 'globe-outline',    label: 'Sources',        route: '/admin/crawl/sources',  color: '#7C3AED' },
+    { icon: 'time-outline',     label: 'History',        route: '/admin/crawl/history',  color: '#0284C7' },
+    { icon: 'layers-outline',   label: 'Review Tours',   route: '/admin/crawl/imported', color: '#D95D39' },
   ];
 
   return (
     <AdminShell title="Tour Aggregator" subtitle="Auto crawling dashboard">
       <ScrollView
         contentContainerStyle={{ paddingBottom: 48 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.primary} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
@@ -60,7 +60,7 @@ export default function CrawlDashboard() {
               <View style={s.heroLeft}>
                 <Text style={s.heroLabel}>ACTIVE SOURCES</Text>
                 {loading ? (
-                  <ActivityIndicator color={colors.primary} />
+                  <ActivityIndicator color={themeColors.primary} />
                 ) : (
                   <Text style={s.heroValue}>{stats?.sources?.active ?? 0}</Text>
                 )}
@@ -71,7 +71,7 @@ export default function CrawlDashboard() {
                   <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
                   <Text style={[s.heroPillTxt, { color: '#16A34A' }]}>{stats?.jobs?.success ?? 0} jobs done</Text>
                 </View>
-                <View style={[s.heroPill, { backgroundColor: '#FFFBEB' }]}>
+                <View style={[s.heroPill, { backgroundColor: '#D9770618' }]}>
                   <Ionicons name="time" size={13} color="#D97706" />
                   <Text style={[s.heroPillTxt, { color: '#D97706' }]}>{stats?.tours?.pending ?? 0} pending review</Text>
                 </View>
@@ -97,7 +97,7 @@ export default function CrawlDashboard() {
           <View style={s.quickRow}>
             {QUICK.map((q, i) => (
               <TouchableOpacity key={i} style={s.quickCard} onPress={() => router.push(q.route)} activeOpacity={0.8}>
-                <View style={[s.quickIcon, { backgroundColor: q.bg }]}>
+                <View style={[s.quickIcon, { backgroundColor: q.color + '18' }]}>
                   <Ionicons name={q.icon} size={24} color={q.color} />
                 </View>
                 <Text style={s.quickLabel}>{q.label}</Text>
@@ -197,7 +197,7 @@ const makeStyles = (colors) => StyleSheet.create({
   heroLabel:{ fontFamily: fonts.bodyBold, fontSize: 10, color: colors.textDisabled, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 },
   heroValue:{ fontFamily: fonts.heading, fontSize: 48, color: colors.textPrimary, letterSpacing: -1 },
   heroSub:  { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  heroPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#F0FDF4', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  heroPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#16A34A18', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   heroPillTxt:{ fontFamily: fonts.bodyBold, fontSize: 11 },
 
   statRow:  { flexDirection: 'row', gap: 8 },

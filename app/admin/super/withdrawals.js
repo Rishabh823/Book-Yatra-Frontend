@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, TextInput, RefreshControl,
@@ -6,7 +6,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { colors, fonts, radius } from "../../../lib/theme";
+import { fonts, radius } from "../../../lib/theme";
+import { useColors } from "../../../lib/ThemeContext";
 import { settlementApi } from "../../../lib/api";
 import Toast from "../../../components/Toast";
 import { useToast } from "../../../lib/hooks/useToast";
@@ -22,13 +23,13 @@ const STATUS_TABS = [
 ];
 
 const STATUS_META = {
-  pending:    { color: "#D97706", bg: "#FFFBEB" },
-  processing: { color: "#2563EB", bg: "#EFF6FF" },
-  completed:  { color: "#16A34A", bg: "#F0FDF4" },
-  rejected:   { color: "#DC2626", bg: "#FEF2F2" },
+  pending:    { color: "#D97706", bg: "#D9770618" },
+  processing: { color: "#2563EB", bg: "#2563EB18" },
+  completed:  { color: "#16A34A", bg: "#16A34A18" },
+  rejected:   { color: "#DC2626", bg: "#DC262618" },
 };
 
-function ActionSheet({ request, onClose, onAction }) {
+function ActionSheet({ request, onClose, onAction, colors, s }) {
   const [utr, setUtr] = useState(request.utrNumber || "");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ function ActionSheet({ request, onClose, onAction }) {
           </View>
           <View style={s.sheetRow}>
             <Text style={s.sheetLabel}>Amount</Text>
-            <Text style={[s.sheetVal, { fontFamily: fonts.bodyBold, color: colors.secondary }]}>
+            <Text style={[s.sheetVal, { fontFamily: fonts.bodyBold, color: colors.primary }]}>
               {fmtCurrency(request.amount)}
             </Text>
           </View>
@@ -99,7 +100,6 @@ function ActionSheet({ request, onClose, onAction }) {
                 autoCapitalize="characters"
               />
             </View>
-
             <View style={s.fieldWrap}>
               <Text style={s.fieldLabel}>Rejection Reason (to reject)</Text>
               <TextInput
@@ -111,7 +111,6 @@ function ActionSheet({ request, onClose, onAction }) {
                 multiline
               />
             </View>
-
             <View style={s.sheetBtns}>
               <TouchableOpacity
                 style={[s.rejectBtn, (!reason.trim() || loading) && { opacity: 0.4 }]}
@@ -128,10 +127,7 @@ function ActionSheet({ request, onClose, onAction }) {
               >
                 {loading
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <>
-                      <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                      <Text style={s.approveBtnTxt}>Approve</Text>
-                    </>
+                  : <><Ionicons name="checkmark-circle" size={16} color="#fff" /><Text style={s.approveBtnTxt}>Approve</Text></>
                 }
               </TouchableOpacity>
             </View>
@@ -157,6 +153,8 @@ function ActionSheet({ request, onClose, onAction }) {
 
 export default function WithdrawalsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const { toast, showToast, hideToast } = useToast();
 
   const [tab, setTab] = useState("pending");
@@ -234,7 +232,7 @@ export default function WithdrawalsScreen() {
     <SafeAreaView style={s.container} edges={["top"]}>
       <View style={s.head}>
         <TouchableOpacity onPress={() => router.back()} style={s.iconBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.secondary} />
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={s.title}>Withdrawal Requests</Text>
         <View style={{ width: 40 }} />
@@ -281,6 +279,8 @@ export default function WithdrawalsScreen() {
           request={selected}
           onClose={() => setSelected(null)}
           onAction={handleAction}
+          colors={colors}
+          s={s}
         />
       )}
 
@@ -289,42 +289,42 @@ export default function WithdrawalsScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: "#E5E7EB" },
-  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.borderSubtle },
+  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   tabs: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 10, gap: 6 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
-  tabActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+  tabActive: { backgroundColor: colors.primary + "18", borderColor: colors.primary },
   tabTxt: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
   tabTxtActive: { color: colors.primary, fontFamily: fonts.bodyBold },
-  row: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, padding: 14, borderRadius: 20, marginVertical: 3, borderWidth: 1, borderColor: "#E5E7EB" },
+  row: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, padding: 14, borderRadius: 20, marginVertical: 3, borderWidth: 1, borderColor: colors.borderSubtle },
   rowIcon: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   rowOp: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   rowBank: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   rowDate: { fontFamily: fonts.body, fontSize: 11, color: colors.textDisabled, marginTop: 2 },
-  rowAmt: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.secondary },
+  rowAmt: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.primary },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   statusTxt: { fontFamily: fonts.bodyBold, fontSize: 10, textTransform: "capitalize" },
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyTxt: { fontFamily: fonts.body, fontSize: 14, color: colors.textSecondary },
   // Action sheet
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 100, justifyContent: "flex-end" },
-  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
-  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 16, maxHeight: "90%" },
-  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.borderSubtle, alignSelf: "center", marginBottom: 4 },
-  sheetTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.secondary, textAlign: "center" },
-  sheetInfo: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, gap: 10 },
+  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, gap: 16, maxHeight: "90%", borderTopWidth: 1, borderColor: colors.borderSubtle },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.borderStrong, alignSelf: "center", marginBottom: 4 },
+  sheetTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.textPrimary, textAlign: "center" },
+  sheetInfo: { backgroundColor: colors.elevated, borderRadius: 20, padding: 14, gap: 10 },
   sheetRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
   sheetLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary },
   sheetVal: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textPrimary, flex: 1, textAlign: "right" },
   fieldWrap: { gap: 6 },
   fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.textSecondary },
-  fieldInput: { backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
+  fieldInput: { backgroundColor: colors.elevated, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 13, color: colors.textPrimary, borderWidth: 1, borderColor: colors.borderSubtle },
   sheetBtns: { flexDirection: "row", gap: 10 },
-  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 999, padding: 13, backgroundColor: "#FEF2F2", borderWidth: 1.5, borderColor: "#DC2626" },
+  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 999, padding: 13, backgroundColor: "#DC262618", borderWidth: 1.5, borderColor: "#DC262640" },
   rejectBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#DC2626" },
   approveBtn: { flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 999, padding: 13, backgroundColor: "#16A34A" },
   approveBtnTxt: { fontFamily: fonts.bodyBold, fontSize: 14, color: "#fff" },

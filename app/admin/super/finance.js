@@ -152,7 +152,7 @@ export default function SuperFinanceScreen() {
         {/* Withdrawal queue shortcut */}
         {pendingCount > 0 && (
           <TouchableOpacity style={s.pendingBanner} onPress={() => router.push("/admin/super/withdrawals")}>
-            <View style={[s.pendingIcon, { backgroundColor: "#FEF3C7" }]}>
+            <View style={s.pendingIcon}>
               <Ionicons name="time" size={20} color="#D97706" />
             </View>
             <View style={{ flex: 1 }}>
@@ -214,7 +214,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
-  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.secondary },
+  title: { fontFamily: fonts.heading, fontSize: 20, color: colors.textPrimary },
   badge: { position: "absolute", top: 4, right: 4, backgroundColor: colors.error, width: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   badgeTxt: { color: "#fff", fontSize: 9, fontFamily: fonts.bodyBold },
   hero: {
@@ -253,10 +253,10 @@ const makeStyles = (colors) => StyleSheet.create({
   metricValue: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.textPrimary },
   metricLabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary },
   metricSub: { fontFamily: fonts.body, fontSize: 10, color: colors.textDisabled },
-  pendingBanner: { backgroundColor: "#FFFBEB", borderRadius: 20, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#FDE68A" },
-  pendingIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  pendingTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: "#92400E" },
-  pendingSub: { fontFamily: fonts.body, fontSize: 12, color: "#78350F", marginTop: 2 },
+  pendingBanner: { backgroundColor: "#D9770618", borderRadius: 20, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#D9770640" },
+  pendingIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#D9770620" },
+  pendingTitle: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
+  pendingSub: { fontFamily: fonts.body, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   sectionTitle: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.textPrimary },
   card: {
     backgroundColor: colors.surface,
@@ -266,7 +266,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: colors.borderSubtle,
   },
   opRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
-  opAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  opAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primary + "18", alignItems: "center", justifyContent: "center" },
   opAvatarTxt: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.primary },
   opName: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.textPrimary },
   opSub: { fontFamily: fonts.body, fontSize: 11, color: colors.textSecondary, marginTop: 2 },
