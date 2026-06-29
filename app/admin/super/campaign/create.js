@@ -172,11 +172,17 @@ export default function CreateCampaign() {
           recurrence: form.scheduleType === 'recurring' ? form.recurrence : null,
         },
       };
-      await superApi.createCampaign(payload);
+      const res = await superApi.createCampaign(payload);
+      const campaignId = res?.data?._id || res?._id;
       Alert.alert(
         'Campaign Created!',
         form.scheduleType === 'now' ? 'Campaign is sending now!' : 'Campaign is scheduled!',
-        [{ text: 'OK', onPress: () => router.replace('/admin/super/campaigns') }]
+        [{
+          text: 'View Details',
+          onPress: () => campaignId
+            ? router.replace('/admin/super/campaign/' + campaignId)
+            : router.replace('/admin/super/notifications'),
+        }]
       );
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to create campaign');

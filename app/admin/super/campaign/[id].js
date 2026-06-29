@@ -129,12 +129,13 @@ export default function CampaignDetail() {
   const typeColor   = TYPE_COLORS[campaign.type]     || '#6B7280';
   const typeLabel   = TYPE_LABEL_MAP[campaign.type]  || campaign.type || 'Unknown';
 
-  const targetCount     = campaign.targetCount      ?? 0;
-  const sentCount       = campaign.sentCount         ?? 0;
-  const deliveredCount  = campaign.deliveredCount    ?? sentCount;
-  const openedCount     = campaign.openedCount       ?? 0;
-  const clickedCount    = campaign.clickedCount      ?? 0;
-  const couponUsedCount = campaign.couponUsedCount   ?? 0;
+  const analytics       = campaign.analytics         || {};
+  const targetCount     = analytics.targetCount      ?? campaign.targetCount      ?? 0;
+  const sentCount       = analytics.sentCount         ?? campaign.sentCount         ?? 0;
+  const deliveredCount  = analytics.deliveredCount    ?? campaign.deliveredCount    ?? sentCount;
+  const openedCount     = analytics.openedCount       ?? campaign.openedCount       ?? 0;
+  const clickedCount    = analytics.clickedCount      ?? campaign.clickedCount      ?? 0;
+  const couponUsedCount = analytics.couponUsedCount   ?? campaign.couponUsedCount   ?? 0;
 
   const deliveryRate = targetCount > 0 ? (sentCount / targetCount) * 100 : 0;
   const openRate     = sentCount   > 0 ? (openedCount / sentCount) * 100  : 0;
@@ -178,7 +179,7 @@ export default function CampaignDetail() {
         </View>
 
         {/* ── Notification Preview ── */}
-        {(campaign.notificationTitle || campaign.notificationBody) && (
+        {(campaign.notification?.title || campaign.notification?.body) && (
           <View style={s.previewCard}>
             <View style={s.previewHeader}>
               <View style={s.previewIconWrap}>
@@ -187,11 +188,11 @@ export default function CampaignDetail() {
               <Text style={s.previewHeaderText}>Notification Preview</Text>
             </View>
             <View style={s.notifBubble}>
-              {campaign.notificationTitle ? (
-                <Text style={s.notifTitle}>{campaign.notificationTitle}</Text>
+              {campaign.notification?.title ? (
+                <Text style={s.notifTitle}>{campaign.notification.title}</Text>
               ) : null}
-              {campaign.notificationBody ? (
-                <Text style={s.notifBody}>{campaign.notificationBody}</Text>
+              {campaign.notification?.body ? (
+                <Text style={s.notifBody}>{campaign.notification.body}</Text>
               ) : null}
             </View>
           </View>
@@ -261,28 +262,29 @@ export default function CampaignDetail() {
         {/* ── Audience & Schedule ── */}
         <Text style={s.sectionLabel}>Audience & Schedule</Text>
         <View style={s.infoCard}>
-          {campaign.audienceSegment ? (
+          {(campaign.audience?.segment || campaign.audienceSegment) ? (
             <View style={s.infoRow}>
               <Ionicons name="people-outline" size={15} color={colors.textSecondary} />
               <Text style={s.infoLabel}>Segment</Text>
-              <Text style={s.infoValue}>{campaign.audienceSegment}</Text>
+              <Text style={s.infoValue}>{campaign.audience?.segment || campaign.audienceSegment}</Text>
             </View>
           ) : null}
-          {campaign.scheduleType ? (
+          {(campaign.schedule?.type || campaign.scheduleType) ? (
             <View style={s.infoRow}>
               <Ionicons name="time-outline" size={15} color={colors.textSecondary} />
               <Text style={s.infoLabel}>Schedule</Text>
               <Text style={s.infoValue}>
-                {campaign.scheduleType.charAt(0).toUpperCase() + campaign.scheduleType.slice(1)}
+                {(campaign.schedule?.type || campaign.scheduleType || '').charAt(0).toUpperCase() +
+                  (campaign.schedule?.type || campaign.scheduleType || '').slice(1)}
               </Text>
             </View>
           ) : null}
-          {campaign.scheduledAt ? (
+          {(campaign.schedule?.scheduledAt || campaign.scheduledAt) ? (
             <View style={s.infoRow}>
               <Ionicons name="calendar-outline" size={15} color={colors.textSecondary} />
               <Text style={s.infoLabel}>Scheduled</Text>
               <Text style={s.infoValue}>
-                {new Date(campaign.scheduledAt).toLocaleString('en-IN', {
+                {new Date(campaign.schedule?.scheduledAt || campaign.scheduledAt).toLocaleString('en-IN', {
                   day: '2-digit', month: 'short', year: 'numeric',
                   hour: '2-digit', minute: '2-digit',
                 })}

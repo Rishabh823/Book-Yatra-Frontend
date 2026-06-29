@@ -84,7 +84,7 @@ export default function ChatScreen() {
 
     const onShow = (e) => {
       Animated.timing(keyboardHeight, {
-        toValue: e.endCoordinates.height,
+        toValue: e.endCoordinates.height + 8,
         duration: Platform.OS === "ios" ? (e.duration ?? 250) : 250,
         useNativeDriver: false,
       }).start();

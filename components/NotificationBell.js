@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { api } from "../lib/api";
+import { eventBus } from "../lib/eventBus";
 
 export default function NotificationBell({ color = "#1A1A1A", size = 24 }) {
   const router = useRouter();
@@ -21,9 +22,14 @@ export default function NotificationBell({ color = "#1A1A1A", size = 24 }) {
     const interval = setInterval(() => {
       if (mounted) fetchCount();
     }, 30000);
+    // Instantly increment badge when new notifications arrive (no polling delay)
+    const unsub = eventBus.on("notifications:new", (items) => {
+      if (mounted) setCount((prev) => prev + (items?.length || 1));
+    });
     return () => {
       mounted = false;
       clearInterval(interval);
+      unsub();
     };
   }, [fetchCount]);
 

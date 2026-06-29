@@ -376,19 +376,21 @@ export default function SearchModal({ visible, onClose }) {
   useEffect(() => {
     if (!Voice) return;
     Voice.onSpeechResults = (e) => {
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
       const text = (e.value?.[0] || "").trim();
       if (text) {
         setQuery(text);
-        // Defer search so React commits setQuery first, then run search
         setTimeout(() => doSearchRef.current?.(text), 100);
       }
       setIsListening(false);
     };
-    Voice.onSpeechError = () => setIsListening(false);
+    Voice.onSpeechError = () => {
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+      setIsListening(false);
+    };
     return () => {
-      try {
-        Voice?.destroy?.();
-      } catch {}
+      if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+      try { Voice?.destroy?.(); } catch {}
     };
   }, []);
 
@@ -540,15 +542,19 @@ export default function SearchModal({ visible, onClose }) {
 
   // ── Voice toggle ────────────────────────────────────────────────────────────
   const webRecognitionRef = useRef(null);
+  const voiceTimeoutRef = useRef(null);
+
+  const stopVoice = async () => {
+    if (voiceTimeoutRef.current) clearTimeout(voiceTimeoutRef.current);
+    try { await Voice?.stop(); } catch {}
+    setIsListening(false);
+  };
 
   const toggleVoice = async () => {
     // Native voice (works in bare React Native builds)
     if (Voice) {
       if (isListening) {
-        try {
-          await Voice.stop();
-        } catch {}
-        setIsListening(false);
+        stopVoice();
       } else {
         // Request microphone permission on Android before starting
         if (Platform.OS === "android") {
@@ -568,15 +574,18 @@ export default function SearchModal({ visible, onClose }) {
               return;
             }
           } catch {
-            setIsListening(false);
             return;
           }
         }
         try {
+          // Start recognition first — only show glow if it actually begins
+          await Voice.start("en-US");
           setIsListening(true);
-          await Voice.start("en-IN");
+          // Auto-stop after 10s if no result
+          voiceTimeoutRef.current = setTimeout(() => stopVoice(), 10000);
         } catch {
-          setIsListening(false);
+          setVoiceUnsupported(true);
+          setTimeout(() => setVoiceUnsupported(false), 3000);
         }
       }
       return;

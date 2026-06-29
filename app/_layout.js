@@ -37,6 +37,7 @@ import {
   addResponseListener,
 } from "../lib/notifications";
 import { useNotificationPolling } from "../lib/useNotificationPolling";
+import { eventBus } from "../lib/eventBus";
 import { useRouter } from "expo-router";
 
 function AppNavigator() {
@@ -49,7 +50,20 @@ function AppNavigator() {
   useEffect(() => {
     registerTokenIfGranted().catch(() => {});
 
-    const notifSub = addNotificationListener(() => {});
+    const notifSub = addNotificationListener((notification) => {
+      // FCM arrived while app is in foreground — emit to update bell + notification screen instantly
+      const content = notification?.request?.content;
+      if (content?.title || content?.body) {
+        eventBus.emit("notifications:new", [{
+          _id: String(Date.now()),
+          title: content.title,
+          body: content.body,
+          type: "system",
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+    });
     const responseSub = addResponseListener((response) => {
       const data = response.notification.request.content.data || {};
       if (data.route) {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../lib/api';
 import { fonts, radius, shadow } from '../lib/theme';
 import { useColors } from '../lib/ThemeContext';
+import { eventBus } from '../lib/eventBus';
 
 const getTypeStyles = (colors) => ({
   booking: { icon: 'calendar', bg: '#EDE9FE', color: '#7C3AED' },
@@ -66,6 +67,12 @@ export default function NotificationsScreen() {
   }, [page, filter]);
 
   useFocusEffect(useCallback(() => { load(true); }, []));
+
+  // Real-time: refresh list instantly when a new notification arrives via FCM or polling
+  useEffect(() => {
+    const unsub = eventBus.on("notifications:new", () => { load(true); });
+    return unsub;
+  }, []);
 
   const markAllRead = async () => {
     try {
