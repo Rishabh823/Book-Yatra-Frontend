@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ActivityIndicator,
   Modal,
@@ -222,7 +223,11 @@ export default function ChatScreen() {
           );
         });
 
-        socketOff = () => { offNew(); offRead(); offDel(); };
+        socketOff = () => {
+          offNew();
+          offRead();
+          offDel();
+        };
       })
       .catch(() => {});
 
@@ -403,6 +408,22 @@ export default function ChatScreen() {
   const isRead = (msg) =>
     (msg.readBy || []).some((r) => String(r.userId) !== String(myUserId));
 
+  // Scroll to bottom whenever keyboard appears/disappears (WhatsApp-style)
+  useEffect(() => {
+    const showEvt =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const onShow = () => flatRef.current?.scrollToEnd({ animated: true });
+    const onHide = () => flatRef.current?.scrollToEnd({ animated: false });
+    const showSub = Keyboard.addListener(showEvt, onShow);
+    const hideSub = Keyboard.addListener(hideEvt, onHide);
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   // ── Derived UI ────────────────────────────────────────────────────────────────
   const inputBlocked = iBlocked || blockedByThem;
 
@@ -536,6 +557,10 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(item, idx) => String(item._id || idx)}
           extraData={myUserId}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item, index }) => (
             <ChatBubble
               message={item}

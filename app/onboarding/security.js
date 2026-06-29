@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as LocalAuthentication from "expo-local-authentication";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, fonts, radius, shadow } from "../../lib/theme";
 import { markSecurityDone } from "../../lib/onboarding";
 import { pinStorage } from "../../lib/security/secureStorage";
@@ -79,6 +80,12 @@ export default function SecurityScreen() {
         disableDeviceFallback: false,
       });
       if (result.success) {
+        // Ensure pinStorage writes to the user-scoped key even during onboarding.
+        // appLockContext.loadSettings() may have run before the userId was saved to
+        // AsyncStorage (fresh registration), so _userId could still be null here.
+        const userId = await AsyncStorage.getItem("userId");
+        if (userId) pinStorage.setUserId(userId);
+
         await pinStorage.setBiometricEnabled(true, biometricType);
         // Persist to account so security page reflects the setting
         securityApi.enableBiometric({ biometricType }).catch(() => {});

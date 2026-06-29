@@ -66,6 +66,7 @@
     "android": {
       "package": "com.rishabh8233.tripkart",
       "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-icon.png",
         "backgroundColor": "#3D0A0A"
